@@ -25,13 +25,19 @@ export interface ResourceLike {
   useMiddleware?(
     method: SupportedMethod,
     middleware: (context: MiddlewareContext, next: NextFunction) => Promise<unknown>
-  ): void;
+  ): void | (() => void);
 }
 
 export type PluginMiddleware = (
   next: (...args: unknown[]) => Promise<unknown>,
   ...args: unknown[]
 ) => Promise<unknown>;
+
+export type PluginWrapper = (
+  result: unknown,
+  args: unknown[],
+  methodName: string
+) => Promise<unknown> | unknown;
 
 export interface ScheduledTask {
   stop?(): void;
@@ -52,6 +58,7 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
   cronManager: Database['cronManager'] | undefined;
   protected _cronJobs: string[] = [];
   protected _storage: PluginStorage | null = null;
+  private _middlewareDisposers: Array<() => void> = [];
   logger: Logger;
   logLevel: string;
   database!: Database;
@@ -80,6 +87,7 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
   setNamespace(value: string | null | undefined): void {
     this.namespace = normalizeNamespace(value);
     this.slug = this.namespace ? `${this.baseSlug}--${this.namespace}` : this.baseSlug;
+    this._storage = null;
     this.onNamespaceChanged(this.namespace);
   }
 
@@ -97,9 +105,13 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
   }
 
   async stop(): Promise<void> {
-    await this.onStop();
-    this.stopAllCronJobs();
-    this.removeAllListeners();
+    try {
+      await this.onStop();
+    } finally {
+      for (const dispose of this._middlewareDisposers.splice(0)) dispose();
+      this.stopAllCronJobs();
+      this.removeAllListeners();
+    }
   }
 
   async uninstall(options: UninstallOptions = {}): Promise<void> {
@@ -183,12 +195,20 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
       });
     }
 
-    resource.useMiddleware(method, async (context, next) => {
+    const dispose = resource.useMiddleware(method, async (context, next) => {
       const invokeNext = async (...nextArgs: unknown[]): Promise<unknown> => {
         if (nextArgs.length > 0) context.args = nextArgs;
         return next();
       };
       return middleware(invokeNext, ...context.args);
+    });
+    if (dispose) this._middlewareDisposers.push(dispose);
+  }
+
+  wrapResourceMethod(resource: ResourceLike, method: SupportedMethod, wrapper: PluginWrapper): void {
+    this.addMiddleware(resource, method, async (next, ...args) => {
+      const result = await next(...args);
+      return wrapper(result, args, method);
     });
   }
 

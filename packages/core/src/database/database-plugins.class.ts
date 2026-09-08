@@ -127,6 +127,9 @@ export class DatabasePlugins {
     }
 
     db.plugins[pluginName] = plugin;
+    if (!db.pluginList.includes(plugin as PluginConstructor)) {
+      db.pluginList.push(plugin as PluginConstructor);
+    }
 
     if (db.isConnected()) {
       await plugin.install(db);

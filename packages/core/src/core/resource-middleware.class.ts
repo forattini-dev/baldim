@@ -2,7 +2,7 @@ import { ResourceError } from '../errors.js';
 
 export type SupportedMethod =
   | 'get' | 'getOrNull' | 'list' | 'listPartition' | 'listIds' | 'getAll' | 'count' | 'page'
-  | 'insert' | 'update' | 'delete' | 'deleteMany' | 'exists' | 'getMany'
+  | 'insert' | 'insertMany' | 'update' | 'delete' | 'deleteMany' | 'exists' | 'getMany'
   | 'content' | 'hasContent' | 'query' | 'getFromPartition' | 'setContent' | 'deleteContent' | 'replace';
 
 export interface MiddlewareContext {
@@ -23,7 +23,7 @@ export interface Resource {
 export class ResourceMiddleware {
   static SUPPORTED_METHODS: SupportedMethod[] = [
     'get', 'getOrNull', 'list', 'listPartition', 'listIds', 'getAll', 'count', 'page',
-    'insert', 'update', 'delete', 'deleteMany', 'exists', 'getMany',
+    'insert', 'insertMany', 'update', 'delete', 'deleteMany', 'exists', 'getMany',
     'content', 'hasContent', 'query', 'getFromPartition', 'setContent', 'deleteContent', 'replace'
   ];
 
@@ -85,7 +85,7 @@ export class ResourceMiddleware {
     };
   }
 
-  use(method: string, fn: MiddlewareFunction): void {
+  use(method: string, fn: MiddlewareFunction): () => void {
     if (!this._initialized) {
       this.init();
     }
@@ -99,6 +99,16 @@ export class ResourceMiddleware {
     }
 
     this._middlewares.get(method)!.push(fn);
+    return () => this.remove(method, fn);
+  }
+
+  remove(method: string, fn: MiddlewareFunction): boolean {
+    const stack = this._middlewares.get(method);
+    if (!stack) return false;
+    const index = stack.indexOf(fn);
+    if (index === -1) return false;
+    stack.splice(index, 1);
+    return true;
   }
 
   getMiddlewares(method: string): MiddlewareFunction[] {

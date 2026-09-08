@@ -53,6 +53,7 @@ const databases = new DatabaseManager({
 | packages/plugin-audit | @baldin/plugin-audit | Persistent resource audit plugin |
 | packages/plugin-ttl | @baldin/plugin-ttl | Indexed and lazy resource expiration plugin |
 | packages/plugin-scheduler | @baldin/plugin-scheduler | Distributed cron jobs and execution history |
+| packages/plugin-fulltext | @baldin/plugin-fulltext | Persistent word indexes and ranked search |
 | apps | Docs, CLI, demos | Reserved |
 
 ## Development

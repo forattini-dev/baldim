@@ -1410,8 +1410,8 @@ export class Resource extends AsyncEventEmitter implements Disposable {
     return (this._guards as any)._checkRolesScopes(requiredRolesScopes, user);
   }
 
-  useMiddleware(method: SupportedMethod, fn: MiddlewareFunction): void {
-    this._middleware.use(method, fn);
+  useMiddleware(method: SupportedMethod, fn: MiddlewareFunction): () => void {
+    return this._middleware.use(method, fn);
   }
 
   applyDefaults(data: Record<string, unknown>): Record<string, unknown> {
