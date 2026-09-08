@@ -16,12 +16,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: pnpm install --no-frozen-lockfile
-      - uses: actions/upload-artifact@v4
-        with:
-          name: bootstrap-lockfile
-          path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm build
       - run: pnpm test
       - run: pnpm --filter @buckiedb/core pack --pack-destination ../../artifacts
+      - name: Verify packed package in a clean consumer
+        shell: bash
+        run: |
+          package="$GITHUB_WORKSPACE/artifacts/buckiedb-core-0.0.0.tgz"
+          consumer="$(mktemp -d)"
+          cd "$consumer"
+          npm init -y
+          npm install --ignore-scripts --no-audit --no-fund "$package"
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { encode, decode } from '@buckiedb/core';
+          import { encodeKey, decodeKey } from '@buckiedb/core/encoding';
+          assert.equal(encode(62), '10');
+          assert.equal(decode('10'), 62);
+          assert.equal(encodeKey(36), '10');
+          assert.equal(decodeKey('10'), 36);
+          JS
