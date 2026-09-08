@@ -4,7 +4,7 @@ import { tryFn } from '../../concerns/try-fn.js';
 import { LatencyBuffer, type LatencyStats } from '../../concerns/ring-buffer.js';
 import type { Database } from '../../database.class.js';
 import type { S3DBLogger } from '../../concerns/logger.js';
-import type { S3Client } from '../../clients/s3-client.class.js';
+import type { Client } from '../../clients/types.js';
 
 let serviceCounter = 0;
 
@@ -1353,7 +1353,7 @@ export interface StorageSetOptions {
 }
 
 export class CoordinatorPluginStorage extends PluginStorage {
-  constructor(client: S3Client, pluginSlug: string = 'coordinator') {
+  constructor(client: Client, pluginSlug: string = 'coordinator') {
     super(client as never, pluginSlug);
   }
 

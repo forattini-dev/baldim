@@ -20,23 +20,42 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm build
       - run: pnpm test
-      - run: pnpm --filter @buckiedb/core pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-      - name: Verify packed package in a clean consumer
+      - name: Pack public packages
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @buckiedb/core pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @buckiedb/adapter-s3 pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @buckiedb/plugin-audit pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+      - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
-          packages=("$GITHUB_WORKSPACE"/artifacts/buckiedb-core-*.tgz)
-          test "${#packages[@]}" -eq 1
-          package="${packages[0]}"
+          core=("$GITHUB_WORKSPACE"/artifacts/buckiedb-core-*.tgz)
+          adapter=("$GITHUB_WORKSPACE"/artifacts/buckiedb-adapter-s3-*.tgz)
+          plugin=("$GITHUB_WORKSPACE"/artifacts/buckiedb-plugin-audit-*.tgz)
+          test "${#core[@]}" -eq 1
+          test "${#adapter[@]}" -eq 1
+          test "${#plugin[@]}" -eq 1
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "$package"
+          npm install --ignore-scripts --no-audit --no-fund "${core[0]}" "${adapter[0]}" "${plugin[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { encode, decode } from '@buckiedb/core';
+          import { BuckieDB, encode, decode } from '@buckiedb/core';
+          import { hasStorageAdapter } from '@buckiedb/core/adapter';
           import { encodeKey, decodeKey } from '@buckiedb/core/encoding';
+          import { AuditPlugin } from '@buckiedb/plugin-audit';
+          import '@buckiedb/adapter-s3';
+
           assert.equal(encode(62), '10');
           assert.equal(decode('10'), 62);
           assert.equal(encodeKey(36), '10');
           assert.equal(decodeKey('10'), 36);
+          assert.equal(hasStorageAdapter('s3'), true);
+
+          const database = new BuckieDB({ connectionString: 'memory://pack-smoke', logLevel: 'silent' });
+          await database.connect();
+          await database.usePlugin(new AuditPlugin());
+          assert.ok(database.resources.plg_audits);
+          await database.disconnect();
           JS

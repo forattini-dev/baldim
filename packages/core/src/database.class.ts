@@ -8,6 +8,7 @@ import { ProcessManager } from './concerns/process-manager.js';
 import { SafeEventEmitter } from './concerns/safe-event-emitter.js';
 import { CronManager } from './concerns/cron-manager.js';
 import { createLogger, getLoggerOptionsFromEnv, type Logger } from './concerns/logger.js';
+import { createStorageClient } from './storage-adapter.js';
 
 import { ThreadPool } from './concurrency/thread-pool.js';
 import { DatabaseHooks } from './database/database-hooks.class.js';
@@ -405,47 +406,26 @@ export class Database extends SafeEventEmitter {
             return new RemoteSqliteClient(sqliteRemoteOptions) as unknown as Client;
           };
         } else {
-          this._clientFactory = async () => {
-            const { S3Client } = await import('./clients/s3-client.class.js');
-            const s3ClientOptions = this._deepMerge({
-              logLevel: this.logger.level,
-              logger: this.getChildLogger('S3Client'),
-              connectionString: connectionString,
-            }, mergedClientOptions as any) as any;
-            s3ClientOptions.executorPool = this._deepMerge(
-              (s3ClientOptions as any).executorPool || {},
-              this.executorPool
-            );
-            return new S3Client(s3ClientOptions) as unknown as Client;
-          };
+          this._clientFactory = async () => createStorageClient(url.protocol, {
+            connectionString,
+            clientOptions: mergedClientOptions as Record<string, unknown>,
+            logLevel: this.logger.level,
+            logger: this.getChildLogger('StorageAdapter'),
+            executorPool: this.executorPool,
+          });
         }
       } catch {
-        this._clientFactory = async () => {
-          const { S3Client } = await import('./clients/s3-client.class.js');
-          const s3ClientOptions = this._deepMerge({
-            logLevel: this.logger.level,
-            logger: this.getChildLogger('S3Client'),
-            connectionString: connectionString,
-          }, mergedClientOptions as any) as any;
-          (s3ClientOptions as any).executorPool = this._deepMerge(
-            (s3ClientOptions as any).executorPool || {},
-            this.executorPool
-          );
-          return new S3Client(s3ClientOptions) as unknown as Client;
-        };
+        this._clientFactory = async () => createStorageClient('s3', {
+          connectionString,
+          clientOptions: mergedClientOptions as Record<string, unknown>,
+          logLevel: this.logger.level,
+          logger: this.getChildLogger('StorageAdapter'),
+          executorPool: this.executorPool,
+        });
       }
     } else {
       this._clientFactory = async () => {
-        const { S3Client } = await import('./clients/s3-client.class.js');
-        const s3ClientOptions = this._deepMerge({
-          logLevel: this.logger.level,
-          logger: this.getChildLogger('S3Client'),
-        }, mergedClientOptions as any) as any;
-        (s3ClientOptions as any).executorPool = this._deepMerge(
-          (s3ClientOptions as any).executorPool || {},
-          this.executorPool
-        );
-        return new S3Client(s3ClientOptions) as unknown as Client;
+        throw new Error('BuckieDB requires a connectionString or an explicit storage client.');
       };
     }
 

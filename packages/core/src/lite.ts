@@ -1,5 +1,5 @@
 /**
- * @buckiedb/core - BuckieDB's database engine and built-in storage clients
+ * @buckiedb/core - BuckieDB's database engine and storage contracts
  *
  * This entry point excludes all plugins with peer dependencies, making it
  * suitable for bundling with pkg, esbuild, or other tools that create
@@ -7,7 +7,7 @@
  *
  * Includes:
  * - Core classes (Database, Resource, Schema, Validator)
- * - All storage clients (S3, MinIO, R2, Memory, FileSystem)
+ * - Provider-neutral engine plus the transitional local clients
  * - Encryption (AES-256-GCM for secret fields)
  * - All field types and behaviors
  * - Streams and concurrency utilities
@@ -38,11 +38,12 @@ export {
   type DatabaseManagerOptions,
   type ManagerCreateResourceConfig
 } from './database-manager.class.js';
-export { S3Client, S3Client as Client } from './clients/s3-client.class.js';
 export { Resource } from './resource.class.js';
 export { Schema, type SchemaRegistry } from './schema.class.js';
 export { Validator } from './validator.class.js';
 export { ConnectionString } from './connection-string.class.js';
+export { registerStorageAdapter, hasStorageAdapter } from './storage-adapter.js';
+export type { StorageAdapterContext, StorageAdapterFactory, Client } from './storage-adapter.js';
 
 // =============================================================================
 // Storage Clients (no peer dependencies)

@@ -1,8 +1,25 @@
-# Planned: @buckiedb/adapter-s3
+# @buckiedb/adapter-s3
 
-Reserved source directory, not yet an installable package.
+S3-compatible storage for BuckieDB. Importing the package registers the `s3:`,
+`http:`, and `https:` protocols with `@buckiedb/core`.
 
-Extract the S3 client after the core storage contract is characterized. AWS S3,
-Cloudflare R2 and compatible endpoints should share this adapter where their API
-semantics permit it. Provider-specific capabilities need explicit tests.
-AWS SDK dependencies belong here, not in @buckiedb/core.
+```ts
+import { BuckieDB } from '@buckiedb/core';
+import '@buckiedb/adapter-s3';
+
+const database = new BuckieDB({
+  connectionString: process.env.BUCKIEDB_URL!,
+});
+```
+
+The same adapter supports AWS S3, Cloudflare R2, MinIO, and other services that
+implement the S3 API. Endpoint, credentials, path-style addressing, retry, and
+transport options remain part of the connection string and `clientOptions`.
+
+You can also instantiate the client directly:
+
+```ts
+import { S3Client } from '@buckiedb/adapter-s3';
+
+const client = new S3Client({ connectionString: process.env.BUCKIEDB_URL! });
+```

@@ -1,6 +1,6 @@
 # @buckiedb/core
 
-BuckieDB's document database engine and built-in storage clients.
+BuckieDB's document database engine, multidatabase manager, and extension contracts.
 
 ```ts
 import { BuckieDB } from '@buckiedb/core';
@@ -26,6 +26,7 @@ For multiple databases, use the manager with named connections:
 
 ```ts
 import { DatabaseManager } from '@buckiedb/core';
+import '@buckiedb/adapter-s3';
 
 const databases = new DatabaseManager({
   default: 'primary',
@@ -49,9 +50,9 @@ Use `connection(name)` for direct database access or `resource(name)` for unifie
 lookup; direct resource creation is indexed, but cross-connection creation should
 go through the manager so it can reject duplicates before writing metadata.
 
-The core currently includes the S3-compatible, memory, filesystem, SQLite,
-libSQL/D1, and RedDB clients inherited from s3db.js. Provider packages will be
-extracted behind a stable client contract in later migration slices.
+S3-compatible storage lives in `@buckiedb/adapter-s3` and registers itself when
+imported. Memory remains the reference client in core; filesystem, SQLite/libSQL/D1,
+and RedDB are transitional built-ins that will move to adapter packages.
 
 `S3db` remains available as a deprecated class alias so applications can migrate
 their imports before changing persisted data. BuckieDB continues to read and
