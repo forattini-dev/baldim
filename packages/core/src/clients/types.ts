@@ -154,29 +154,6 @@ export interface Logger {
   trace?: (obj: unknown, msg?: string) => void;
 }
 
-export interface MemoryClientConfig {
-  id?: string;
-  logLevel?: string;
-  logger?: Logger;
-  concurrency?: number;
-  retries?: number;
-  retryDelay?: number;
-  timeout?: number;
-  retryableErrors?: string[];
-  taskExecutor?: TaskManager;
-  taskExecutorMonitoring?: MonitoringConfig | null;
-  bucket?: string;
-  keyPrefix?: string;
-  region?: string;
-  enforceLimits?: boolean;
-  metadataLimit?: number;
-  maxObjectSize?: number;
-  persistPath?: string;
-  autoPersist?: boolean;
-  maxMemoryMB?: number;
-  evictionEnabled?: boolean;
-}
-
 export interface FileSystemClientConfig {
   id?: string;
   logLevel?: string;
@@ -480,19 +457,6 @@ export interface StorageListParams {
   startAfter?: string | null;
 }
 
-export interface MemoryStorageConfig {
-  bucket?: string;
-  enforceLimits?: boolean;
-  metadataLimit?: number;
-  maxObjectSize?: number;
-  persistPath?: string;
-  autoPersist?: boolean;
-  logLevel?: string;
-  logger?: Logger;
-  maxMemoryMB?: number;
-  evictionEnabled?: boolean;
-}
-
 export interface FileSystemStorageConfig {
   basePath?: string;
   bucket?: string;
@@ -507,19 +471,6 @@ export interface FileSystemStorageConfig {
   backup?: BackupConfig;
   journal?: JournalConfig;
   stats?: StatsConfig;
-}
-
-export interface MemoryStorageStats {
-  objectCount: number;
-  totalSize: number;
-  totalSizeFormatted: string;
-  keys: string[];
-  bucket: string;
-  maxMemoryMB: number;
-  memoryUsagePercent: number;
-  evictions: number;
-  evictedBytes: number;
-  peakMemoryBytes: number;
 }
 
 export interface FileSystemStorageStats {
@@ -539,22 +490,6 @@ export interface FileSystemStorageStats {
     journal: boolean;
     stats: boolean;
   };
-}
-
-export interface StorageSnapshot {
-  timestamp: string;
-  bucket: string;
-  objectCount: number;
-  objects: Record<string, {
-    body: string;
-    metadata: Record<string, string>;
-    contentType: string;
-    etag: string;
-    lastModified: string;
-    size: number;
-    contentEncoding?: string;
-    contentLength: number;
-  }>;
 }
 
 export interface ReckerHttpHandlerOptions {

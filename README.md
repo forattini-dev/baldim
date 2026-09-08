@@ -6,7 +6,7 @@ A small document database for object storage — being rebuilt from s3db.js as a
 entrypoint now runs as `@baldin/core`. Database CRUD, schemas, resources,
 multidatabase management, behaviors, streams, and concurrency are present. The S3
 adapters and first standalone plugin have been extracted; the remaining plugin catalog,
-memory adapter boundary, CLI, and MCP still need migration.
+provider contract cleanup, CLI, and MCP still need migration.
 
 This is not yet a feature-complete replacement for `s3db.js`. The tracked gaps
 and completion criteria live in the [parity audit](docs/parity-audit.md).
@@ -45,6 +45,7 @@ const databases = new DatabaseManager({
 | Path | Package | Status |
 | --- | --- | --- |
 | packages/core | @baldin/core | Engine, multidatabase manager, adapter registry, and plugin SDK |
+| packages/adapter-memory | @baldin/adapter-memory | Built-in in-memory adapter, installed by core |
 | packages/adapter-filesystem | @baldin/adapter-filesystem | Installable local filesystem adapter |
 | packages/adapter-reddb | @baldin/adapter-reddb | Installable RedDB adapter |
 | packages/adapter-sqlite | @baldin/adapter-sqlite | SQLite, libSQL, and D1 adapter |
@@ -67,7 +68,7 @@ Turborepo builds dependencies before consumers. Tests import compiled package
 exports so the package entry points are exercised. Changesets tracks independent
 package releases; no automatic npm publishing is configured.
 
-Memory remains the last storage implementation carried by core during the migration.
+`@baldin/core` installs the separate memory adapter so `memory:` works without setup.
 Filesystem, SQLite, RedDB, and S3 load through the public adapter registry, and plugins use
 the public plugin SDK. See [the migration plan](docs/migration.md) for source
 provenance, compatibility guarantees and extraction order.

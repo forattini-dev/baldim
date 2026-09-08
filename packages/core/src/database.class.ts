@@ -338,7 +338,7 @@ export class Database extends SafeEventEmitter {
         const url = new URL(connectionString);
         if (url.protocol === 'memory:') {
           this._clientFactory = async () => {
-            const { MemoryClient } = await import('./clients/memory-client.class.js');
+            const { MemoryClient } = await import('@baldin/adapter-memory');
             const bucketHost = url.hostname || 'test-bucket';
             const [okBucket, , decodedBucket] = tryFnSync(() => decodeURIComponent(bucketHost));
             const bucket = okBucket ? decodedBucket : bucketHost;

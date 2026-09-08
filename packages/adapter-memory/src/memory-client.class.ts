@@ -2,17 +2,13 @@ import path from 'path';
 import EventEmitter from 'events';
 import { chunk } from 'lodash-es';
 
-import { tryFn } from '../concerns/try-fn.js';
-import { idGenerator } from '../concerns/id.js';
-import { metadataEncode, metadataDecode } from '../concerns/metadata-encoding.js';
-import { mapAwsError, DatabaseError, BaseError } from '../errors.js';
-import { TasksRunner } from '../tasks/tasks-runner.class.js';
+import { BaseError, DatabaseError, TasksRunner, idGenerator, mapAwsError, tryFn } from './runtime.js';
+import { metadataDecode, metadataEncode } from './metadata-encoding.js';
 import { MemoryStorage } from './memory-storage.class.js';
-import { createLogger } from '../concerns/logger.js';
-import type { LogLevel } from '../types/common.types.js';
+import { createLogger } from './runtime.js';
+import type { LogLevel } from './types.js';
 import type {
   Logger,
-  MemoryClientConfig,
   TaskManager,
   ClientConfig,
   QueueStats,
@@ -27,6 +23,7 @@ import type {
   DeleteObjectResponse,
   DeleteObjectsResponse,
   ListObjectsResponse,
+  MemoryClientConfig,
   StorageSnapshot
 } from './types.js';
 

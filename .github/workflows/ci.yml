@@ -23,6 +23,7 @@ jobs:
       - name: Pack public packages
         run: |
           mkdir -p "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/adapter-memory pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/core pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/adapter-filesystem pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/adapter-reddb pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
@@ -33,12 +34,14 @@ jobs:
         shell: bash
         run: |
           core=("$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz)
+          memory=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz)
           filesystem=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-filesystem-*.tgz)
           reddb=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-reddb-*.tgz)
           sqlite=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-sqlite-*.tgz)
           adapter=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-s3-*.tgz)
           plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-audit-*.tgz)
           test "${#core[@]}" -eq 1
+          test "${#memory[@]}" -eq 1
           test "${#filesystem[@]}" -eq 1
           test "${#reddb[@]}" -eq 1
           test "${#sqlite[@]}" -eq 1
@@ -47,13 +50,14 @@ jobs:
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
           import { hasStorageAdapter } from '@baldin/core/adapter';
           import { encodeKey, decodeKey } from '@baldin/core/encoding';
           import { AuditPlugin } from '@baldin/plugin-audit';
+          import { MemoryClient } from '@baldin/adapter-memory';
           import '@baldin/adapter-filesystem';
           import '@baldin/adapter-reddb';
           import '@baldin/adapter-sqlite';
@@ -63,6 +67,7 @@ jobs:
           assert.equal(decode('10'), 62);
           assert.equal(encodeKey(36), '10');
           assert.equal(decodeKey('10'), 36);
+          assert.equal(typeof MemoryClient.clearAllStorage, 'function');
           assert.equal(hasStorageAdapter('file'), true);
           assert.equal(hasStorageAdapter('reddb'), true);
           assert.equal(hasStorageAdapter('sqlite'), true);

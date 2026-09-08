@@ -50,9 +50,9 @@ Use `connection(name)` for direct database access or `resource(name)` for unifie
 lookup; direct resource creation is indexed, but cross-connection creation should
 go through the manager so it can reject duplicates before writing metadata.
 
-S3-compatible storage lives in `@baldin/adapter-s3` and registers itself when
-imported. Memory remains the reference client in core; filesystem, SQLite/libSQL/D1,
-and RedDB are transitional built-ins that will move to adapter packages.
+The memory implementation lives in `@baldin/adapter-memory` and is installed by
+core, so `memory:` works without setup. Filesystem, SQLite/libSQL/D1, RedDB, and
+S3-compatible storage live in separate adapter packages and register when imported.
 
 `S3db` remains available as a deprecated class alias so applications can migrate
 their imports before changing persisted data. Baldin continues to read and

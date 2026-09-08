@@ -46,10 +46,11 @@ export { registerStorageAdapter, hasStorageAdapter } from './storage-adapter.js'
 export type { StorageAdapterContext, StorageAdapterFactory, Client } from './storage-adapter.js';
 
 // =============================================================================
-// Storage Clients (no peer dependencies)
+// Built-in storage adapter compatibility exports
 // =============================================================================
 
-export { MemoryClient } from './clients/memory-client.class.js';
+export { MemoryClient } from '@baldin/adapter-memory';
+export type { MemoryClientConfig, MemoryStorageConfig, MemoryStorageStats, StorageSnapshot } from '@baldin/adapter-memory';
 
 // =============================================================================
 // Errors

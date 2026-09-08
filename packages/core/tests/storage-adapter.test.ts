@@ -5,7 +5,6 @@ import {
   registerStorageAdapter,
   type StorageAdapterContext,
 } from '../src/storage-adapter.js';
-import { MemoryClient } from '../src/clients/memory-client.class.js';
 
 const context: StorageAdapterContext = {
   connectionString: 'example://bucket',
@@ -17,10 +16,11 @@ const context: StorageAdapterContext = {
 
 describe('storage adapter registry', () => {
   it('registers, resolves, and unregisters protocol factories', async () => {
-    const unregister = registerStorageAdapter('example', () => new MemoryClient());
+    const client = { id: 'example-client' };
+    const unregister = registerStorageAdapter('example', () => client as never);
 
     expect(hasStorageAdapter('example:')).toBe(true);
-    expect(await createStorageClient('EXAMPLE:', context)).toBeInstanceOf(MemoryClient);
+    expect(await createStorageClient('EXAMPLE:', context)).toBe(client);
 
     unregister();
     expect(hasStorageAdapter('example')).toBe(false);

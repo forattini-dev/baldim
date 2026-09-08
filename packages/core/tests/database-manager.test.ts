@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Baldin, DatabaseError, DatabaseManager, MemoryClient } from '@baldin/core';
+import { Baldin, DatabaseError, DatabaseManager } from '@baldin/core';
+import { MemoryClient } from '@baldin/adapter-memory';
 
 describe('DatabaseManager public API', () => {
   let manager: DatabaseManager | undefined;

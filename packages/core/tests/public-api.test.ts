@@ -3,11 +3,11 @@ import BaldinDefault, {
   Baldin,
   BuckieDB,
   Database,
-  MemoryClient,
   S3db,
   decode,
   encode,
 } from '@baldin/core';
+import { MemoryClient } from '@baldin/adapter-memory';
 
 describe('@baldin/core public API', () => {
   const databases: Database[] = [];
