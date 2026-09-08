@@ -17,7 +17,7 @@ working core from a completed product migration.
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Migrated to `@baldin/testing` | Working |
 | Public subpaths | root, lite, concerns, plugins, generator | Core subpaths plus standalone plugins, testing, and typegen packages | Partial |
-| Test suites | 118 core and 176 plugin test files | 43 focused test files, 400 tests plus 4 MinIO contract cases in CI | Partial |
+| Test suites | 118 core and 176 plugin test files | 43 focused test files, 401 tests plus 4 MinIO contract cases in CI | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps

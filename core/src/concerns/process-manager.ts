@@ -92,6 +92,9 @@ export class ProcessManager {
     let timerId: ReturnType<typeof setTimeout>;
 
     const tick = () => {
+      const activeEntry = this.intervals.get(name);
+      if (!activeEntry) return;
+
       const now = Date.now();
       const drift = now - expected;
       let executions = 1;
@@ -99,14 +102,16 @@ export class ProcessManager {
         executions += Math.floor(drift / interval);
       }
       try {
-        for (let i = 0; i < executions; i++) fn();
+        for (let i = 0; i < executions; i++) {
+          if (this.intervals.get(name) !== activeEntry) break;
+          fn();
+        }
       } finally {
         expected += executions * interval;
-        const entry = this.intervals.get(name);
-        if (entry) {
+        if (this.intervals.get(name) === activeEntry) {
           const nextDelay = Math.max(0, interval - (drift % interval));
           timerId = setTimeout(tick, nextDelay);
-          entry.id = timerId;
+          activeEntry.id = timerId;
         }
       }
     };

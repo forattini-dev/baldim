@@ -38,6 +38,25 @@ describe('process lifecycle managers', () => {
     manager.removeSignalHandlers();
   });
 
+  it('does not replay catch-up callbacks after the interval clears itself', async () => {
+    const manager = new ProcessManager({ exitOnSignal: false, logLevel: 'silent' });
+    let runs = 0;
+    manager.setInterval(() => {
+      runs++;
+      manager.clearInterval('delayed-self-clearing');
+    }, 10, 'delayed-self-clearing');
+
+    const blockedUntil = Date.now() + 35;
+    while (Date.now() < blockedUntil) {
+      // Block the event loop so the precise timer enters its catch-up path.
+    }
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(runs).toBe(1);
+    expect(manager.getStatus().intervals).toEqual([]);
+    manager.removeSignalHandlers();
+  });
+
   it('updates the tracked timer so later interval cleanup works', async () => {
     const manager = new ProcessManager({ exitOnSignal: false, logLevel: 'silent' });
     let runs = 0;
