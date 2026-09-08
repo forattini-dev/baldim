@@ -1,0 +1,47 @@
+{
+  "name": "@buckiedb/core",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Provider-independent building blocks for BuckieDB. Database migration in progress.",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">=24"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/buckiedb.git",
+    "directory": "packages/core"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./encoding": {
+      "types": "./dist/encoding/base62.d.ts",
+      "import": "./dist/encoding/base62.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "UNLICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "devDependencies": {
+    "typescript": "6.0.2",
+    "vitest": "4.1.3"
+  }
+}
