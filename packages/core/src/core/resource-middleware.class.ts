@@ -1,7 +1,7 @@
 import { ResourceError } from '../errors.js';
 
 export type SupportedMethod =
-  | 'get' | 'list' | 'listIds' | 'getAll' | 'count' | 'page'
+  | 'get' | 'getOrNull' | 'list' | 'listPartition' | 'listIds' | 'getAll' | 'count' | 'page'
   | 'insert' | 'update' | 'delete' | 'deleteMany' | 'exists' | 'getMany'
   | 'content' | 'hasContent' | 'query' | 'getFromPartition' | 'setContent' | 'deleteContent' | 'replace';
 
@@ -22,7 +22,7 @@ export interface Resource {
 
 export class ResourceMiddleware {
   static SUPPORTED_METHODS: SupportedMethod[] = [
-    'get', 'list', 'listIds', 'getAll', 'count', 'page',
+    'get', 'getOrNull', 'list', 'listPartition', 'listIds', 'getAll', 'count', 'page',
     'insert', 'update', 'delete', 'deleteMany', 'exists', 'getMany',
     'content', 'hasContent', 'query', 'getFromPartition', 'setContent', 'deleteContent', 'replace'
   ];

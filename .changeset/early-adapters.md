@@ -6,9 +6,10 @@
 "@baldin/adapter-memory": minor
 "@baldin/adapter-reddb": minor
 "@baldin/plugin-audit": minor
+"@baldin/plugin-ttl": minor
 ---
 
-Add the storage adapter registry and plugin SDK, extract memory, filesystem, SQLite, libSQL/D1, RedDB, and S3-compatible storage into standalone packages, publish the first standalone plugin package, and introduce provider-neutral storage contract names with deprecated compatibility aliases.
+Add the storage adapter registry and plugin SDK, extract memory, filesystem, SQLite, libSQL/D1, RedDB, and S3-compatible storage into standalone packages, publish the audit and TTL plugins as standalone packages, and introduce provider-neutral storage contract names with deprecated compatibility aliases.
 Connection-string parsing now stays generic in core while each adapter owns its URL,
 credential, and provider-option semantics.
 Adapters now declare engine capabilities, provider-specific legacy options resolve in

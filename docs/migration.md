@@ -32,11 +32,12 @@ Original project and data remain unchanged. Source license: Unlicense.
 - RedDB transport lives in `@baldin/adapter-reddb`; Recker is no longer a core dependency.
 - S3 transport and the AWS SDK live in `@baldin/adapter-s3`, with registration
   for AWS S3, Cloudflare R2, MinIO, and other compatible HTTP endpoints.
-- A public plugin SDK lives at `@baldin/core/plugin`; the audit plugin is the
-  first extracted package at `@baldin/plugin-audit`.
+- A public plugin SDK lives at `@baldin/core/plugin`, with coordinator support at
+  `@baldin/core/coordinator`. Audit and TTL now live in the standalone
+  `@baldin/plugin-audit` and `@baldin/plugin-ttl` packages.
 - Tests cover the numeric codec, memory-backed document lifecycle, manager
   lifecycle and collisions, adapter registration, S3 client initialization,
-  plugin installation, and persisted audit records. A shared object-storage
+  plugin installation, persisted audit records, and indexed and lazy TTL expiration. A shared object-storage
   contract runs against Memory, filesystem, SQLite, and MinIO in CI.
 - CI builds and tests every workspace package, then installs all public tarballs
   together in an empty consumer and exercises their public entrypoints.
@@ -46,7 +47,7 @@ Original project and data remain unchanged. Source license: Unlicense.
 1. Run the storage contract against configured AWS S3/R2 targets outside pull requests.
 2. Extend the contract to RedDB and remote SQLite test services.
 3. Migrate the remaining plugin families one package at a time with their
-   relevant original tests, starting with TTL and scheduler.
+   relevant original tests, continuing with scheduler.
 4. Add baseline compatibility fixtures for S3-compatible and SQLite storage; the
    filesystem fixture already covers schema metadata, bodies, partitions, and manifest.
 5. Restore testing utilities and TypeScript generation through public packages.
@@ -72,7 +73,7 @@ dependencies and release independently.
 
 ## Status and limits
 
-The core, manager, S3 adapter, and audit plugin are working package slices. The
+The core, manager, storage adapters, audit plugin, and TTL plugin are working package slices. The
 full plugin, adapter, CLI, MCP, utilities, and compatibility-suite migration is
 incomplete. No npm package has been published and the `@baldin` scope has not
 been registered.

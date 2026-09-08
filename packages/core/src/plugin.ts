@@ -1,6 +1,12 @@
 import EventEmitter from 'node:events';
 import { createLogger, type Logger } from './concerns/logger.js';
+import { PluginError } from './errors.js';
 import type { Database } from './database.class.js';
+import type {
+  MiddlewareContext,
+  NextFunction,
+  SupportedMethod,
+} from './core/resource-middleware.class.js';
 
 export interface PluginOptions {
   slug?: string;
@@ -15,6 +21,19 @@ export interface ResourceLike {
   config?: { partitions?: Record<string, { fields?: Record<string, unknown> }> };
   name?: string;
   applyPartitionRule?(value: unknown, rule: unknown): unknown;
+  useMiddleware?(
+    method: SupportedMethod,
+    middleware: (context: MiddlewareContext, next: NextFunction) => Promise<unknown>
+  ): void;
+}
+
+export type PluginMiddleware = (
+  next: (...args: unknown[]) => Promise<unknown>,
+  ...args: unknown[]
+) => Promise<unknown>;
+
+export interface ScheduledTask {
+  stop?(): void;
 }
 
 export interface UninstallOptions {
@@ -30,6 +49,7 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
   namespace: string | null;
   processManager: Database['processManager'] | undefined;
   cronManager: Database['cronManager'] | undefined;
+  protected _cronJobs: string[] = [];
   logger: Logger;
   logLevel: string;
   database!: Database;
@@ -76,6 +96,7 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
 
   async stop(): Promise<void> {
     await this.onStop();
+    this.stopAllCronJobs();
     this.removeAllListeners();
   }
 
@@ -87,6 +108,67 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
   async onStart(): Promise<void> {}
   async onStop(): Promise<void> {}
   async onUninstall(_options: UninstallOptions): Promise<void> {}
+
+  async scheduleCron(
+    expression: string,
+    fn: () => Promise<void> | void,
+    suffix = 'job',
+    options: Record<string, unknown> = {}
+  ): Promise<ScheduledTask | null> {
+    if (!this.cronManager) return null;
+
+    const jobName = `${this.slug}-${suffix}`;
+    const task = await this.cronManager.schedule(expression, fn, jobName, options);
+    if (task) this._cronJobs.push(jobName);
+    return task;
+  }
+
+  async scheduleInterval(
+    milliseconds: number,
+    fn: () => Promise<void> | void,
+    suffix = 'interval',
+    options: Record<string, unknown> = {}
+  ): Promise<ScheduledTask | null> {
+    if (!this.cronManager) return null;
+
+    const jobName = `${this.slug}-${suffix}`;
+    const task = await this.cronManager.scheduleInterval(milliseconds, fn, jobName, options);
+    if (task) this._cronJobs.push(jobName);
+    return task;
+  }
+
+  stopAllCronJobs(): number {
+    if (!this.cronManager) return 0;
+
+    let stopped = 0;
+    for (const jobName of this._cronJobs) {
+      if (this.cronManager.stop(jobName)) stopped++;
+    }
+    this._cronJobs = [];
+    return stopped;
+  }
+
+  addMiddleware(resource: ResourceLike, method: SupportedMethod, middleware: PluginMiddleware): void {
+    if (!resource.useMiddleware) {
+      throw new PluginError(`Cannot add middleware to "${method}"`, {
+        pluginName: this.name,
+        operation: 'addMiddleware',
+        statusCode: 400,
+        retriable: false,
+        suggestion: 'Ensure the resource exposes useMiddleware() before registering middleware.',
+        resourceName: resource.name || 'unknown',
+        methodName: method,
+      });
+    }
+
+    resource.useMiddleware(method, async (context, next) => {
+      const invokeNext = async (...nextArgs: unknown[]): Promise<unknown> => {
+        if (nextArgs.length > 0) context.args = nextArgs;
+        return next();
+      };
+      return middleware(invokeNext, ...context.args);
+    });
+  }
 
   getPartitionValues(
     data: Record<string, unknown>,
@@ -171,5 +253,7 @@ export { createLogger } from './concerns/logger.js';
 export type { Logger, LogLevel } from './concerns/logger.js';
 export { tryFn } from './concerns/try-fn.js';
 export { mapWithConcurrency, forEachWithConcurrency } from './concerns/map-with-concurrency.js';
-export { PluginError } from './errors.js';
+export { PluginError };
 export type { Database } from './database.class.js';
+export type { Resource } from './resource.class.js';
+export type { MiddlewareContext, NextFunction, SupportedMethod } from './core/resource-middleware.class.js';

@@ -5,7 +5,7 @@ A small document database for object storage — being rebuilt from s3db.js as a
 **Status: core migration.** The database engine behind the former `s3db.js/lite`
 entrypoint now runs as `@baldin/core`. Database CRUD, schemas, resources,
 multidatabase management, behaviors, streams, and concurrency are present. The S3
-adapters and first standalone plugin have been extracted; the remaining plugin catalog,
+adapters and the first standalone plugins have been extracted; the remaining plugin catalog,
 provider contract cleanup, CLI, and MCP still need migration.
 
 This is not yet a feature-complete replacement for `s3db.js`. The tracked gaps
@@ -50,7 +50,8 @@ const databases = new DatabaseManager({
 | packages/adapter-reddb | @baldin/adapter-reddb | Installable RedDB adapter |
 | packages/adapter-sqlite | @baldin/adapter-sqlite | SQLite, libSQL, and D1 adapter |
 | packages/adapter-s3 | @baldin/adapter-s3 | Installable S3/R2/MinIO-compatible adapter |
-| packages/plugin-audit | @baldin/plugin-audit | First extracted standalone plugin |
+| packages/plugin-audit | @baldin/plugin-audit | Persistent resource audit plugin |
+| packages/plugin-ttl | @baldin/plugin-ttl | Indexed and lazy resource expiration plugin |
 | apps | Docs, CLI, demos | Reserved |
 
 ## Development
