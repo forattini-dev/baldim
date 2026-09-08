@@ -56,9 +56,17 @@ describe('DatabaseManager public API', () => {
     });
     await manager.connect();
 
-    await manager.createResource({ name: 'items', attributes: {}, connection: 'first' });
+    await manager.createResource({
+      name: 'items',
+      attributes: { title: 'string' },
+      connection: 'first',
+    });
     await expect(
-      manager.createResource({ name: 'items', attributes: {}, connection: 'second' }),
+      manager.createResource({
+        name: 'items',
+        attributes: { title: 'string' },
+        connection: 'second',
+      }),
     ).rejects.toBeInstanceOf(DatabaseError);
   });
 
