@@ -1,0 +1,138 @@
+import tryFn from "../try-fn.js";
+import { loadOptionalDependency } from '../optional-dependency.js';
+
+interface RabbitMQMessage {
+  content: Buffer;
+  fields: Record<string, unknown>;
+  properties: Record<string, unknown>;
+}
+
+interface ParsedMessage {
+  $body: unknown;
+  $raw: RabbitMQMessage;
+}
+
+type MessageHandler = (parsed: ParsedMessage) => Promise<void>;
+type ErrorHandler = (error: Error, message?: RabbitMQMessage | null) => void;
+
+interface Channel {
+  assertQueue(queue: string, options: { durable: boolean }): Promise<void>;
+  prefetch(count: number): void;
+  consume(queue: string, callback: (msg: RabbitMQMessage | null) => void): Promise<void>;
+  ack(message: RabbitMQMessage): void;
+  nack(message: RabbitMQMessage, allUpTo?: boolean, requeue?: boolean): void;
+  sendToQueue(queue: string, content: Buffer, options?: Record<string, unknown>): boolean;
+  close(): Promise<void>;
+}
+
+interface Connection {
+  createChannel(): Promise<Channel>;
+  close(): Promise<void>;
+}
+
+interface RabbitMqConsumerOptions {
+  amqpUrl: string;
+  queue: string;
+  prefetch?: number;
+  reconnectInterval?: number;
+  onMessage: MessageHandler;
+  onError?: ErrorHandler;
+  driver?: string;
+}
+
+export class RabbitMqConsumer {
+  amqpUrl: string;
+  queue: string;
+  prefetch: number;
+  reconnectInterval: number;
+  onMessage: MessageHandler;
+  onError?: ErrorHandler;
+  driver: string;
+  connection: Connection | null = null;
+  channel: Channel | null = null;
+  private _stopped: boolean = false;
+  private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor({
+    amqpUrl,
+    queue,
+    prefetch = 10,
+    reconnectInterval = 2000,
+    onMessage,
+    onError,
+    driver = 'rabbitmq'
+  }: RabbitMqConsumerOptions) {
+    this.amqpUrl = amqpUrl;
+    this.queue = queue;
+    this.prefetch = prefetch;
+    this.reconnectInterval = reconnectInterval;
+    this.onMessage = onMessage;
+    this.onError = onError;
+    this.driver = driver;
+  }
+
+  async start(): Promise<void> {
+
+    this._stopped = false;
+    await this._connect();
+  }
+
+  async stop(): Promise<void> {
+    this._stopped = true;
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
+    const channel = this.channel;
+    const connection = this.connection;
+    this.channel = null;
+    this.connection = null;
+    await Promise.allSettled([channel?.close(), connection?.close()].filter(Boolean) as Promise<void>[]);
+  }
+
+  async publish(data: unknown, options: Record<string, unknown> = {}): Promise<void> {
+    if (!this.channel) {
+      throw new Error('RabbitMqConsumer not started. Call start() before publishing.');
+    }
+
+    const content = Buffer.from(typeof data === 'string' ? data : JSON.stringify(data));
+    this.channel.sendToQueue(this.queue, content, { persistent: true, ...options });
+  }
+
+  private async _connect(): Promise<void> {
+    const [ok, err] = await tryFn(async () => {
+      // @ts-ignore - amqplib does not have type definitions
+      const amqp = (await loadOptionalDependency('amqplib', 'RabbitMqConsumer')).default as {
+        connect(url: string): Promise<Connection>;
+      };
+      this.connection = await amqp.connect(this.amqpUrl);
+      this.channel = await this.connection.createChannel();
+      await this.channel.assertQueue(this.queue, { durable: true });
+      this.channel.prefetch(this.prefetch);
+      this.channel.consume(this.queue, async (msg) => {
+        if (msg !== null) {
+          const [okMsg, errMsg] = await tryFn(async () => {
+            const content = JSON.parse(msg.content.toString());
+            await this.onMessage({ $body: content, $raw: msg });
+            this.channel!.ack(msg);
+          });
+          if (!okMsg) {
+            if (this.onError) this.onError(errMsg as Error, msg);
+            this.channel!.nack(msg, false, false);
+          }
+        }
+      });
+    });
+
+    if (!ok) {
+      if (this.onError) this.onError(err as Error);
+      if (!this._stopped) {
+        this._reconnectTimer = setTimeout(() => {
+          this._reconnectTimer = null;
+          void this._connect();
+        }, this.reconnectInterval);
+        this._reconnectTimer.unref?.();
+      }
+    }
+  }
+}

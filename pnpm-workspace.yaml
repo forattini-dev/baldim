@@ -1,4 +1,7 @@
 packages:
+  - 'core'
+  - 'adapters/*'
+  - 'plugins/*'
   - 'packages/*'
   - 'apps/*'
 

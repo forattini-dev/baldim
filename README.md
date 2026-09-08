@@ -44,20 +44,21 @@ const databases = new DatabaseManager({
 
 | Path | Package | Status |
 | --- | --- | --- |
-| packages/core | @baldin/core | Engine, multidatabase manager, adapter registry, and plugin SDK |
-| packages/adapter-memory | @baldin/adapter-memory | Standalone in-memory adapter, pulled in by core |
-| packages/adapter-filesystem | @baldin/adapter-filesystem | Installable local filesystem adapter |
-| packages/adapter-reddb | @baldin/adapter-reddb | Installable RedDB adapter |
-| packages/adapter-sqlite | @baldin/adapter-sqlite | SQLite, libSQL, and D1 adapter |
-| packages/adapter-s3 | @baldin/adapter-s3 | Installable S3/R2/MinIO-compatible adapter |
-| packages/plugin-audit | @baldin/plugin-audit | Persistent resource audit plugin |
-| packages/plugin-ttl | @baldin/plugin-ttl | Indexed and lazy resource expiration plugin |
-| packages/plugin-scheduler | @baldin/plugin-scheduler | Distributed cron jobs and execution history |
-| packages/plugin-fulltext | @baldin/plugin-fulltext | Persistent word indexes and ranked search |
-| packages/plugin-geo | @baldin/plugin-geo | Geohash indexes, distance calculations, and spatial queries |
-| packages/plugin-graph | @baldin/plugin-graph | Indexed edges, traversal, and weighted shortest paths |
-| packages/plugin-costs | @baldin/plugin-costs | Provider-aware usage accounting and cost projections |
-| packages/plugin-metrics | @baldin/plugin-metrics | Persistent telemetry and Prometheus export |
+| core | @baldin/core | Engine, multidatabase manager, adapter registry, and plugin SDK |
+| adapters/memory | @baldin/adapter-memory | Standalone in-memory adapter, pulled in by core |
+| adapters/filesystem | @baldin/adapter-filesystem | Installable local filesystem adapter |
+| adapters/reddb | @baldin/adapter-reddb | Installable RedDB adapter |
+| adapters/sqlite | @baldin/adapter-sqlite | SQLite, libSQL, and D1 adapter |
+| adapters/s3 | @baldin/adapter-s3 | Installable S3/R2/MinIO-compatible adapter |
+| plugins/audit | @baldin/plugin-audit | Persistent resource audit plugin |
+| plugins/ttl | @baldin/plugin-ttl | Indexed and lazy resource expiration plugin |
+| plugins/scheduler | @baldin/plugin-scheduler | Distributed cron jobs and execution history |
+| plugins/fulltext | @baldin/plugin-fulltext | Persistent word indexes and ranked search |
+| plugins/geo | @baldin/plugin-geo | Geohash indexes, distance calculations, and spatial queries |
+| plugins/graph | @baldin/plugin-graph | Indexed edges, traversal, and weighted shortest paths |
+| plugins/costs | @baldin/plugin-costs | Provider-aware usage accounting and cost projections |
+| plugins/metrics | @baldin/plugin-metrics | Persistent telemetry and Prometheus export |
+| plugins/queue-consumer | @baldin/plugin-queue-consumer | Optional SQS, RabbitMQ, Redis, and BullMQ consumers |
 | apps | Docs, CLI, demos | Reserved |
 
 ## Development

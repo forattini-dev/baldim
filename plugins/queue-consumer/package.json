@@ -1,0 +1,71 @@
+{
+  "name": "@baldin/plugin-queue-consumer",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Queue consumers and publishers for Baldin with optional SQS, RabbitMQ, Redis, and BullMQ drivers.",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">=24"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "directory": "plugins/queue-consumer"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./consumers": {
+      "types": "./dist/consumers/index.d.ts",
+      "import": "./dist/consumers/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "UNLICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-sqs": ">=3",
+    "@baldin/core": "^0.0.0",
+    "amqplib": ">=0.10",
+    "bullmq": ">=5",
+    "ioredis": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-sqs": {
+      "optional": true
+    },
+    "amqplib": {
+      "optional": true
+    },
+    "bullmq": {
+      "optional": true
+    },
+    "ioredis": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@baldin/core": "workspace:*",
+    "@baldin/adapter-memory": "workspace:*",
+    "@types/node": "25.5.2",
+    "typescript": "6.0.2",
+    "vitest": "4.1.3"
+  }
+}

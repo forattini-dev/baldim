@@ -1,0 +1,214 @@
+import tryFn from "../try-fn.js";
+import { loadOptionalDependency } from '../optional-dependency.js';
+import { PluginError } from '@baldin/core/plugin';
+
+interface SQSCredentials {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken?: string;
+}
+
+interface SQSMessageAttribute {
+  StringValue?: string;
+  DataType?: string;
+}
+
+interface SQSMessage {
+  MessageId?: string;
+  ReceiptHandle?: string;
+  Body?: string;
+  MessageAttributes?: Record<string, SQSMessageAttribute>;
+}
+
+interface ParsedMessage {
+  $body: unknown;
+  $attributes: Record<string, string | undefined>;
+  $raw: SQSMessage;
+}
+
+type MessageHandler = (parsed: ParsedMessage, raw: SQSMessage) => Promise<void>;
+type ErrorHandler = (error: Error, message?: SQSMessage) => void;
+
+interface SqsConsumerOptions {
+  queueUrl: string;
+  onMessage: MessageHandler;
+  onError?: ErrorHandler;
+  poolingInterval?: number;
+  maxMessages?: number;
+  region?: string;
+  credentials?: SQSCredentials;
+  endpoint?: string;
+  driver?: string;
+}
+
+interface SQSClientInstance {
+  send(command: unknown): Promise<{ Messages?: SQSMessage[]; MessageId?: string }>;
+}
+
+type SQSClientConstructor = new (config: {
+  region: string;
+  credentials?: SQSCredentials;
+  endpoint?: string;
+}) => SQSClientInstance;
+
+type CommandConstructor = new (params: Record<string, unknown>) => unknown;
+
+interface PublishOptions {
+  messageAttributes?: Record<string, { DataType: string; StringValue: string }>;
+  messageGroupId?: string;
+  messageDeduplicationId?: string;
+}
+
+export class SqsConsumer {
+  driver: string;
+  queueUrl: string;
+  onMessage: MessageHandler;
+  onError?: ErrorHandler;
+  poolingInterval: number;
+  maxMessages: number;
+  region: string;
+  credentials?: SQSCredentials;
+  endpoint?: string;
+  sqs: SQSClientInstance | null = null;
+  private _stopped: boolean = false;
+  private _timer: ReturnType<typeof setTimeout> | null = null;
+  private _SQSClient: SQSClientConstructor | null = null;
+  private _ReceiveMessageCommand: CommandConstructor | null = null;
+  private _DeleteMessageCommand: CommandConstructor | null = null;
+  private _SendMessageCommand: CommandConstructor | null = null;
+
+  constructor({
+    queueUrl,
+    onMessage,
+    onError,
+    poolingInterval = 5000,
+    maxMessages = 10,
+    region = 'us-east-1',
+    credentials,
+    endpoint,
+    driver = 'sqs'
+  }: SqsConsumerOptions) {
+    this.driver = driver;
+    this.queueUrl = queueUrl;
+    this.onMessage = onMessage;
+    this.onError = onError;
+    this.poolingInterval = poolingInterval;
+    this.maxMessages = maxMessages;
+    this.region = region;
+    this.credentials = credentials;
+    this.endpoint = endpoint;
+  }
+
+  async start(): Promise<void> {
+
+    const [ok, err, sdk] = await tryFn(() => loadOptionalDependency('@aws-sdk/client-sqs', 'SqsConsumer'));
+    if (!ok) {
+      throw new PluginError('SqsConsumer requires @aws-sdk/client-sqs', {
+        pluginName: 'ConsumersPlugin',
+        operation: 'SqsConsumer.start',
+        statusCode: 500,
+        retriable: false,
+        suggestion: 'Install @aws-sdk/client-sqs as a dependency to enable SQS consumption.',
+        original: err
+      });
+    }
+
+    const { SQSClient, ReceiveMessageCommand, DeleteMessageCommand, SendMessageCommand } = sdk as unknown as {
+      SQSClient: SQSClientConstructor;
+      ReceiveMessageCommand: CommandConstructor;
+      DeleteMessageCommand: CommandConstructor;
+      SendMessageCommand: CommandConstructor;
+    };
+
+    this._SQSClient = SQSClient;
+    this._ReceiveMessageCommand = ReceiveMessageCommand;
+    this._DeleteMessageCommand = DeleteMessageCommand;
+    this._SendMessageCommand = SendMessageCommand;
+    this.sqs = new SQSClient({
+      region: this.region,
+      credentials: this.credentials,
+      endpoint: this.endpoint
+    });
+    this._stopped = false;
+    void this._poll();
+  }
+
+  async stop(): Promise<void> {
+    this._stopped = true;
+    if (this._timer) {
+      clearTimeout(this._timer);
+      this._timer = null;
+    }
+  }
+
+  private async _poll(): Promise<void> {
+    if (this._stopped) return;
+
+    const [ok, err] = await tryFn(async () => {
+      const cmd = new this._ReceiveMessageCommand!({
+        QueueUrl: this.queueUrl,
+        MaxNumberOfMessages: this.maxMessages,
+        WaitTimeSeconds: 10,
+        MessageAttributeNames: ['All'],
+      });
+      const { Messages } = await this.sqs!.send(cmd);
+      if (Messages && Messages.length > 0) {
+        for (const msg of Messages) {
+          const [okMsg, errMsg] = await tryFn(async () => {
+            const parsedMsg = this._parseMessage(msg);
+            await this.onMessage(parsedMsg, msg);
+            await this.sqs!.send(new this._DeleteMessageCommand!({
+              QueueUrl: this.queueUrl,
+              ReceiptHandle: msg.ReceiptHandle
+            }));
+          });
+          if (!okMsg && this.onError) {
+            this.onError(errMsg as Error, msg);
+          }
+        }
+      }
+    });
+
+    if (!ok && this.onError) {
+      this.onError(err as Error);
+    }
+
+    if (!this._stopped) {
+      this._timer = setTimeout(() => { void this._poll(); }, this.poolingInterval);
+      this._timer.unref?.();
+    }
+  }
+
+  async publish(data: unknown, options: PublishOptions = {}): Promise<string | undefined> {
+    if (!this.sqs || !this._SendMessageCommand) {
+      await this.start();
+    }
+
+    const params: Record<string, unknown> = {
+      QueueUrl: this.queueUrl,
+      MessageBody: typeof data === 'string' ? data : JSON.stringify(data),
+    };
+
+    if (options.messageAttributes) params.MessageAttributes = options.messageAttributes;
+    if (options.messageGroupId) params.MessageGroupId = options.messageGroupId;
+    if (options.messageDeduplicationId) params.MessageDeduplicationId = options.messageDeduplicationId;
+
+    const result = await this.sqs!.send(new this._SendMessageCommand!(params));
+    return result.MessageId;
+  }
+
+  private _parseMessage(msg: SQSMessage): ParsedMessage {
+    let body: unknown;
+    const [ok, , parsed] = tryFn(() => JSON.parse(msg.Body || ''));
+    body = ok ? parsed : msg.Body;
+
+    const attributes: Record<string, string | undefined> = {};
+    if (msg.MessageAttributes) {
+      for (const [k, v] of Object.entries(msg.MessageAttributes)) {
+        attributes[k] = v.StringValue;
+      }
+    }
+
+    return { $body: body, $attributes: attributes, $raw: msg };
+  }
+}

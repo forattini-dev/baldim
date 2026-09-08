@@ -58,6 +58,7 @@ jobs:
           pnpm --filter @baldin/plugin-graph pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-costs pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-metrics pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-queue-consumer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
@@ -75,6 +76,7 @@ jobs:
           graph_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-graph-*.tgz)
           costs_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-costs-*.tgz)
           metrics_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-metrics-*.tgz)
+          queue_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-queue-consumer-*.tgz)
           test "${#core[@]}" -eq 1
           test "${#memory[@]}" -eq 1
           test "${#filesystem[@]}" -eq 1
@@ -89,10 +91,11 @@ jobs:
           test "${#graph_plugin[@]}" -eq 1
           test "${#costs_plugin[@]}" -eq 1
           test "${#metrics_plugin[@]}" -eq 1
+          test "${#queue_plugin[@]}" -eq 1
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -106,6 +109,7 @@ jobs:
           import { GraphPlugin } from '@baldin/plugin-graph';
           import { CostsPlugin } from '@baldin/plugin-costs';
           import { MetricsPlugin } from '@baldin/plugin-metrics';
+          import { QueueConsumerPlugin } from '@baldin/plugin-queue-consumer';
           import { MemoryClient } from '@baldin/adapter-memory';
           import '@baldin/adapter-filesystem';
           import '@baldin/adapter-reddb';
@@ -185,5 +189,17 @@ jobs:
           await database.client.putObject({ key: 'resource=pack/item', body: 'x' });
           assert.equal(costs.getCosts().provider, 'self-hosted');
           assert.equal(costs.getCosts().requests.counts.put, 1);
+          let queueStopped = false;
+          const queue = new QueueConsumerPlugin({
+            drivers: [{ driver: 'fake', queues: [{ name: 'pack-queue', onMessage: async () => {} }] }],
+            consumerFactory: async () => ({
+              start: async () => {},
+              stop: async () => { queueStopped = true; },
+              publish: async data => data,
+            }),
+          });
+          await database.usePlugin(queue);
+          assert.deepEqual(await queue.publish('pack-queue', { packed: true }), { packed: true });
           await database.disconnect();
+          assert.equal(queueStopped, true);
           JS
