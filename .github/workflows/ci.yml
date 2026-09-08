@@ -25,6 +25,7 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/core pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/adapter-filesystem pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/adapter-reddb pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/adapter-sqlite pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/adapter-s3 pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-audit pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
@@ -33,18 +34,20 @@ jobs:
         run: |
           core=("$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz)
           filesystem=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-filesystem-*.tgz)
+          reddb=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-reddb-*.tgz)
           sqlite=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-sqlite-*.tgz)
           adapter=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-s3-*.tgz)
           plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-audit-*.tgz)
           test "${#core[@]}" -eq 1
           test "${#filesystem[@]}" -eq 1
+          test "${#reddb[@]}" -eq 1
           test "${#sqlite[@]}" -eq 1
           test "${#adapter[@]}" -eq 1
           test "${#plugin[@]}" -eq 1
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${core[0]}" "${filesystem[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -52,6 +55,7 @@ jobs:
           import { encodeKey, decodeKey } from '@baldin/core/encoding';
           import { AuditPlugin } from '@baldin/plugin-audit';
           import '@baldin/adapter-filesystem';
+          import '@baldin/adapter-reddb';
           import '@baldin/adapter-sqlite';
           import '@baldin/adapter-s3';
 
@@ -60,6 +64,7 @@ jobs:
           assert.equal(encodeKey(36), '10');
           assert.equal(decodeKey('10'), 36);
           assert.equal(hasStorageAdapter('file'), true);
+          assert.equal(hasStorageAdapter('reddb'), true);
           assert.equal(hasStorageAdapter('sqlite'), true);
           assert.equal(hasStorageAdapter('s3'), true);
 

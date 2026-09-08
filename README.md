@@ -5,8 +5,8 @@ A small document database for object storage — being rebuilt from s3db.js as a
 **Status: core migration.** The database engine behind the former `s3db.js/lite`
 entrypoint now runs as `@baldin/core`. Database CRUD, schemas, resources,
 multidatabase management, behaviors, streams, and concurrency are present. The S3
-adapter and first standalone plugin have been extracted; the remaining plugin catalog,
-provider adapters, CLI, and MCP still need migration.
+adapters and first standalone plugin have been extracted; the remaining plugin catalog,
+memory adapter boundary, CLI, and MCP still need migration.
 
 This is not yet a feature-complete replacement for `s3db.js`. The tracked gaps
 and completion criteria live in the [parity audit](docs/parity-audit.md).
@@ -46,6 +46,7 @@ const databases = new DatabaseManager({
 | --- | --- | --- |
 | packages/core | @baldin/core | Engine, multidatabase manager, adapter registry, and plugin SDK |
 | packages/adapter-filesystem | @baldin/adapter-filesystem | Installable local filesystem adapter |
+| packages/adapter-reddb | @baldin/adapter-reddb | Installable RedDB adapter |
 | packages/adapter-sqlite | @baldin/adapter-sqlite | SQLite, libSQL, and D1 adapter |
 | packages/adapter-s3 | @baldin/adapter-s3 | Installable S3/R2/MinIO-compatible adapter |
 | packages/plugin-audit | @baldin/plugin-audit | First extracted standalone plugin |
@@ -66,8 +67,8 @@ Turborepo builds dependencies before consumers. Tests import compiled package
 exports so the package entry points are exercised. Changesets tracks independent
 package releases; no automatic npm publishing is configured.
 
-The core still carries the RedDB client during
-the migration. Filesystem, SQLite, and S3 load through the public adapter registry, and plugins use
+Memory remains the last storage implementation carried by core during the migration.
+Filesystem, SQLite, RedDB, and S3 load through the public adapter registry, and plugins use
 the public plugin SDK. See [the migration plan](docs/migration.md) for source
 provenance, compatibility guarantees and extraction order.
 

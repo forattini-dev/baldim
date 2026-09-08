@@ -50,7 +50,6 @@ export type { StorageAdapterContext, StorageAdapterFactory, Client } from './sto
 // =============================================================================
 
 export { MemoryClient } from './clients/memory-client.class.js';
-export { RedDbClient } from './clients/reddb-client.class.js';
 
 // =============================================================================
 // Errors

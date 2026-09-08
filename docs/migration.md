@@ -19,6 +19,7 @@ Original project and data remain unchanged. Source license: Unlicense.
   connect rollback.
 - A public storage adapter registry selects external clients by URL protocol.
 - Filesystem storage lives in `@baldin/adapter-filesystem`.
+- RedDB transport lives in `@baldin/adapter-reddb`; Recker is no longer a core dependency.
 - S3 transport and the AWS SDK live in `@baldin/adapter-s3`, with registration
   for AWS S3, Cloudflare R2, MinIO, and other compatible HTTP endpoints.
 - A public plugin SDK lives at `@baldin/core/plugin`; the audit plugin is the
@@ -33,7 +34,7 @@ Original project and data remain unchanged. Source license: Unlicense.
 
 1. Run one storage contract suite against MinIO in CI and configured AWS S3/R2
    targets outside pull requests.
-2. Extract SQLite/libSQL/D1 and RedDB clients to adapter packages.
+2. Extract memory storage to `@baldin/adapter-memory` while keeping it available through core.
 3. Migrate the remaining plugin families one package at a time with their
    relevant original tests, starting with TTL and scheduler.
 4. Expand compatibility fixtures for schema metadata, document bodies,
@@ -43,10 +44,10 @@ Original project and data remain unchanged. Source license: Unlicense.
 
 ## Dependency rules
 
-Core does not import plugin packages or the S3 implementation. Adapters depend on
+Core does not import plugin packages or external provider implementations. Adapters depend on
 `@baldin/core/adapter`; plugins depend on `@baldin/core/plugin` and the normal
 core public API. Packages own their runtime dependencies and release independently.
-The remaining SQLite and RedDB provider clients are tracked extraction debt.
+The in-memory implementation is the remaining storage extraction debt.
 
 ## Compatibility contract
 

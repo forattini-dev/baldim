@@ -1,13 +1,5 @@
 import type EventEmitter from 'events';
 import type { Readable } from 'node:stream';
-import type {
-  RedDbClient as ReckerRedDbTransportClient,
-  RedDbGrpcKeepaliveOptions,
-  RedDbGrpcTlsOptions,
-  RedDbOperationTimeouts,
-  RedDbTransportMode,
-  RedDbWireTlsOptions,
-} from 'recker';
 
 export interface S3ClientConfig {
   logLevel?: string;
@@ -261,77 +253,6 @@ export interface RemoteSqliteClientConfig {
     execute(sql: string, args?: unknown[]): Promise<{ rows: Array<Record<string, unknown>> }>;
     close?(): Promise<void> | void;
   };
-}
-
-export interface RedDbClientConfig {
-  id?: string;
-  logLevel?: string;
-  logger?: Logger;
-  taskExecutor?: TaskManager;
-  taskExecutorMonitoring?: MonitoringConfig | null;
-  concurrency?: number;
-  retries?: number;
-  retryDelay?: number;
-  timeout?: number;
-  retryableErrors?: string[];
-  baseUrl: string;
-  authToken?: string;
-  writeToken?: string;
-  collection?: string;
-  bucket?: string;
-  keyPrefix?: string;
-  region?: string;
-  transport?: RedDbTransportMode;
-  allowTransportFallback?: boolean;
-  headers?: Record<string, string>;
-  http2?: boolean;
-  wireAddress?: string;
-  wireTls?: boolean | RedDbWireTlsOptions;
-  wirePoolSize?: number;
-  wireKeepAlive?: boolean;
-  wireKeepAliveInitialDelayMs?: number;
-  wireConnectTimeout?: number;
-  grpcAddress?: string;
-  grpcTls?: boolean | RedDbGrpcTlsOptions;
-  grpcOptions?: Record<string, string | number>;
-  grpcKeepalive?: RedDbGrpcKeepaliveOptions;
-  operationTimeouts?: RedDbOperationTimeouts;
-  batchConcurrency?: number;
-  ensureIndexes?: boolean;
-  warmupIndexes?: boolean;
-  indexTransport?: RedDbTransportMode;
-}
-
-export interface RedDbNativeClientConfig {
-  id?: string;
-  logLevel?: string;
-  logger?: Logger;
-  connectionString?: string;
-  baseUrl?: string;
-  authToken?: string;
-  writeToken?: string;
-  collection?: string;
-  bucket?: string;
-  keyPrefix?: string;
-  region?: string;
-  transport?: RedDbTransportMode;
-  allowTransportFallback?: boolean;
-  headers?: Record<string, string>;
-  timeout?: number;
-  http2?: boolean;
-  wireAddress?: string;
-  wireTls?: boolean | RedDbWireTlsOptions;
-  wirePoolSize?: number;
-  wireKeepAlive?: boolean;
-  wireKeepAliveInitialDelayMs?: number;
-  wireConnectTimeout?: number;
-  grpcAddress?: string;
-  grpcTls?: boolean | RedDbGrpcTlsOptions;
-  grpcOptions?: Record<string, string | number>;
-  grpcKeepalive?: RedDbGrpcKeepaliveOptions;
-  operationTimeouts?: RedDbOperationTimeouts;
-  batchConcurrency?: number;
-  client?: ReckerRedDbTransportClient;
 }
 
 export interface CompressionConfig {

@@ -11,8 +11,8 @@ working core from a completed product migration.
 | Source | 558 files, 555 TypeScript | 113 core TypeScript files plus extracted package sources | Partial |
 | Core engine | Database, Resource, Schema, Validator, manager | Migrated from the `lite` dependency closure | Working |
 | Plugin catalog | 23 plugin families, 411 TypeScript files | Public plugin SDK and `@baldin/plugin-audit`; 22 families remain | Partial |
-| Installable packages | One all-in-one package | `core`, three storage adapters, and `plugin-audit` | Partial |
-| Storage adapters | Built into the package | S3, filesystem, and SQLite/libSQL/D1 extracted; RedDB remains in core | Partial |
+| Installable packages | One all-in-one package | `core`, four storage adapters, and `plugin-audit` | Partial |
+| Storage adapters | Built into the package | S3, filesystem, SQLite/libSQL/D1, and RedDB extracted; memory remains in core | Partial |
 | CLI | 6 TypeScript modules plus 2 bin files | No CLI application/package | Missing |
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Not exported or migrated | Missing |
@@ -22,10 +22,10 @@ working core from a completed product migration.
 
 ## Architectural gaps
 
-`@baldin/core` no longer depends on the AWS SDK and resolves external providers
-through a public protocol registry. It still contains SQLite/libSQL/D1,
-and RedDB implementations and their runtime dependencies. Those implementations
-must move to `@baldin/adapter-*` packages before core is provider-neutral.
+`@baldin/core` no longer depends on the AWS SDK, SQLite drivers, or Recker and
+resolves external providers through a public protocol registry. The memory
+implementation must still move to `@baldin/adapter-memory` before core is
+provider-neutral at the source boundary.
 
 The source still carries legacy names such as `s3db.json`, `s3dbVersion`, and
 `S3DB_*`. Persisted manifest names and operational environment variables are
@@ -39,8 +39,7 @@ contract has not yet run against live targets for each provider.
 ## Corrective order
 
 1. Run the storage contract suite against AWS S3, R2, MinIO, and a custom endpoint.
-2. Extract the RedDB adapter and remove their runtime
-   dependencies from core.
+2. Extract the memory adapter while keeping `memory:` available by default.
 3. Migrate the remaining 22 plugin families to `@baldin/plugin-<name>` with their
    relevant original tests.
 4. Restore public utilities, Factory/Seeder, TypeScript generation, and explicitly
