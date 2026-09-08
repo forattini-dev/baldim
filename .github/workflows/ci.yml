@@ -52,6 +52,7 @@ jobs:
           pnpm --filter @baldin/adapter-s3 pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-audit pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-ttl pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-scheduler pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
@@ -63,6 +64,7 @@ jobs:
           adapter=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-s3-*.tgz)
           plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-audit-*.tgz)
           ttl_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-ttl-*.tgz)
+          scheduler_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-scheduler-*.tgz)
           test "${#core[@]}" -eq 1
           test "${#memory[@]}" -eq 1
           test "${#filesystem[@]}" -eq 1
@@ -71,10 +73,11 @@ jobs:
           test "${#adapter[@]}" -eq 1
           test "${#plugin[@]}" -eq 1
           test "${#ttl_plugin[@]}" -eq 1
+          test "${#scheduler_plugin[@]}" -eq 1
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -82,6 +85,7 @@ jobs:
           import { encodeKey, decodeKey } from '@baldin/core/encoding';
           import { AuditPlugin } from '@baldin/plugin-audit';
           import { TTLPlugin } from '@baldin/plugin-ttl';
+          import { SchedulerPlugin } from '@baldin/plugin-scheduler';
           import { MemoryClient } from '@baldin/adapter-memory';
           import '@baldin/adapter-filesystem';
           import '@baldin/adapter-reddb';
@@ -103,5 +107,20 @@ jobs:
           await database.connect();
           await database.usePlugin(new AuditPlugin());
           assert.ok(database.resources.plg_audits);
+          let schedulerRuns = 0;
+          const scheduler = new SchedulerPlugin({
+            enableCoordinator: false,
+            persistJobs: false,
+            jobs: {
+              smoke: {
+                schedule: '@daily',
+                enabled: false,
+                action: async () => { schedulerRuns++; },
+              },
+            },
+          });
+          await database.usePlugin(scheduler);
+          await scheduler.runJob('smoke');
+          assert.equal(schedulerRuns, 1);
           await database.disconnect();
           JS

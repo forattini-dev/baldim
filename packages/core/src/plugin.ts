@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events';
 import { createLogger, type Logger } from './concerns/logger.js';
 import { PluginError } from './errors.js';
+import { PluginStorage, type PluginClient } from './plugins/concerns/plugin-storage.js';
 import type { Database } from './database.class.js';
 import type {
   MiddlewareContext,
@@ -50,6 +51,7 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
   processManager: Database['processManager'] | undefined;
   cronManager: Database['cronManager'] | undefined;
   protected _cronJobs: string[] = [];
+  protected _storage: PluginStorage | null = null;
   logger: Logger;
   logLevel: string;
   database!: Database;
@@ -102,6 +104,10 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
 
   async uninstall(options: UninstallOptions = {}): Promise<void> {
     await this.onUninstall(options);
+    if (options.purgeData && this._storage) {
+      const deleted = await this._storage.deleteAll();
+      this.emit('plugin.dataPurged', { deleted });
+    }
   }
 
   async onInstall(): Promise<void> {}
@@ -146,6 +152,22 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
     }
     this._cronJobs = [];
     return stopped;
+  }
+
+  getStorage(): PluginStorage {
+    if (!this._storage) {
+      if (!this.database?.client) {
+        throw new PluginError('Plugin storage unavailable until plugin is installed', {
+          pluginName: this.name,
+          operation: 'getStorage',
+          statusCode: 400,
+          retriable: false,
+          suggestion: 'Install the plugin on a connected database before accessing its storage.',
+        });
+      }
+      this._storage = new PluginStorage(this.database.client as unknown as PluginClient, this.slug);
+    }
+    return this._storage;
   }
 
   addMiddleware(resource: ResourceLike, method: SupportedMethod, middleware: PluginMiddleware): void {
@@ -254,6 +276,8 @@ export type { Logger, LogLevel } from './concerns/logger.js';
 export { tryFn } from './concerns/try-fn.js';
 export { mapWithConcurrency, forEachWithConcurrency } from './concerns/map-with-concurrency.js';
 export { PluginError };
+export { PluginStorage };
+export type { PluginStorageOptions } from './plugins/concerns/plugin-storage.js';
 export type { Database } from './database.class.js';
 export type { Resource } from './resource.class.js';
 export type { MiddlewareContext, NextFunction, SupportedMethod } from './core/resource-middleware.class.js';

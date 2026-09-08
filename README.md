@@ -52,6 +52,7 @@ const databases = new DatabaseManager({
 | packages/adapter-s3 | @baldin/adapter-s3 | Installable S3/R2/MinIO-compatible adapter |
 | packages/plugin-audit | @baldin/plugin-audit | Persistent resource audit plugin |
 | packages/plugin-ttl | @baldin/plugin-ttl | Indexed and lazy resource expiration plugin |
+| packages/plugin-scheduler | @baldin/plugin-scheduler | Distributed cron jobs and execution history |
 | apps | Docs, CLI, demos | Reserved |
 
 ## Development
