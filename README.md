@@ -55,6 +55,7 @@ const databases = new DatabaseManager({
 | packages/plugin-scheduler | @baldin/plugin-scheduler | Distributed cron jobs and execution history |
 | packages/plugin-fulltext | @baldin/plugin-fulltext | Persistent word indexes and ranked search |
 | packages/plugin-geo | @baldin/plugin-geo | Geohash indexes, distance calculations, and spatial queries |
+| packages/plugin-graph | @baldin/plugin-graph | Indexed edges, traversal, and weighted shortest paths |
 | apps | Docs, CLI, demos | Reserved |
 
 ## Development
