@@ -1,0 +1,749 @@
+import { join } from 'path';
+import { tryFn } from '../concerns/try-fn.js';
+import { mapWithConcurrency } from '../concerns/map-with-concurrency.js';
+import { isNotFoundError } from '../concerns/s3-errors.js';
+import { validateS3KeySegment } from '../concerns/s3-key.js';
+import { mapAwsError, PartitionError, ResourceError } from '../errors.js';
+import type { StringRecord } from '../types/common.types.js';
+
+export interface PartitionFields {
+  [fieldName: string]: string;
+}
+
+export interface PartitionDefinition {
+  fields: PartitionFields;
+}
+
+export interface PartitionsConfig {
+  [partitionName: string]: PartitionDefinition;
+}
+
+export interface ResourceConfig {
+  partitions?: PartitionsConfig;
+}
+
+export interface S3Client {
+  supportsPartitionIndex?: boolean;
+  putObject(params: {
+    key: string;
+    metadata: StringRecord<string>;
+    body: string;
+    contentType: string | undefined;
+  }): Promise<void>;
+  headObject(key: string): Promise<unknown>;
+  deleteObject(key: string): Promise<void>;
+  deleteObjects(keys: string[]): Promise<void>;
+  getAllKeys(params: { prefix: string }): Promise<string[]>;
+}
+
+export interface HooksCollection {
+  afterInsert?: Array<(data: ResourceData) => Promise<ResourceData>>;
+  afterDelete?: Array<(data: ResourceData) => Promise<ResourceData>>;
+  [hookName: string]: unknown;
+}
+
+export interface HooksModule {
+  getHooks(): HooksCollection;
+}
+
+export interface ResourceData extends StringRecord {
+  id?: string;
+  _partition?: string;
+  _partitionValues?: StringRecord;
+}
+
+export interface Resource {
+  name: string;
+  version: number;
+  client: S3Client;
+  config: ResourceConfig;
+  attributes: StringRecord;
+
+  get(id: string): Promise<ResourceData>;
+  emit(event: string, ...args: unknown[]): void;
+  _emitStandardized(event: string, data: unknown, id?: string): void;
+}
+
+export interface PartitionsConfigOptions {
+  partitions?: PartitionsConfig;
+  strictValidation?: boolean;
+}
+
+export interface GetKeyParams {
+  partitionName: string;
+  id?: string;
+  data: ResourceData;
+}
+
+export interface GetFromPartitionParams {
+  id: string;
+  partitionName: string;
+  partitionValues?: StringRecord;
+}
+
+export interface OrphanedPartition {
+  missingFields: string[];
+  definition: PartitionDefinition;
+  allFields: string[];
+}
+
+export interface OrphanedPartitions {
+  [partitionName: string]: OrphanedPartition;
+}
+
+export interface RemoveOrphanedOptions {
+  dryRun?: boolean;
+}
+
+export interface ReferenceUpdateResult {
+  partitionName: string;
+  error?: Error;
+  success?: boolean;
+}
+
+export class ResourcePartitions {
+  resource: Resource;
+  private _strictValidation: boolean;
+
+  constructor(resource: Resource, config: PartitionsConfigOptions = {}) {
+    this.resource = resource;
+    this._strictValidation = config.strictValidation !== false;
+  }
+
+  private _normalizePartitionError(
+    error: unknown,
+    context: { operation: string; key?: string; id?: string; partitionName?: string }
+  ): Error {
+    if (error instanceof PartitionError || error instanceof ResourceError) {
+      return error;
+    }
+
+    if (error && typeof error === 'object') {
+      const errObj = error as Record<string, unknown>;
+      if ('statusCode' in errObj || 'retriable' in errObj) {
+        return error as Error;
+      }
+    }
+
+    const safeError = error instanceof Error ? error : new Error(String(error ?? 'Unknown error'));
+    return mapAwsError(safeError, {
+      resourceName: this.resource.name,
+      ...context
+    });
+  }
+
+  getPartitions(): PartitionsConfig {
+    return this.resource.config?.partitions || {};
+  }
+
+  hasPartitions(): boolean {
+    const partitions = this.getPartitions();
+    return partitions && Object.keys(partitions).length > 0;
+  }
+
+  setupHooks(hooksModule: HooksModule): void {
+    if (!this.hasPartitions()) {
+      return;
+    }
+
+    const hooks = hooksModule.getHooks();
+
+    if (!hooks.afterInsert) {
+      hooks.afterInsert = [];
+    }
+    hooks.afterInsert.push(async (data: ResourceData) => {
+      await this.createReferences(data);
+      return data;
+    });
+
+    if (!hooks.afterDelete) {
+      hooks.afterDelete = [];
+    }
+    hooks.afterDelete.push(async (data: ResourceData) => {
+      await this.deleteReferences(data);
+      return data;
+    });
+  }
+
+  validate(): void {
+    if (!this._strictValidation) {
+      return;
+    }
+
+    const partitions = this.getPartitions();
+    if (!partitions || Object.keys(partitions).length === 0) {
+      return;
+    }
+
+    const currentAttributes = Object.keys(this.resource.attributes || {});
+
+    for (const [partitionName, partitionDef] of Object.entries(partitions)) {
+      if (!partitionDef.fields) {
+        continue;
+      }
+
+      for (const fieldName of Object.keys(partitionDef.fields)) {
+        if (!this.fieldExistsInAttributes(fieldName)) {
+          throw new PartitionError(
+            `Partition '${partitionName}' uses field '${fieldName}' which does not exist in resource attributes. Available fields: ${currentAttributes.join(', ')}.`,
+            {
+              resourceName: this.resource.name,
+              partitionName,
+              fieldName,
+              availableFields: currentAttributes,
+              operation: 'validatePartitions'
+            }
+          );
+        }
+      }
+    }
+  }
+
+  fieldExistsInAttributes(fieldName: string): boolean {
+    if (fieldName.startsWith('_')) {
+      return true;
+    }
+
+    if (!fieldName.includes('.')) {
+      return Object.keys(this.resource.attributes || {}).includes(fieldName);
+    }
+
+    const keys = fieldName.split('.');
+    let currentLevel: unknown = this.resource.attributes || {};
+
+    for (const key of keys) {
+      if (!currentLevel || typeof currentLevel !== 'object' || !(key in currentLevel)) {
+        return false;
+      }
+      currentLevel = (currentLevel as StringRecord)[key];
+    }
+
+    return true;
+  }
+
+  findOrphaned(): OrphanedPartitions {
+    const orphaned: OrphanedPartitions = {};
+    const partitions = this.getPartitions();
+
+    if (!partitions) {
+      return orphaned;
+    }
+
+    for (const [partitionName, partitionDef] of Object.entries(partitions)) {
+      if (!partitionDef.fields) {
+        continue;
+      }
+
+      const missingFields: string[] = [];
+      for (const fieldName of Object.keys(partitionDef.fields)) {
+        if (!this.fieldExistsInAttributes(fieldName)) {
+          missingFields.push(fieldName);
+        }
+      }
+
+      if (missingFields.length > 0) {
+        orphaned[partitionName] = {
+          missingFields,
+          definition: partitionDef,
+          allFields: Object.keys(partitionDef.fields)
+        };
+      }
+    }
+
+    return orphaned;
+  }
+
+  removeOrphaned({ dryRun = false }: RemoveOrphanedOptions = {}): OrphanedPartitions {
+    const orphaned = this.findOrphaned();
+
+    if (Object.keys(orphaned).length === 0) {
+      return {};
+    }
+
+    if (dryRun) {
+      return orphaned;
+    }
+
+    for (const partitionName of Object.keys(orphaned)) {
+      delete this.resource.config.partitions![partitionName];
+    }
+
+    this.resource.emit('orphanedPartitionsRemoved', {
+      resourceName: this.resource.name,
+      removed: orphaned,
+      timestamp: new Date().toISOString()
+    });
+
+    return orphaned;
+  }
+
+  applyRule(value: unknown, rule: string): unknown {
+    if (value === undefined || value === null) {
+      return value;
+    }
+
+    let transformedValue: unknown = value;
+
+    if (typeof rule === 'string' && rule.includes('maxlength:')) {
+      const maxLengthMatch = rule.match(/maxlength:(\d+)/);
+      if (maxLengthMatch) {
+        const maxLength = parseInt(maxLengthMatch[1]!, 10);
+        if (typeof transformedValue === 'string' && transformedValue.length > maxLength) {
+          transformedValue = transformedValue.substring(0, maxLength);
+        }
+      }
+    }
+
+    if (rule.includes('date')) {
+      if (transformedValue instanceof Date) {
+        transformedValue = transformedValue.toISOString().split('T')[0];
+      } else if (typeof transformedValue === 'string') {
+        if (transformedValue.includes('T') && transformedValue.includes('Z')) {
+          transformedValue = transformedValue.split('T')[0];
+        } else {
+          const date = new Date(transformedValue);
+          if (!isNaN(date.getTime())) {
+            transformedValue = date.toISOString().split('T')[0];
+          }
+        }
+      }
+    }
+
+    return transformedValue;
+  }
+
+  getNestedFieldValue(data: StringRecord, fieldPath: string): unknown {
+    if (!fieldPath.includes('.')) {
+      return data[fieldPath];
+    }
+
+    const keys = fieldPath.split('.');
+    let currentLevel: unknown = data;
+
+    for (const key of keys) {
+      if (!currentLevel || typeof currentLevel !== 'object' || !(key in currentLevel)) {
+        return undefined;
+      }
+      currentLevel = (currentLevel as StringRecord)[key];
+    }
+
+    return currentLevel;
+  }
+
+  getKey({ partitionName, id, data }: GetKeyParams): string | null {
+    const partitions = this.getPartitions();
+    if (!partitions || !partitions[partitionName]) {
+      throw new PartitionError(`Partition '${partitionName}' not found`, {
+        resourceName: this.resource.name,
+        partitionName,
+        operation: 'getPartitionKey'
+      });
+    }
+
+    const partition = partitions[partitionName]!;
+    const partitionSegments: string[] = [];
+
+    const sortedFields = Object.entries(partition.fields).sort(([a], [b]) => a.localeCompare(b));
+    for (const [fieldName, rule] of sortedFields) {
+      const fieldValue = this.getNestedFieldValue(data, fieldName);
+      const transformedValue = this.applyRule(fieldValue, rule);
+
+      if (transformedValue === undefined || transformedValue === null) {
+        return null;
+      }
+
+      partitionSegments.push(`${fieldName}=${transformedValue}`);
+    }
+
+    if (partitionSegments.length === 0) {
+      return null;
+    }
+
+    const finalId = id || data?.id;
+    if (!finalId) {
+      return null;
+    }
+
+    return join(`resource=${this.resource.name}`, `partition=${partitionName}`, ...partitionSegments, `id=${finalId}`);
+  }
+
+  buildPrefix(partition: string, partitionDef: PartitionDefinition, partitionValues: StringRecord): string {
+    const partitionSegments: string[] = [];
+    const sortedFields = Object.entries(partitionDef.fields).sort(([a], [b]) => a.localeCompare(b));
+
+    for (const [fieldName, rule] of sortedFields) {
+      const value = partitionValues[fieldName];
+      if (value !== undefined && value !== null) {
+        const transformedValue = this.applyRule(value, rule);
+        partitionSegments.push(`${fieldName}=${transformedValue}`);
+      }
+    }
+
+    if (partitionSegments.length > 0) {
+      return `resource=${this.resource.name}/partition=${partition}/${partitionSegments.join('/')}`;
+    }
+
+    return `resource=${this.resource.name}/partition=${partition}`;
+  }
+
+  extractValuesFromKey(id: string, keys: string[], sortedFields: Array<[string, string]>): StringRecord {
+    const idSegment = `id=${id}`;
+    const keyForId = keys.find(key => {
+      const segments = key.split('/');
+      return segments.some(segment => segment === idSegment);
+    });
+    if (!keyForId) {
+      throw new PartitionError(`Partition key not found for ID ${id}`, {
+        resourceName: this.resource.name,
+        id,
+        operation: 'extractPartitionValuesFromKey'
+      });
+    }
+
+    const keyParts = keyForId.split('/');
+    const actualPartitionValues: StringRecord = {};
+
+    for (const [fieldName] of sortedFields) {
+      const fieldPart = keyParts.find(part => part.startsWith(`${fieldName}=`));
+      if (fieldPart) {
+        const value = fieldPart.replace(`${fieldName}=`, '');
+        actualPartitionValues[fieldName] = value;
+      }
+    }
+
+    return actualPartitionValues;
+  }
+
+  async createReferences(data: ResourceData): Promise<void> {
+    const partitions = this.getPartitions();
+    if (!partitions || Object.keys(partitions).length === 0) {
+      return;
+    }
+
+    const partitionEntries = Object.entries(partitions);
+    const { results: successes, errors } = await mapWithConcurrency(
+      partitionEntries,
+      async ([partitionName]) => {
+        const partitionKey = this.getKey({ partitionName, id: data.id, data });
+        if (partitionKey) {
+          const partitionMetadata = {
+            _v: String(this.resource.version)
+          };
+          return this.resource.client.putObject({
+            key: partitionKey,
+            metadata: partitionMetadata,
+            body: '',
+            contentType: undefined,
+          });
+        }
+        return null;
+      },
+      { concurrency: 10 }
+    );
+
+    if (errors.length > 0) {
+      this.resource.emit('partitionIndexWarning', {
+        operation: 'create',
+        id: data.id,
+        failures: errors.map(e => e.raw)
+      });
+    }
+  }
+
+  async deleteReferences(data: ResourceData): Promise<void> {
+    const partitions = this.getPartitions();
+    if (!partitions || Object.keys(partitions).length === 0) {
+      return;
+    }
+
+    const keysToDelete: string[] = [];
+    for (const [partitionName] of Object.entries(partitions)) {
+      const partitionKey = this.getKey({ partitionName, id: data.id, data });
+      if (partitionKey) {
+        keysToDelete.push(partitionKey);
+      }
+    }
+
+    if (keysToDelete.length > 0) {
+      const [okDelete, errDelete] = await tryFn(() => this.resource.client.deleteObjects(keysToDelete));
+      if (!okDelete) {
+        throw this._normalizePartitionError(errDelete, {
+          operation: 'deleteReferences',
+          id: data.id
+        });
+      }
+    }
+  }
+
+  async updateReferences(data: ResourceData): Promise<void> {
+    const partitions = this.getPartitions();
+    if (!partitions || Object.keys(partitions).length === 0) {
+      return;
+    }
+
+    const ops: Array<{ partitionName: string; partitionKey: string }> = [];
+    for (const [partitionName, partition] of Object.entries(partitions)) {
+      if (!partition || !partition.fields || typeof partition.fields !== 'object') {
+        continue;
+      }
+
+      const partitionKey = this.getKey({ partitionName, id: data.id, data });
+      if (partitionKey) {
+        ops.push({ partitionName, partitionKey });
+      }
+    }
+
+    if (ops.length === 0) return;
+
+    const { errors } = await mapWithConcurrency(
+      ops,
+      ({ partitionKey }) =>
+        this.resource.client.putObject({
+          key: partitionKey,
+          metadata: { _v: String(this.resource.version) },
+          body: '',
+          contentType: undefined,
+        }),
+      { concurrency: 10 }
+    );
+
+    if (errors.length > 0) {
+      const first = errors[0]!;
+      const op = ops[first.index]!;
+      throw this._normalizePartitionError(first.raw, {
+        operation: 'updateReferences',
+        id: data.id,
+        partitionName: op.partitionName,
+        key: op.partitionKey
+      });
+    }
+  }
+
+  async handleReferenceUpdates(oldData: ResourceData, newData: ResourceData): Promise<void> {
+    const partitions = this.getPartitions();
+    if (!partitions || Object.keys(partitions).length === 0) {
+      return;
+    }
+
+    const partitionEntries = Object.entries(partitions);
+    const { results: updateResults, errors: updateErrors } = await mapWithConcurrency(
+      partitionEntries,
+      async ([partitionName, partition]): Promise<ReferenceUpdateResult> => {
+        const [ok, err] = await tryFn(() => this.handleReferenceUpdate(partitionName, partition, oldData, newData));
+        if (!ok) {
+          return { partitionName, error: err as Error };
+        }
+        return { partitionName, success: true };
+      },
+      { concurrency: 10 }
+    );
+
+    const id = newData.id || oldData.id;
+    const isNewInsert = !oldData || Object.keys(oldData).length === 0;
+
+    const updateFailures = [
+      ...updateErrors.map(e => e.raw),
+      ...updateResults.filter(r => r.error).map(r => r.error!),
+    ];
+
+    if (updateFailures.length > 0) {
+      throw this._normalizePartitionError(updateFailures[0], {
+        operation: 'handleReferenceUpdates',
+        id
+      });
+    }
+
+    if (!isNewInsert && !this.resource.client.supportsPartitionIndex) {
+      const { results: cleanupResults, errors: cleanupErrors } = await mapWithConcurrency(
+        Object.entries(partitions),
+        async ([partitionName]) => {
+          const prefix = `resource=${this.resource.name}/partition=${partitionName}`;
+          const [okKeys, errKeys, keys] = await tryFn<string[]>(() => this.resource.client.getAllKeys({ prefix }));
+          if (!okKeys || !keys) {
+            return this._normalizePartitionError(errKeys, {
+              operation: 'handleReferenceUpdates.listPartitionKeys',
+              id,
+              partitionName,
+              key: prefix
+            });
+          }
+
+          const validKey = this.getKey({ partitionName, id, data: newData });
+          const staleKeys = keys.filter(key => key.endsWith(`/id=${id}`) && key !== validKey);
+
+          if (staleKeys.length > 0) {
+            const [okDelete, errDelete] = await tryFn(() => this.resource.client.deleteObjects(staleKeys));
+            if (!okDelete) {
+              return this._normalizePartitionError(errDelete, {
+                operation: 'handleReferenceUpdates.deleteStalePartitionKeys',
+                id,
+                partitionName
+              });
+            }
+          }
+
+          return null;
+        },
+        { concurrency: 10 }
+      );
+
+      const cleanupFailures = [
+        ...cleanupErrors.map(e => e.raw),
+        ...cleanupResults.filter((r): r is Error => r instanceof Error),
+      ];
+
+      if (cleanupFailures.length > 0) {
+        throw this._normalizePartitionError(cleanupFailures[0], {
+          operation: 'handleReferenceUpdates.cleanup',
+          id
+        });
+      }
+    }
+  }
+
+  async handleReferenceUpdate(
+    partitionName: string,
+    partition: PartitionDefinition,
+    oldData: ResourceData,
+    newData: ResourceData
+  ): Promise<void> {
+    const id = newData.id || oldData.id;
+
+    const oldPartitionKey = this.getKey({ partitionName, id, data: oldData });
+    const newPartitionKey = this.getKey({ partitionName, id, data: newData });
+
+    if (oldPartitionKey !== newPartitionKey) {
+      const ops: Promise<void>[] = [];
+
+      if (oldPartitionKey) {
+        ops.push(
+          tryFn(async () => {
+            await this.resource.client.deleteObject(oldPartitionKey);
+          }).then(([ok, err]) => {
+            if (!ok) throw this._normalizePartitionError(err, {
+              operation: 'handleReferenceUpdate.deleteOld', id, partitionName, key: oldPartitionKey
+            });
+          })
+        );
+      }
+
+      if (newPartitionKey) {
+        ops.push(
+          tryFn(async () => {
+            await this.resource.client.putObject({
+              key: newPartitionKey,
+              metadata: { _v: String(this.resource.version) },
+              body: '',
+              contentType: undefined,
+            });
+          }).then(([ok, err]) => {
+            if (!ok) throw this._normalizePartitionError(err, {
+              operation: 'handleReferenceUpdate.putNew', id, partitionName, key: newPartitionKey
+            });
+          })
+        );
+      }
+
+      if (ops.length > 0) {
+        await Promise.all(ops);
+      }
+    } else if (newPartitionKey) {
+      const [okPut, errPut] = await tryFn(async () => {
+        const partitionMetadata = {
+          _v: String(this.resource.version)
+        };
+        await this.resource.client.putObject({
+          key: newPartitionKey,
+          metadata: partitionMetadata,
+          body: '',
+          contentType: undefined,
+        });
+      });
+      if (!okPut) {
+        throw this._normalizePartitionError(errPut, {
+          operation: 'handleReferenceUpdate.refreshCurrent',
+          id,
+          partitionName,
+          key: newPartitionKey
+        });
+      }
+    }
+  }
+
+  async getFromPartition({ id, partitionName, partitionValues = {} }: GetFromPartitionParams): Promise<ResourceData> {
+    validateS3KeySegment(id, 'id');
+
+    for (const [fieldName, value] of Object.entries(partitionValues)) {
+      if (value !== undefined && value !== null) {
+        validateS3KeySegment(value, `partitionValues.${fieldName}`);
+      }
+    }
+
+    const partitions = this.getPartitions();
+    if (!partitions || !partitions[partitionName]) {
+      throw new PartitionError(`Partition '${partitionName}' not found`, {
+        resourceName: this.resource.name,
+        partitionName,
+        operation: 'getFromPartition'
+      });
+    }
+
+    const partition = partitions[partitionName]!;
+
+    const partitionSegments: string[] = [];
+    const sortedFields = Object.entries(partition.fields).sort(([a], [b]) => a.localeCompare(b));
+    for (const [fieldName, rule] of sortedFields) {
+      const value = partitionValues[fieldName];
+      if (value !== undefined && value !== null) {
+        const transformedValue = this.applyRule(value, rule);
+        partitionSegments.push(`${fieldName}=${transformedValue}`);
+      }
+    }
+
+    if (partitionSegments.length === 0) {
+      throw new PartitionError(`No partition values provided for partition '${partitionName}'`, {
+        resourceName: this.resource.name,
+        partitionName,
+        operation: 'getFromPartition'
+      });
+    }
+
+    const partitionKey = join(
+      `resource=${this.resource.name}`,
+      `partition=${partitionName}`,
+      ...partitionSegments,
+      `id=${id}`
+    );
+
+    const [ok, err] = await tryFn(async () => {
+      await this.resource.client.headObject(partitionKey);
+    });
+    if (!ok) {
+      if (!isNotFoundError(err)) {
+        throw this._normalizePartitionError(err, {
+          operation: 'getFromPartition',
+          id,
+          partitionName,
+          key: partitionKey
+        });
+      }
+
+      throw new ResourceError(`Resource with id '${id}' not found in partition '${partitionName}'`, {
+        resourceName: this.resource.name,
+        id,
+        partitionName,
+        operation: 'getFromPartition'
+      });
+    }
+
+    const data = await this.resource.get(id);
+
+    data._partition = partitionName;
+    data._partitionValues = partitionValues;
+
+    this.resource._emitStandardized('partition-fetched', data, data.id);
+    return data;
+  }
+}
+
+export default ResourcePartitions;

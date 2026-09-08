@@ -1,1 +1,2 @@
-export { encode, decode, encodeKey, decodeKey, encodeDecimal, decodeDecimal, encodeFixedPoint, decodeFixedPoint, encodeFixedPointBatch, decodeFixedPointBatch } from './encoding/base62.js';
+export * from './lite.js';
+export { default } from './lite.js';

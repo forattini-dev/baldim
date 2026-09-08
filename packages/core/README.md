@@ -1,16 +1,33 @@
 # @buckiedb/core
 
-Early migration of the provider-independent BuckieDB core. Not yet a database
-replacement: this initial package contains only numeric metadata codecs.
+BuckieDB's document database engine and built-in storage clients.
 
 ```ts
-import { encode, decode } from '@buckiedb/core/encoding';
+import { BuckieDB } from '@buckiedb/core';
 
-encode(62); // '10'
-decode('10'); // 62
+const database = new BuckieDB({
+  connectionString: 'memory://my-app',
+});
+
+await database.connect();
+
+const notes = await database.createResource({
+  name: 'notes',
+  attributes: {
+    title: 'string',
+    done: 'boolean',
+  },
+});
+
+await notes.insert({ id: 'first', title: 'Try BuckieDB', done: false });
 ```
 
-The original s3db.js numeric encoding implementation is preserved without changes.
-Tests exercise the built package export, including decimal and embedding encoding.
-Legacy edge-case behavior remains unchanged; this is not a new validation API.
-See ../../docs/migration.md for provenance and the remaining extraction work.
+The core currently includes the S3-compatible, memory, filesystem, SQLite,
+libSQL/D1, and RedDB clients inherited from s3db.js. Provider packages will be
+extracted behind a stable client contract in later migration slices.
+
+`S3db` remains available as a deprecated class alias so applications can migrate
+their imports before changing persisted data. BuckieDB continues to read and
+write the established `s3db.json` metadata format during this compatibility phase.
+
+No package has been published to npm yet.
