@@ -13,9 +13,15 @@
 "@baldin/plugin-graph": minor
 "@baldin/plugin-costs": minor
 "@baldin/plugin-metrics": minor
+"@baldin/plugin-queue-consumer": minor
+"@baldin/plugin-backup": minor
+"@baldin/plugin-cache": minor
+"@baldin/plugin-state-machine": minor
+"@baldin/testing": minor
+"@baldin/typegen": minor
 ---
 
-Add the storage adapter registry and plugin SDK, extract memory, filesystem, SQLite, libSQL/D1, RedDB, and S3-compatible storage into standalone packages, publish the audit, TTL, scheduler, fulltext, geo, graph, costs, and metrics plugins as standalone packages, and introduce provider-neutral storage contract names with deprecated compatibility aliases.
+Add the storage adapter registry and plugin SDK, extract memory, filesystem, SQLite, libSQL/D1, RedDB, and S3-compatible storage into standalone packages, publish the audit, TTL, scheduler, fulltext, geo, graph, costs, metrics, queue-consumer, backup, cache, and state-machine plugins as standalone packages, publish the testing and type-generation libraries, and introduce provider-neutral storage contract names with deprecated compatibility aliases.
 Plugin lifecycle registration now rolls back failed installs and starts, and plugin-owned resource hooks and extensions are disposable.
 Connection-string parsing now stays generic in core while each adapter owns its URL,
 credential, and provider-option semantics.

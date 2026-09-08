@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { Baldin, MemoryClient, type Database } from '@baldin/core';
-import { Plugin, type ResourceLike } from '@baldin/core/plugin';
+import {
+  Plugin,
+  resolveResourceNames,
+  type ResourceLike,
+} from '@baldin/core/plugin';
 
 let sequence = 0;
 const databases: Database[] = [];
@@ -154,6 +158,20 @@ describe('@baldin/core plugin SDK', () => {
     expect(database.pluginList).not.toContain(plugin);
     expect('leakedHelper' in notes).toBe(false);
     expect((await notes.insert({ id: 'clean', title: 'clean' })).title).toBe('clean');
+  });
+
+  test('resolves a typed collection of names with one namespace policy', () => {
+    const names = resolveResourceNames('state-machine', {
+      states: 'entity_states',
+      transitions: { defaultName: 'state_transitions' },
+      external: { override: 'custom_events' },
+    }, { namespace: 'orders' });
+
+    expect(names).toEqual({
+      states: 'plg_orders_entity_states',
+      transitions: 'plg_orders_state_transitions',
+      external: 'custom_events',
+    });
   });
 
 });

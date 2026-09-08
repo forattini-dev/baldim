@@ -330,10 +330,23 @@ export function getValidatedNamespace(
 
 const PLUGIN_RESOURCE_PREFIX = 'plg_';
 
+export interface ResolveResourceNameParams {
+  defaultName?: string;
+  override?: string;
+  suffix?: string;
+}
+
+export interface ResolveResourceNameOptions {
+  namespace?: string;
+  applyNamespaceToOverrides?: boolean;
+}
+
+export type ResourceNameDescriptor = string | ResolveResourceNameParams;
+
 export function resolveResourceName(
   pluginKey: string,
-  descriptor: { defaultName?: string; override?: string; suffix?: string } = {},
-  options: { namespace?: string; applyNamespaceToOverrides?: boolean } = {}
+  descriptor: ResolveResourceNameParams = {},
+  options: ResolveResourceNameOptions = {}
 ): string {
   const explicit = descriptor.override?.trim();
   if (explicit && !options.applyNamespaceToOverrides) return explicit;
@@ -351,8 +364,23 @@ export function resolveResourceName(
     : `${PLUGIN_RESOURCE_PREFIX}${namespace}_${withoutPrefix}`;
 }
 
+export function resolveResourceNames<T extends Record<string, ResourceNameDescriptor>>(
+  pluginKey: string,
+  descriptors: T,
+  options: ResolveResourceNameOptions = {}
+): { [K in keyof T]: string } {
+  const result = {} as { [K in keyof T]: string };
+  for (const [key, descriptor] of Object.entries(descriptors)) {
+    result[key as keyof T] = typeof descriptor === 'string'
+      ? resolveResourceName(pluginKey, { defaultName: descriptor }, options)
+      : resolveResourceName(pluginKey, descriptor, options);
+  }
+  return result;
+}
+
 export { createLogger } from './concerns/logger.js';
 export type { Logger, LogLevel } from './concerns/logger.js';
+export type { CronManager } from './concerns/cron-manager.js';
 export { tryFn } from './concerns/try-fn.js';
 export { mapWithConcurrency, forEachWithConcurrency } from './concerns/map-with-concurrency.js';
 export { PluginError };

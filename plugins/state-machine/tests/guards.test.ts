@@ -1,0 +1,130 @@
+import { createDatabaseForTest } from './helpers.js';
+import { StateMachinePlugin } from '../src/index.js';
+
+describe('StateMachinePlugin - Guards', () => {
+  let database;
+  let plugin;
+  let mockActions = {};
+  let mockGuards = {};
+
+  beforeEach(async () => {
+    mockActions = {
+      onConfirmed: vi.fn().mockResolvedValue({ action: 'confirmed' }),
+      onShipped: vi.fn().mockResolvedValue({ action: 'shipped' }),
+      onError: vi.fn().mockRejectedValue(new Error('Action failed'))
+    };
+
+    mockGuards = {
+      canShip: vi.fn().mockResolvedValue(true),
+      cannotShip: vi.fn().mockResolvedValue(false),
+      guardError: vi.fn().mockRejectedValue(new Error('Guard failed'))
+    };
+
+    database = createDatabaseForTest('suite=plugins/state-machine');
+
+    plugin = new StateMachinePlugin({
+      logLevel: 'silent',
+      stateMachines: {
+        order_processing: {
+          initialState: 'pending',
+          states: {
+            pending: { on: { CONFIRM: 'confirmed', CANCEL: 'cancelled' }, meta: { color: 'yellow' } },
+            confirmed: { on: { PREPARE: 'preparing', CANCEL: 'cancelled' }, entry: 'onConfirmed', exit: 'onConfirmed' },
+            preparing: { on: { SHIP: 'shipped', CANCEL: 'cancelled' }, guards: { SHIP: 'canShip' } },
+            shipped: { on: { DELIVER: 'delivered', RETURN: 'returned' }, entry: 'onShipped' },
+            delivered: { type: 'final' },
+            cancelled: { type: 'final' },
+            returned: { type: 'final' }
+          }
+        },
+        user_onboarding: {
+          initialState: 'registered',
+          states: { registered: { on: { VERIFY_EMAIL: 'verified' } }, verified: { on: { COMPLETE_PROFILE: 'active' } }, active: { type: 'final' } }
+        },
+        test_guards: {
+          initialState: 'start',
+          states: {
+            start: {
+              on: { PASS: 'success', FAIL: 'failure', ERROR: 'error' },
+              guards: { PASS: 'canShip', FAIL: 'cannotShip', ERROR: 'guardError' }
+            },
+            success: { type: 'final' },
+            failure: { type: 'final' },
+            error: { type: 'final' }
+          }
+        }
+      },
+      actions: mockActions,
+      guards: mockGuards,
+      persistTransitions: true
+    });
+
+    await database.connect();
+    await plugin.install(database);
+  });
+
+  afterEach(async () => {
+    if (database) {
+      await database.disconnect();
+    }
+  });
+
+  beforeEach(async () => {
+    await plugin.initializeEntity('test_guards', 'test1');
+  });
+
+  it('should allow transition when guard returns true', async () => {
+    mockGuards.canShip.mockResolvedValue(true);
+
+    await plugin.send('test_guards', 'test1', 'PASS');
+
+    const state = await plugin.getState('test_guards', 'test1');
+    expect(state).toBe('success');
+    expect(mockGuards.canShip).toHaveBeenCalled();
+  });
+
+  it('should block transition when guard returns false', async () => {
+    mockGuards.cannotShip.mockResolvedValue(false);
+
+    const result = await plugin.send('test_guards', 'test1', 'FAIL');
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: 'GUARD_REJECTED',
+      reason: 'GUARD_REJECTED'
+    });
+
+    const state = await plugin.getState('test_guards', 'test1');
+    expect(state).toBe('start'); // Should remain in start state
+  });
+
+  it('should block transition when guard throws error', async () => {
+    mockGuards.guardError.mockRejectedValue(new Error('Guard error'));
+
+    const result = await plugin.send('test_guards', 'test1', 'ERROR');
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: 'GUARD_ERROR'
+    });
+  });
+
+  it('should pass correct parameters to guard', async () => {
+    const context = { test: 'data' };
+    await plugin.send('test_guards', 'test1', 'PASS', context);
+
+    expect(mockGuards.canShip).toHaveBeenCalledWith(
+      context,
+      'PASS',
+      expect.objectContaining({
+        database: plugin.database,
+        machineId: 'test_guards',
+        entityId: 'test1',
+        resource: null,
+        entity: null,
+        machineContext: expect.any(Object),
+        assign: expect.any(Function)
+      })
+    );
+  });
+});
