@@ -6,6 +6,7 @@ describe('@baldin/adapter-reddb', () => {
     const database = new Baldin({ connectionString: 'reddb://token@localhost:8080/app', logLevel: 'silent' });
     await database.ensureClientInitialized();
     expect(database.client).toBeInstanceOf(RedDbClient);
+    expect(database.client.config).toMatchObject({ bucket: 's3db', keyPrefix: 'app', region: 'reddb' });
     await database.disconnect();
   });
 });

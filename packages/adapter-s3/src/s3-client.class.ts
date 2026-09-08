@@ -17,7 +17,6 @@ import {
 
 import {
   AdaptiveTuning,
-  ConnectionString,
   TasksPool,
   UnknownError,
   idGenerator,
@@ -28,6 +27,7 @@ import {
   tryFn,
 } from '@baldin/core/adapter';
 import { normalizeHttpClientRetryConfig } from './client-compat.js';
+import { parseS3ConnectionString, type S3ConnectionConfig } from './connection-string.js';
 import type {
   Logger,
   TaskExecutorConfig,
@@ -87,7 +87,7 @@ export class S3Client extends EventEmitter {
   id: string;
   logLevel: string;
   private logger: Logger;
-  config: ConnectionString;
+  config: S3ConnectionConfig;
   connectionString: string;
   httpClientOptions: HttpClientOptions;
   client: AwsS3Client;
@@ -131,7 +131,7 @@ export class S3Client extends EventEmitter {
     };
 
     this.id = id ?? idGenerator(77);
-    this.config = new ConnectionString(connectionString);
+    this.config = parseS3ConnectionString(connectionString);
     this.connectionString = connectionString;
 
     const isR2 = this.config.endpoint?.includes('.r2.cloudflarestorage.com') || false;

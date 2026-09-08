@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { MemoryClient, MemoryStorage } from '../src/index.js';
+import { MemoryClient, MemoryStorage, createMemoryClient } from '../src/index.js';
 
 const paths: string[] = [];
 
@@ -12,6 +12,15 @@ afterEach(async () => {
 });
 
 describe('@baldin/adapter-memory', () => {
+  it('owns memory connection parsing', () => {
+    const client = createMemoryClient({
+      connectionString: 'memory://bucket-name/nested/prefix',
+      clientOptions: {},
+      logLevel: 'silent',
+    });
+    expect(client.config).toMatchObject({ bucket: 'bucket-name', keyPrefix: 'nested/prefix' });
+  });
+
   it('stores, lists, snapshots, and restores objects', async () => {
     const client = new MemoryClient({ bucket: 'adapter-memory', logLevel: 'silent' });
     await client.putObject({ key: 'notes/one', body: 'hello', metadata: { count: 2 } });

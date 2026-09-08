@@ -9,6 +9,16 @@ const paths: string[] = [];
 afterEach(async () => { for (const path of paths.splice(0)) await rm(path, { recursive: true, force: true }); });
 
 describe('@baldin/adapter-sqlite', () => {
+  it('owns sqlite connection parsing and query overrides', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'baldin-sqlite-options-'));
+    paths.push(directory);
+    const file = join(directory, 'options.sqlite');
+    const database = new Baldin({ connectionString: `sqlite:///${file.replace(/^\//, '')}?bucket=custom&keyPrefix=nested`, logLevel: 'silent' });
+    await database.ensureClientInitialized();
+    expect(database.client.config).toMatchObject({ basePath: file, bucket: 'custom', keyPrefix: 'nested' });
+    await database.disconnect();
+  });
+
   it('runs document CRUD through sqlite:', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'baldin-sqlite-'));
     paths.push(dir);

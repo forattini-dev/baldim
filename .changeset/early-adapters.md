@@ -9,3 +9,5 @@
 ---
 
 Add the storage adapter registry and plugin SDK, extract memory, filesystem, SQLite, libSQL/D1, RedDB, and S3-compatible storage into standalone packages, publish the first standalone plugin package, and introduce provider-neutral storage contract names with deprecated compatibility aliases.
+Connection-string parsing now stays generic in core while each adapter owns its URL,
+credential, and provider-option semantics.

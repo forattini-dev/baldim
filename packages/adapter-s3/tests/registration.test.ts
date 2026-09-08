@@ -18,6 +18,7 @@ describe('@baldin/adapter-s3', () => {
     });
     await database.ensureClientInitialized();
     expect(database.client).toBeInstanceOf(S3Client);
+    expect(database.client.config).toMatchObject({ bucket: 'test-bucket', region: 'us-east-1', keyPrefix: '' });
     await database.disconnect();
   });
   it('creates an S3 client without making a network request', () => {
@@ -30,6 +31,7 @@ describe('@baldin/adapter-s3', () => {
     });
 
     expect(client).toBeInstanceOf(S3Client);
+    expect(client.config).toMatchObject({ bucket: 'test-bucket', region: 'us-east-1' });
     client.destroy();
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ConnectionString } from '../src/connection-string.class.js';
 import {
   createStorageClient,
   hasStorageAdapter,
@@ -15,6 +16,12 @@ const context: StorageAdapterContext = {
 };
 
 describe('storage adapter registry', () => {
+  it('parses nested adapter options without knowing the provider', () => {
+    const parsed = new ConnectionString('custom://host/path?retry.count=3&enabled=true&name=value');
+    expect(parsed.protocol).toBe('custom');
+    expect(parsed.clientOptions).toEqual({ retry: { count: 3 }, enabled: true, name: 'value' });
+  });
+
   it('registers, resolves, and unregisters protocol factories', async () => {
     const client = { id: 'example-client' };
     const unregister = registerStorageAdapter('example', () => client as never);

@@ -313,118 +313,34 @@ export class Database extends SafeEventEmitter {
       }
     }
 
-    let mergedClientOptions: ClientOptions = {};
-    let connStr: ConnectionString | null = null;
-
-    if (options.clientOptions) {
-      mergedClientOptions = { ...options.clientOptions };
-    }
+    let mergedClientOptions: ClientOptions = { ...(options.clientOptions || {}) };
+    let parsedConnection: ConnectionString | null = null;
 
     if (connectionString) {
-      try {
-        connStr = new ConnectionString(connectionString);
-        if ((connStr as any).clientOptions && Object.keys((connStr as any).clientOptions).length > 0) {
-          mergedClientOptions = this._deepMerge(mergedClientOptions, (connStr as any).clientOptions);
-        }
-      } catch {
-        // If parsing fails, continue without querystring params
+      parsedConnection = new ConnectionString(connectionString);
+      if (Object.keys(parsedConnection.clientOptions).length > 0) {
+        mergedClientOptions = this._deepMerge(mergedClientOptions, parsedConnection.clientOptions);
       }
     }
 
     if (options.client) {
       this.client = options.client;
-    } else if (connectionString) {
-      try {
-        const url = new URL(connectionString);
-        if (url.protocol === 'memory:') {
-          this._clientFactory = async () => {
-            const { MemoryClient } = await import('@baldin/adapter-memory');
-            const bucketHost = url.hostname || 'test-bucket';
-            const [okBucket, , decodedBucket] = tryFnSync(() => decodeURIComponent(bucketHost));
-            const bucket = okBucket ? decodedBucket : bucketHost;
-            const rawPrefix = url.pathname ? url.pathname.substring(1) : '';
-            const [okPrefix, , decodedPrefix] = tryFnSync(() => decodeURIComponent(rawPrefix));
-            const keyPrefix = okPrefix ? decodedPrefix : rawPrefix;
+    } else if (connectionString && parsedConnection) {
+      const context = {
+        connectionString,
+        clientOptions: this._applyTaskExecutorMonitoring(mergedClientOptions as any) as Record<string, unknown>,
+        logLevel: this.logger.level,
+        logger: this.getChildLogger('StorageAdapter'),
+        executorPool: this.executorPool,
+      };
 
-            const memoryOptions = this._applyTaskExecutorMonitoring(this._deepMerge({
-              bucket,
-              keyPrefix,
-              logLevel: this.logger.level,
-            }, mergedClientOptions as any) as any);
-            return new MemoryClient(memoryOptions) as Client;
-          };
-        } else if (url.protocol === 'file:') {
-          this._clientFactory = async () => createStorageClient('file', {
-            connectionString,
-            clientOptions: this._applyTaskExecutorMonitoring(this._deepMerge({
-              basePath: (connStr as any)?.basePath,
-              bucket: (connStr as any)?.bucket,
-              keyPrefix: (connStr as any)?.keyPrefix,
-            }, mergedClientOptions as any) as any) as Record<string, unknown>,
-            logLevel: this.logger.level,
-            logger: this.getChildLogger('StorageAdapter'),
-            executorPool: this.executorPool,
-          });
-        } else if (url.protocol === 'sqlite:') {
-          this._clientFactory = async () => createStorageClient('sqlite', {
-            connectionString,
-            clientOptions: this._applyTaskExecutorMonitoring(this._deepMerge({
-              basePath: (connStr as any)?.basePath,
-              bucket: (connStr as any)?.bucket,
-              keyPrefix: (connStr as any)?.keyPrefix,
-              region: (connStr as any)?.region,
-            }, mergedClientOptions as any) as any) as Record<string, unknown>,
-            logLevel: this.logger.level,
-            logger: this.getChildLogger('StorageAdapter'),
-            executorPool: this.executorPool,
-          });
-        } else if (url.protocol === 'reddb:') {
-          this._clientFactory = async () => createStorageClient('reddb', {
-            connectionString,
-            clientOptions: this._applyTaskExecutorMonitoring(this._deepMerge({
-              baseUrl: (connStr as any)?.redDbBaseUrl || `http://${url.hostname || 'localhost'}:${url.port || '8080'}`,
-              authToken: (connStr as any)?.redDbAuthToken,
-              writeToken: (connStr as any)?.redDbWriteToken,
-              collection: (connStr as any)?.redDbCollection,
-              bucket: (connStr as any)?.bucket,
-              keyPrefix: (connStr as any)?.keyPrefix,
-              region: 'reddb',
-            }, mergedClientOptions as any) as any) as Record<string, unknown>,
-            logLevel: this.logger.level,
-            logger: this.getChildLogger('StorageAdapter'),
-            executorPool: this.executorPool,
-          });
-        } else if (url.protocol === 'sqlite+libsql:' || url.protocol === 'sqlite+d1:') {
-          this._clientFactory = async () => createStorageClient(url.protocol, {
-            connectionString,
-            clientOptions: this._applyTaskExecutorMonitoring(this._deepMerge({
-              bucket: (connStr as any)?.bucket,
-              keyPrefix: (connStr as any)?.keyPrefix,
-              region: (connStr as any)?.region,
-              endpoint: (connStr as any)?.endpoint,
-              sqliteDriver: (connStr as any)?.sqliteDriver,
-            }, mergedClientOptions as any) as any) as Record<string, unknown>,
-            logLevel: this.logger.level,
-            logger: this.getChildLogger('StorageAdapter'),
-            executorPool: this.executorPool,
-          });
-        } else {
-          this._clientFactory = async () => createStorageClient(url.protocol, {
-            connectionString,
-            clientOptions: mergedClientOptions as Record<string, unknown>,
-            logLevel: this.logger.level,
-            logger: this.getChildLogger('StorageAdapter'),
-            executorPool: this.executorPool,
-          });
-        }
-      } catch {
-        this._clientFactory = async () => createStorageClient('s3', {
-          connectionString,
-          clientOptions: mergedClientOptions as Record<string, unknown>,
-          logLevel: this.logger.level,
-          logger: this.getChildLogger('StorageAdapter'),
-          executorPool: this.executorPool,
-        });
+      if (parsedConnection.protocol === 'memory') {
+        this._clientFactory = async () => {
+          const { createMemoryClient } = await import('@baldin/adapter-memory');
+          return createMemoryClient(context) as unknown as Client;
+        };
+      } else {
+        this._clientFactory = async () => createStorageClient(parsedConnection!.protocol, context);
       }
     } else {
       this._clientFactory = async () => {
@@ -438,8 +354,8 @@ export class Database extends SafeEventEmitter {
       this.databaseOptions.connectionString = resolvedConnectionString;
     }
 
-    this.bucket = (this.client as any)?.bucket || connStr?.bucket || 's3db';
-    this.keyPrefix = (this.client as any)?.keyPrefix || connStr?.keyPrefix || '';
+    this.bucket = (this.client as any)?.bucket || 's3db';
+    this.keyPrefix = (this.client as any)?.keyPrefix || '';
   }
 
   async ensureClientInitialized(): Promise<void> {
@@ -733,46 +649,7 @@ export class Database extends SafeEventEmitter {
   }
 
   private _inferConnectionStringFromClient(client: Client): string | undefined {
-    if (!client) {
-      return undefined;
-    }
-
-    if ((client as any).connectionString) {
-      return (client as any).connectionString;
-    }
-
-    const candidate = client as any;
-
-    if (candidate?.config?.endpoint === 'memory://' || candidate?.region === 'memory') {
-      const bucket = encodeURIComponent(candidate.bucket || 's3db');
-      const encodedPrefix = candidate.keyPrefix
-        ? candidate.keyPrefix
-            .split('/')
-            .filter(Boolean)
-            .map((segment: string) => encodeURIComponent(segment))
-            .join('/')
-        : '';
-      const prefixPath = encodedPrefix ? `/${encodedPrefix}` : '';
-      return `memory://${bucket}${prefixPath}`;
-    }
-
-    if (candidate?.region === 'sqlite' || candidate?.dbPath) {
-      if (candidate.connectionString) {
-        return candidate.connectionString;
-      }
-
-      if (candidate.dbPath) {
-        return `sqlite:///${encodeURI(candidate.dbPath).replace(/^\//, '')}`;
-      }
-    }
-
-    if (typeof candidate?.basePath === 'string') {
-      if (candidate.basePath) {
-        return `file://${encodeURI(candidate.basePath)}`;
-      }
-    }
-
-    return undefined;
+    return client?.connectionString || undefined;
   }
 }
 

@@ -254,6 +254,7 @@ export interface StorageSnapshot {
 }
 
 export interface MemoryAdapterContext {
+  connectionString: string;
   clientOptions: Record<string, unknown>;
   logLevel: string;
   logger?: Logger;

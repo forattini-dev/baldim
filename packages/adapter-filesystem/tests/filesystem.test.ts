@@ -9,6 +9,15 @@ const paths: string[] = [];
 afterEach(async () => { for (const path of paths.splice(0)) await rm(path, { recursive: true, force: true }); });
 
 describe('@baldin/adapter-filesystem', () => {
+  it('owns file connection parsing and query overrides', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'baldin-fs-options-'));
+    paths.push(directory);
+    const database = new Baldin({ connectionString: `file://${directory}?bucket=custom&keyPrefix=nested`, logLevel: 'silent' });
+    await database.ensureClientInitialized();
+    expect(database.client.config).toMatchObject({ basePath: directory, bucket: 'custom', keyPrefix: 'nested' });
+    await database.disconnect();
+  });
+
   it('runs document CRUD through a registered file: connection', async () => {
     const path = await mkdtemp(join(tmpdir(), 'baldin-fs-'));
     paths.push(path);
