@@ -8,7 +8,7 @@ working core from a completed product migration.
 
 | Surface | s3db.js baseline | Baldin status | Result |
 | --- | ---: | --- | --- |
-| Source | 558 files, 555 TypeScript | 102 core TypeScript files plus 103 adapter, plugin, and shared-package TypeScript files | Partial |
+| Source | 558 files, 555 TypeScript | 102 core TypeScript files plus 107 adapter, plugin, and shared-package TypeScript files | Partial |
 | Core engine | Database, Resource, Schema, Validator, manager | Migrated from the `lite` dependency closure | Working |
 | Plugin catalog | 23 plugin families, 411 TypeScript files | Public plugin SDK plus audit, TTL, scheduler, fulltext, geo, graph, costs, metrics, and queue-consumer packages; 14 families remain | Partial |
 | Installable packages | One all-in-one package | `core`, five storage adapters, and nine standalone plugins | Partial |
@@ -16,8 +16,8 @@ working core from a completed product migration.
 | CLI | 6 TypeScript modules plus 2 bin files | No CLI application/package | Missing |
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Migrated to `@baldin/testing` | Working |
-| Public subpaths | root, lite, concerns, plugins, generator | root, lite, encoding, adapter SDK, plugin SDK | Partial |
-| Test suites | 118 core and 176 plugin test files | 29 focused test files, 268 tests plus 4 MinIO contract cases in CI | Partial |
+| Public subpaths | root, lite, concerns, plugins, generator | Core subpaths plus standalone plugins, testing, and typegen packages | Partial |
+| Test suites | 118 core and 176 plugin test files | 30 focused test files, 278 tests plus 4 MinIO contract cases in CI | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps
@@ -46,8 +46,7 @@ runs are still needed before release.
 2. Extend the shared contract to RedDB and remote SQLite test services.
 3. Migrate the remaining 14 plugin families to `@baldin/plugin-<name>` with their
    relevant original tests.
-4. Restore remaining public utilities and TypeScript generation, and explicitly
-   retire or migrate every old subpath export.
+4. Restore remaining public utilities and explicitly retire or migrate every old subpath export.
 5. Migrate CLI and MCP into applications that consume public workspace packages.
 6. Extend baseline persisted-data fixtures beyond the current filesystem coverage
    to S3-compatible and SQLite representations.

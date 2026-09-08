@@ -60,6 +60,7 @@ const databases = new DatabaseManager({
 | plugins/metrics | @baldin/plugin-metrics | Persistent telemetry and Prometheus export |
 | plugins/queue-consumer | @baldin/plugin-queue-consumer | Optional SQS, RabbitMQ, Redis, and BullMQ consumers |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
+| packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |
 
 ## Development

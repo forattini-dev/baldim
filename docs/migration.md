@@ -85,3 +85,7 @@ been registered.
 ## Testing utilities
 
 Import `Factory` and `Seeder` from `@baldin/testing`.
+
+## Type generation
+
+Replace `s3db.js/typescript-generator` with `@baldin/typegen`. Generated files now import `@baldin/core` by default and export a valid `TypedDatabase` resource map.
