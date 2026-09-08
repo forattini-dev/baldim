@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "packages/core/src/database/database-connection.class.ts#s3db-json-read",
+      "classification": "external",
+      "reason": "s3db.json is the persisted compatibility format read from existing object-storage databases."
+    },
+    {
+      "id": "packages/core/src/database/database-metadata.class.ts#s3db-json-read-write",
+      "classification": "external",
+      "reason": "s3db.json remains JSON so BuckieDB can open and update existing databases without a data migration."
+    },
+    {
+      "id": "packages/core/src/database/database-recovery.class.ts#s3db-json-recovery",
+      "classification": "external",
+      "reason": "Recovery reads and rewrites the established s3db.json compatibility format."
+    }
+  ]
+}
