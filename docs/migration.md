@@ -18,6 +18,7 @@ Original project and data remain unchanged. Source license: Unlicense.
   lookup, duplicate-name protection, reconnect-safe event forwarding, and
   connect rollback.
 - A public storage adapter registry selects external clients by URL protocol.
+- Filesystem storage lives in `@baldin/adapter-filesystem`.
 - S3 transport and the AWS SDK live in `@baldin/adapter-s3`, with registration
   for AWS S3, Cloudflare R2, MinIO, and other compatible HTTP endpoints.
 - A public plugin SDK lives at `@baldin/core/plugin`; the audit plugin is the
@@ -32,7 +33,7 @@ Original project and data remain unchanged. Source license: Unlicense.
 
 1. Run one storage contract suite against MinIO in CI and configured AWS S3/R2
    targets outside pull requests.
-2. Extract filesystem, SQLite/libSQL/D1, and RedDB clients to adapter packages.
+2. Extract SQLite/libSQL/D1 and RedDB clients to adapter packages.
 3. Migrate the remaining plugin families one package at a time with their
    relevant original tests, starting with TTL and scheduler.
 4. Expand compatibility fixtures for schema metadata, document bodies,
@@ -45,7 +46,7 @@ Original project and data remain unchanged. Source license: Unlicense.
 Core does not import plugin packages or the S3 implementation. Adapters depend on
 `@baldin/core/adapter`; plugins depend on `@baldin/core/plugin` and the normal
 core public API. Packages own their runtime dependencies and release independently.
-The remaining built-in provider clients are tracked extraction debt.
+The remaining SQLite and RedDB provider clients are tracked extraction debt.
 
 ## Compatibility contract
 

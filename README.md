@@ -45,6 +45,7 @@ const databases = new DatabaseManager({
 | Path | Package | Status |
 | --- | --- | --- |
 | packages/core | @baldin/core | Engine, multidatabase manager, adapter registry, and plugin SDK |
+| packages/adapter-filesystem | @baldin/adapter-filesystem | Installable local filesystem adapter |
 | packages/adapter-s3 | @baldin/adapter-s3 | Installable S3/R2/MinIO-compatible adapter |
 | packages/plugin-audit | @baldin/plugin-audit | First extracted standalone plugin |
 | apps | Docs, CLI, demos | Reserved |
@@ -64,8 +65,8 @@ Turborepo builds dependencies before consumers. Tests import compiled package
 exports so the package entry points are exercised. Changesets tracks independent
 package releases; no automatic npm publishing is configured.
 
-The core still carries the filesystem, SQLite/libSQL/D1, and RedDB clients during
-the migration. S3 already loads through the public adapter registry, and plugins use
+The core still carries the SQLite/libSQL/D1 and RedDB clients during
+the migration. Filesystem and S3 load through the public adapter registry, and plugins use
 the public plugin SDK. See [the migration plan](docs/migration.md) for source
 provenance, compatibility guarantees and extraction order.
 

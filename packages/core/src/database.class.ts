@@ -354,16 +354,17 @@ export class Database extends SafeEventEmitter {
             return new MemoryClient(memoryOptions) as Client;
           };
         } else if (url.protocol === 'file:') {
-          this._clientFactory = async () => {
-            const { FileSystemClient } = await import('./clients/filesystem-client.class.js');
-            const filesystemOptions = this._applyTaskExecutorMonitoring(this._deepMerge({
+          this._clientFactory = async () => createStorageClient('file', {
+            connectionString,
+            clientOptions: this._applyTaskExecutorMonitoring(this._deepMerge({
               basePath: (connStr as any)?.basePath,
               bucket: (connStr as any)?.bucket,
               keyPrefix: (connStr as any)?.keyPrefix,
-              logLevel: this.logger.level,
-            }, mergedClientOptions as any) as any);
-            return new FileSystemClient(filesystemOptions) as Client;
-          };
+            }, mergedClientOptions as any) as any) as Record<string, unknown>,
+            logLevel: this.logger.level,
+            logger: this.getChildLogger('StorageAdapter'),
+            executorPool: this.executorPool,
+          });
         } else if (url.protocol === 'sqlite:') {
           this._clientFactory = async () => {
             const { SqliteClient } = await import('./clients/sqlite-client.class.js');
