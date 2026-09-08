@@ -18,7 +18,6 @@ import {
 import {
   AdaptiveTuning,
   ConnectionString,
-  HTTP_CLIENT_PROFILES,
   TasksPool,
   UnknownError,
   idGenerator,
@@ -31,19 +30,17 @@ import {
 import { normalizeHttpClientRetryConfig } from './client-compat.js';
 import type {
   Logger,
-  S3ClientConfig,
-  HttpClientOptions,
-  HttpClientProfile,
   TaskExecutorConfig,
   AutotuneConfig,
   MonitoringConfig,
-  PutObjectParams,
-  CopyObjectParams,
-  ListObjectsParams,
+  StoragePutObjectParams,
+  StorageCopyObjectParams,
+  StorageListObjectsParams,
   GetKeysPageParams,
   QueueStats,
-  ReckerHttpHandlerOptions
 } from '@baldin/core/adapter';
+import { HTTP_CLIENT_PROFILES } from './types.js';
+import type { HttpClientOptions, HttpClientProfile, ReckerHttpHandlerOptions, S3ClientConfig } from './types.js';
 
 interface NormalizedTaskExecutorConfig {
   enabled: boolean;
@@ -622,7 +619,7 @@ export class S3Client extends EventEmitter {
     return response;
   }
 
-  async putObject(params: PutObjectParams): Promise<unknown> {
+  async putObject(params: StoragePutObjectParams): Promise<unknown> {
     const { key, metadata, contentType, body, contentEncoding, contentLength, ifMatch, ifNoneMatch } = params;
 
     return await this._executeOperation(async () => {
@@ -754,7 +751,7 @@ export class S3Client extends EventEmitter {
     }, { metadata: { operation: 'headObject', key } });
   }
 
-  async copyObject(params: CopyObjectParams): Promise<unknown> {
+  async copyObject(params: StorageCopyObjectParams): Promise<unknown> {
     const { from, to, metadata, metadataDirective, contentType } = params;
 
     return await this._executeOperation(async () => {
@@ -931,7 +928,7 @@ export class S3Client extends EventEmitter {
     return true;
   }
 
-  async listObjects(params: ListObjectsParams = {}): Promise<unknown> {
+  async listObjects(params: StorageListObjectsParams = {}): Promise<unknown> {
     const { prefix, maxKeys = 1000, continuationToken } = params;
     const listStart = Date.now();
     this.logger.debug({ prefix: prefix?.substring(0, 60), maxKeys }, `[S3Client.listObjects] START`);

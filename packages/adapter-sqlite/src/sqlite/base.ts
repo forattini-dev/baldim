@@ -13,11 +13,11 @@ import type { LogLevel } from '@baldin/core/adapter';
 import type { DatabaseSync as NodeSqliteDatabaseSync } from 'node:sqlite';
 import type {
   Logger,
-  SqliteClientConfig,
   TaskManager,
   MonitoringConfig,
   QueueStats
 } from '@baldin/core/adapter';
+import type { SqliteClientConfig } from '../client-types.js';
 import type {
   DbRow,
   DbObjectHeaderRow,

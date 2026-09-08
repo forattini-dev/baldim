@@ -10,12 +10,12 @@ import type {
   StoragePutParams,
   StorageCopyParams,
   StorageListParams,
-  S3Object,
-  PutObjectResponse,
-  CopyObjectResponse,
-  DeleteObjectResponse,
-  DeleteObjectsResponse,
-  ListObjectsResponse,
+  StorageObject,
+  StoragePutObjectResponse,
+  StorageCopyObjectResponse,
+  StorageDeleteObjectResponse,
+  StorageDeleteObjectsResponse,
+  StorageListObjectsResponse,
   MemoryStorageConfig,
   MemoryStorageStats,
   StorageSnapshot
@@ -178,7 +178,7 @@ export class MemoryStorage {
     }
   }
 
-  async put(key: string, params: StoragePutParams): Promise<PutObjectResponse> {
+  async put(key: string, params: StoragePutParams): Promise<StoragePutObjectResponse> {
     const { body, metadata, contentType, contentEncoding, contentLength, ifMatch, ifNoneMatch } = params;
 
     this._validateLimits(body, metadata);
@@ -259,7 +259,7 @@ export class MemoryStorage {
     };
   }
 
-  async get(key: string): Promise<S3Object> {
+  async get(key: string): Promise<StorageObject> {
     const obj = this.objects.get(key);
 
     if (!obj) {
@@ -279,7 +279,7 @@ export class MemoryStorage {
 
     this.logger.debug({ key, size: obj.size }, `GET ${key} (${obj.size} bytes)`);
 
-    const bodyStream = Readable.from(obj.body) as S3Object['Body'];
+    const bodyStream = Readable.from(obj.body) as StorageObject['Body'];
 
     bodyStream!.transformToString = async (encoding: string = 'utf-8') => {
       const chunks: Buffer[] = [];
@@ -312,7 +312,7 @@ export class MemoryStorage {
     };
   }
 
-  async head(key: string): Promise<Omit<S3Object, 'Body'>> {
+  async head(key: string): Promise<Omit<StorageObject, 'Body'>> {
     const obj = this.objects.get(key);
 
     if (!obj) {
@@ -342,7 +342,7 @@ export class MemoryStorage {
     };
   }
 
-  async copy(from: string, to: string, params: StorageCopyParams): Promise<CopyObjectResponse> {
+  async copy(from: string, to: string, params: StorageCopyParams): Promise<StorageCopyObjectResponse> {
     const { metadata, metadataDirective, contentType } = params;
     const source = this.objects.get(from);
 
@@ -389,7 +389,7 @@ export class MemoryStorage {
     return this.objects.has(key);
   }
 
-  async delete(key: string): Promise<DeleteObjectResponse> {
+  async delete(key: string): Promise<StorageDeleteObjectResponse> {
     const obj = this.objects.get(key);
     const existed = Boolean(obj);
 
@@ -411,7 +411,7 @@ export class MemoryStorage {
     };
   }
 
-  async deleteMultiple(keys: string[]): Promise<DeleteObjectsResponse> {
+  async deleteMultiple(keys: string[]): Promise<StorageDeleteObjectsResponse> {
     const deleted: Array<{ Key: string }> = [];
     const errors: Array<{ Key: string; Code: string; Message: string }> = [];
 
@@ -434,7 +434,7 @@ export class MemoryStorage {
     return { Deleted: deleted, Errors: errors };
   }
 
-  async list(params: StorageListParams): Promise<ListObjectsResponse> {
+  async list(params: StorageListParams): Promise<StorageListObjectsResponse> {
     const { prefix = '', delimiter = null, maxKeys = 1000, continuationToken = null, startAfter = null } = params;
     const sortedKeys = Array.from(this.objects.keys()).sort();
     const prefixFilter = prefix || '';

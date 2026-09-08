@@ -1,126 +1,6 @@
 import type EventEmitter from 'events';
 import type { Readable } from 'node:stream';
 
-export interface S3ClientConfig {
-  logLevel?: string;
-  logger?: Logger | null;
-  id?: string | null;
-  AwsS3Client?: unknown;
-  connectionString: string;
-  httpClientOptions?: HttpClientOptions;
-  taskExecutor?: boolean | TaskExecutorConfig;
-  executorPool?: boolean | TaskExecutorConfig | null;
-  metadataLimit?: number;
-}
-
-export type HttpClientProfile = 'balanced' | 'throughput' | 'resilient';
-
-export const HTTP_CLIENT_PROFILES: Record<HttpClientProfile, Partial<HttpClientOptions>> = {
-  balanced: {
-    keepAlive: true,
-    keepAliveMsecs: 1000,
-    maxSockets: 50,
-    maxFreeSockets: 10,
-    timeout: 60000,
-    connections: 50,
-    headersTimeout: 30000,
-    bodyTimeout: 60000,
-    http2: true,
-    http2Preset: 'performance',
-    enableRetry: true,
-    retryProfile: 'dual',
-    maxRetries: 3,
-  },
-  throughput: {
-    keepAlive: true,
-    keepAliveMsecs: 1000,
-    maxSockets: 150,
-    maxFreeSockets: 20,
-    timeout: 120000,
-    connections: 150,
-    headersTimeout: 30000,
-    bodyTimeout: 120000,
-    http2: true,
-    http2Preset: 'low-latency',
-    enableRetry: true,
-    retryProfile: 'recker-only',
-    maxRetries: 2,
-  },
-  resilient: {
-    keepAlive: true,
-    keepAliveMsecs: 2000,
-    maxSockets: 50,
-    maxFreeSockets: 20,
-    timeout: 60000,
-    connections: 50,
-    headersTimeout: 30000,
-    bodyTimeout: 60000,
-    http2: true,
-    http2Preset: 'balanced',
-    retryProfile: 'sdk-only',
-    retryMode: 'adaptive',
-    retryAttempts: 4,
-  },
-};
-
-export interface HttpClientOptions {
-  /** Apply a pre-defined transport profile before custom overrides. */
-  httpClientProfile?: HttpClientProfile;
-  /**
-   * Retry ownership profile for the transport stack.
-   * - dual (default): both handler and AWS client can retry.
-   * - recker-only: retry only in Recker handler.
-   * - sdk-only: retry only in AWS client.
-   */
-  retryProfile?: 'dual' | 'recker-only' | 'sdk-only';
-  /**
-   * Request-attempt budget for the AWS client when its retry layer is active.
-   */
-  retryAttempts?: number;
-  /** Retry mode for AWS client when its retry layer is active ('standard' | 'adaptive'). */
-  retryMode?: 'standard' | 'adaptive';
-  /** Backward-compatible alias for retryProfile. */
-  retryCoordination?: 'dual' | 'recker-only' | 'aws-only';
-  /** Backward-compatible alias for retryMode. */
-  awsRetryMode?: 'standard' | 'adaptive';
-  /** Backward-compatible alias for retryAttempts. */
-  awsMaxAttempts?: number;
-  connectTimeout?: number;
-  headersTimeout?: number;
-  bodyTimeout?: number;
-  keepAlive?: boolean;
-  keepAliveMsecs?: number;
-  maxSockets?: number;
-  maxFreeSockets?: number;
-  timeout?: number;
-  connections?: number;
-  pipelining?: number;
-  keepAliveTimeout?: number;
-  keepAliveMaxTimeout?: number;
-  keepAliveTimeoutThreshold?: number;
-  maxRequestsPerClient?: number;
-  clientTtl?: number | null;
-  http2?: boolean;
-  http2Preset?: 'balanced' | 'performance' | 'low-latency' | 'low-memory';
-  http2MaxConcurrentStreams?: number;
-  enableHttp2Metrics?: boolean;
-  enableDedup?: boolean;
-  enableCircuitBreaker?: boolean;
-  circuitBreakerThreshold?: number;
-  circuitBreakerResetTimeout?: number;
-  enableRetry?: boolean;
-  maxRetries?: number;
-  retryDelay?: number;
-  maxRetryDelay?: number;
-  retryJitter?: boolean;
-  respectRetryAfter?: boolean;
-  /** Use Recker HTTP handler (defaults to true). Falls back to AWS SDK default handler on failures by default. */
-  useReckerHandler?: boolean;
-  /** If false, throw immediately when Recker handler initialization fails. */
-  failFastOnReckerFailure?: boolean;
-  [key: string]: unknown;
-}
-
 export interface TaskExecutorConfig {
   enabled?: boolean;
   concurrency?: number | 'auto';
@@ -154,115 +34,6 @@ export interface Logger {
   trace?: (obj: unknown, msg?: string) => void;
 }
 
-export interface FileSystemClientConfig {
-  id?: string;
-  logLevel?: string;
-  logger?: Logger;
-  taskExecutor?: TaskManager;
-  taskExecutorMonitoring?: MonitoringConfig | null;
-  concurrency?: number;
-  retries?: number;
-  retryDelay?: number;
-  timeout?: number;
-  retryableErrors?: string[];
-  basePath?: string;
-  bucket?: string;
-  keyPrefix?: string;
-  region?: string;
-  enforceLimits?: boolean;
-  metadataLimit?: number;
-  maxObjectSize?: number;
-  compression?: CompressionConfig;
-  ttl?: TTLConfig;
-  locking?: LockingConfig;
-  backup?: BackupConfig;
-  journal?: JournalConfig;
-  stats?: StatsConfig;
-}
-
-export interface SqliteClientConfig {
-  id?: string;
-  logLevel?: string;
-  logger?: Logger;
-  taskExecutor?: TaskManager;
-  taskExecutorMonitoring?: MonitoringConfig | null;
-  concurrency?: number;
-  retries?: number;
-  retryDelay?: number;
-  timeout?: number;
-  retryableErrors?: string[];
-  basePath?: string;
-  bucket?: string;
-  keyPrefix?: string;
-  region?: string;
-  enforceLimits?: boolean;
-  metadataLimit?: number;
-  maxObjectSize?: number;
-  maxMemoryMB?: number;
-}
-
-export interface RemoteSqliteClientConfig {
-  id?: string;
-  logLevel?: string;
-  logger?: Logger;
-  taskExecutor?: TaskManager;
-  taskExecutorMonitoring?: MonitoringConfig | null;
-  concurrency?: number;
-  retries?: number;
-  retryDelay?: number;
-  timeout?: number;
-  retryableErrors?: string[];
-  bucket?: string;
-  keyPrefix?: string;
-  region?: string;
-  endpoint: string;
-  connectionString?: string;
-  sqliteDriver: 'libsql' | 'd1';
-  enforceLimits?: boolean;
-  metadataLimit?: number;
-  maxObjectSize?: number;
-  authToken?: string;
-  apiToken?: string;
-  syncUrl?: string;
-  syncInterval?: number;
-  d1Binding?: unknown;
-  executor?: {
-    execute(sql: string, args?: unknown[]): Promise<{ rows: Array<Record<string, unknown>> }>;
-    close?(): Promise<void> | void;
-  };
-}
-
-export interface CompressionConfig {
-  enabled?: boolean;
-  threshold?: number;
-  level?: number;
-}
-
-export interface TTLConfig {
-  enabled?: boolean;
-  defaultTTL?: number;
-  cleanupInterval?: number;
-}
-
-export interface LockingConfig {
-  enabled?: boolean;
-  timeout?: number;
-}
-
-export interface BackupConfig {
-  enabled?: boolean;
-  suffix?: string;
-}
-
-export interface JournalConfig {
-  enabled?: boolean;
-  file?: string;
-}
-
-export interface StatsConfig {
-  enabled?: boolean;
-}
-
 export interface ClientConfig {
   bucket: string;
   keyPrefix: string;
@@ -270,8 +41,7 @@ export interface ClientConfig {
   endpoint?: string;
   basePath?: string;
   forcePathStyle?: boolean;
-  accessKeyId?: string;
-  secretAccessKey?: string;
+  [key: string]: unknown;
 }
 
 export interface TaskManager {
@@ -293,7 +63,7 @@ export interface QueueStats {
   [key: string]: unknown;
 }
 
-export interface PutObjectParams {
+export interface StoragePutObjectParams {
   key: string;
   metadata?: Record<string, unknown>;
   contentType?: string;
@@ -304,7 +74,7 @@ export interface PutObjectParams {
   ifNoneMatch?: string;
 }
 
-export interface CopyObjectParams {
+export interface StorageCopyObjectParams {
   from: string;
   to: string;
   metadata?: Record<string, unknown>;
@@ -312,7 +82,7 @@ export interface CopyObjectParams {
   contentType?: string;
 }
 
-export interface ListObjectsParams {
+export interface StorageListObjectsParams {
   prefix?: string;
   delimiter?: string | null;
   maxKeys?: number;
@@ -350,12 +120,12 @@ export interface GetFilteredObjectsWindowParams {
 }
 
 export interface FilteredObjectsWindowResponse {
-  Contents: Array<{ key: string; object: S3Object }>;
+  Contents: Array<{ key: string; object: StorageObject }>;
   IsTruncated: boolean;
   NextContinuationToken?: string | null;
 }
 
-export interface S3Object {
+export interface StorageObject {
   Body?: Readable & {
     transformToString?: (encoding?: string) => Promise<string>;
     transformToByteArray?: () => Promise<Uint8Array>;
@@ -369,8 +139,8 @@ export interface S3Object {
   ContentEncoding?: string;
 }
 
-export interface ListObjectsResponse {
-  Contents: S3ObjectInfo[];
+export interface StorageListObjectsResponse {
+  Contents: StorageObjectInfo[];
   CommonPrefixes: Array<{ Prefix: string }>;
   IsTruncated: boolean;
   ContinuationToken?: string;
@@ -382,7 +152,7 @@ export interface ListObjectsResponse {
   StartAfter?: string;
 }
 
-export interface S3ObjectInfo {
+export interface StorageObjectInfo {
   Key: string;
   Size: number;
   LastModified: Date;
@@ -390,14 +160,14 @@ export interface S3ObjectInfo {
   StorageClass?: string;
 }
 
-export interface PutObjectResponse {
+export interface StoragePutObjectResponse {
   ETag: string;
   VersionId: string | null;
   ServerSideEncryption: string | null;
   Location: string;
 }
 
-export interface CopyObjectResponse {
+export interface StorageCopyObjectResponse {
   CopyObjectResult: {
     ETag: string;
     LastModified: string;
@@ -407,15 +177,36 @@ export interface CopyObjectResponse {
   ServerSideEncryption: string | null;
 }
 
-export interface DeleteObjectResponse {
+export interface StorageDeleteObjectResponse {
   DeleteMarker: boolean;
   VersionId: string | null;
 }
 
-export interface DeleteObjectsResponse {
+export interface StorageDeleteObjectsResponse {
   Deleted: Array<{ Key: string }>;
   Errors: Array<{ Key: string; Code: string; Message: string }>;
 }
+
+/** @deprecated Use StoragePutObjectParams. */
+export type PutObjectParams = StoragePutObjectParams;
+/** @deprecated Use StorageCopyObjectParams. */
+export type CopyObjectParams = StorageCopyObjectParams;
+/** @deprecated Use StorageListObjectsParams. */
+export type ListObjectsParams = StorageListObjectsParams;
+/** @deprecated Use StorageObject. */
+export type S3Object = StorageObject;
+/** @deprecated Use StorageObjectInfo. */
+export type S3ObjectInfo = StorageObjectInfo;
+/** @deprecated Use StoragePutObjectResponse. */
+export type PutObjectResponse = StoragePutObjectResponse;
+/** @deprecated Use StorageCopyObjectResponse. */
+export type CopyObjectResponse = StorageCopyObjectResponse;
+/** @deprecated Use StorageDeleteObjectResponse. */
+export type DeleteObjectResponse = StorageDeleteObjectResponse;
+/** @deprecated Use StorageDeleteObjectsResponse. */
+export type DeleteObjectsResponse = StorageDeleteObjectsResponse;
+/** @deprecated Use StorageListObjectsResponse. */
+export type ListObjectsResponse = StorageListObjectsResponse;
 
 export interface StorageObjectData {
   body: Buffer;
@@ -457,125 +248,6 @@ export interface StorageListParams {
   startAfter?: string | null;
 }
 
-export interface FileSystemStorageConfig {
-  basePath?: string;
-  bucket?: string;
-  enforceLimits?: boolean;
-  metadataLimit?: number;
-  maxObjectSize?: number;
-  logLevel?: string;
-  logger?: Logger;
-  compression?: CompressionConfig;
-  ttl?: TTLConfig;
-  locking?: LockingConfig;
-  backup?: BackupConfig;
-  journal?: JournalConfig;
-  stats?: StatsConfig;
-}
-
-export interface FileSystemStorageStats {
-  gets: number;
-  puts: number;
-  deletes: number;
-  errors: number;
-  compressionSaved: number;
-  totalCompressed: number;
-  totalUncompressed: number;
-  avgCompressionRatio: string | number;
-  features: {
-    compression: boolean;
-    ttl: boolean;
-    locking: boolean;
-    backup: boolean;
-    journal: boolean;
-    stats: boolean;
-  };
-}
-
-export interface ReckerHttpHandlerOptions {
-  connectTimeout?: number;
-  headersTimeout?: number;
-  bodyTimeout?: number;
-  keepAlive?: boolean;
-  keepAliveTimeout?: number;
-  keepAliveMaxTimeout?: number;
-  keepAliveTimeoutThreshold?: number;
-  connections?: number;
-  pipelining?: number;
-  maxRequestsPerClient?: number;
-  clientTtl?: number | null;
-  maxCachedSessions?: number;
-  localAddress?: string;
-  http2?: boolean;
-  http2MaxConcurrentStreams?: number;
-  /** HTTP/2 preset: 'balanced' | 'performance' | 'low-latency' | 'low-memory' */
-  http2Preset?: 'balanced' | 'performance' | 'low-latency' | 'low-memory';
-  /** Enable Expect: 100-Continue for large uploads (bytes threshold or boolean) */
-  expectContinue?: boolean | number;
-  /** Enable HTTP/2 observability metrics */
-  enableHttp2Metrics?: boolean;
-  enableDedup?: boolean;
-  enableCircuitBreaker?: boolean;
-  circuitBreakerThreshold?: number;
-  circuitBreakerResetTimeout?: number;
-  enableRetry?: boolean;
-  maxRetries?: number;
-  retryDelay?: number;
-  maxRetryDelay?: number;
-  retryJitter?: boolean;
-  respectRetryAfter?: boolean;
-  /** Internal alignment with HttpClientOptions.useReckerHandler. */
-  useReckerHandler?: boolean;
-  /** Internal alignment with HttpClientOptions.failFastOnReckerFailure. */
-  failFastOnReckerFailure?: boolean;
-}
-
-export interface CircuitStats {
-  failures: number;
-  lastFailureTime: number;
-  state: 'CLOSED' | 'OPEN' | 'HALF_OPEN';
-}
-
-export interface HandlerMetrics {
-  requests: number;
-  retries: number;
-  deduped: number;
-  circuitBreakerTrips: number;
-  circuitStates?: Record<string, CircuitStats>;
-  pendingDeduped?: number;
-  /** HTTP/2 metrics (when enableHttp2Metrics is true) */
-  http2?: {
-    sessions: number;
-    activeSessions: number;
-    streams: number;
-    activeStreams: number;
-    errors: number;
-  };
-}
-
-export interface AwsHttpRequest {
-  protocol?: string;
-  hostname: string;
-  port?: number;
-  path: string;
-  query?: Record<string, string | string[] | null | undefined>;
-  method: string;
-  headers: Record<string, string | undefined>;
-  body?: unknown;
-}
-
-export interface AwsHttpResponse {
-  statusCode: number;
-  reason?: string;
-  headers: Record<string, string>;
-  body?: Readable;
-}
-
-export interface HandleOptions {
-  abortSignal?: AbortSignal;
-  requestTimeout?: number;
-}
-
 export interface Client extends EventEmitter {
   id: string;
   config: ClientConfig;
@@ -584,16 +256,16 @@ export interface Client extends EventEmitter {
   runInTransaction?<T>(fn: () => Promise<T> | T): Promise<T>;
   isInTransaction?(): boolean;
 
-  putObject(params: PutObjectParams): Promise<PutObjectResponse>;
-  getObject(key: string): Promise<S3Object>;
-  headObject(key: string): Promise<S3Object>;
-  copyObject(params: CopyObjectParams): Promise<CopyObjectResponse>;
+  putObject(params: StoragePutObjectParams): Promise<StoragePutObjectResponse>;
+  getObject(key: string): Promise<StorageObject>;
+  headObject(key: string): Promise<StorageObject>;
+  copyObject(params: StorageCopyObjectParams): Promise<StorageCopyObjectResponse>;
   exists(key: string): Promise<boolean>;
-  deleteObject(key: string): Promise<DeleteObjectResponse>;
-  deleteObjects(keys: string[]): Promise<DeleteObjectsResponse>;
-  listObjects(params?: ListObjectsParams): Promise<ListObjectsResponse>;
+  deleteObject(key: string): Promise<StorageDeleteObjectResponse>;
+  deleteObjects(keys: string[]): Promise<StorageDeleteObjectsResponse>;
+  listObjects(params?: StorageListObjectsParams): Promise<StorageListObjectsResponse>;
   getKeysPage(params?: GetKeysPageParams): Promise<string[]>;
-  getFilteredObjectsPage?(params: GetFilteredObjectsPageParams): Promise<Array<{ key: string; object: S3Object }>>;
+  getFilteredObjectsPage?(params: GetFilteredObjectsPageParams): Promise<Array<{ key: string; object: StorageObject }>>;
   getFilteredObjectsWindow?(params: GetFilteredObjectsWindowParams): Promise<FilteredObjectsWindowResponse>;
   getAllKeys(params?: { prefix?: string }): Promise<string[]>;
   count(params?: { prefix?: string }): Promise<number>;

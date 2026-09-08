@@ -1,7 +1,7 @@
 import { tryFn } from '@baldin/core/adapter';
 import { DatabaseError } from '@baldin/core/adapter';
 import type {
-  ListObjectsResponse,
+  StorageListObjectsResponse,
   FilteredObjectsPageFilter
 } from '@baldin/core/adapter';
 import type {
@@ -125,7 +125,7 @@ export class SqliteClientPartitions extends SqliteClientUtils {
     maxKeys: number;
     continuationToken: string | null;
     startAfter: string | null;
-  }): ListObjectsResponse {
+  }): StorageListObjectsResponse {
     const startFilter = continuationToken
       ? this._decodeContinuationToken(continuationToken)
       : startAfter;

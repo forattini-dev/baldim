@@ -4,7 +4,7 @@ import { getBehavior } from '../behaviors/index.js';
 import { isNotFoundError } from '../concerns/s3-errors.js';
 import { sanitizeDeep } from '../concerns/safe-merge.js';
 import { calculateTotalSize, calculateEffectiveLimit } from '../concerns/calculator.js';
-import { mapAwsError, InvalidResourceItem, ResourceError, ValidationError } from '../errors.js';
+import { mapStorageError, InvalidResourceItem, ResourceError, ValidationError } from '../errors.js';
 import type { StringRecord } from '../types/common.types.js';
 import type { IdGeneratorConfig } from './resource-id-generator.class.js';
 import { isPasswordHash } from '../concerns/password-hashing.js';
@@ -60,7 +60,7 @@ export interface Behavior {
   handleGet(params: BehaviorHandleParams): Promise<{ metadata: StringRecord<string> }>;
 }
 
-export interface S3ClientConfig {
+export interface StorageClientConfig {
   bucket: string;
 }
 
@@ -94,7 +94,7 @@ export interface CopyObjectParams {
 }
 
 export interface S3Client {
-  config: S3ClientConfig;
+  config: StorageClientConfig;
   putObject(params: PutObjectParams): Promise<{ ETag?: string }>;
   getObject(key: string): Promise<S3Response>;
   headObject(key: string): Promise<S3Response>;
@@ -358,7 +358,7 @@ export class ResourcePersistence {
     }
 
     const safeError = error instanceof Error ? error : new Error(String(error ?? 'Unknown error'));
-    return mapAwsError(safeError, {
+    return mapStorageError(safeError, {
       bucket: this.client.config.bucket,
       resourceName: this.name,
       ...context
@@ -663,7 +663,7 @@ export class ResourcePersistence {
     const [ok, err, request] = await tryFn<S3Response>(() => this.client.getObject(key));
 
     if (!ok || !request) {
-      throw mapAwsError(err as Error, {
+      throw mapStorageError(err as Error, {
         bucket: this.client.config.bucket,
         key,
         resourceName: this.name,
@@ -880,7 +880,7 @@ export class ResourcePersistence {
     }, id);
 
     if (deleteError) {
-      throw mapAwsError(deleteError, {
+      throw mapStorageError(deleteError, {
         bucket: this.client.config.bucket,
         key,
         resourceName: this.name,
@@ -889,7 +889,7 @@ export class ResourcePersistence {
       });
     }
 
-    if (!ok2) throw mapAwsError(err2 as Error, {
+    if (!ok2) throw mapStorageError(err2 as Error, {
       key,
       resourceName: this.name,
       operation: 'delete',
@@ -1184,7 +1184,7 @@ export class ResourcePersistence {
         suggestion: 'Reduce metadata size or number of fields.'
       });
     } else if (!ok) {
-      throw mapAwsError(err as Error, {
+      throw mapStorageError(err as Error, {
         bucket: this.client.config.bucket,
         key,
         resourceName: this.name,

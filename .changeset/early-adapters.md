@@ -8,4 +8,4 @@
 "@baldin/plugin-audit": minor
 ---
 
-Add the storage adapter registry and plugin SDK, extract memory, filesystem, SQLite, libSQL/D1, RedDB, and S3-compatible storage into standalone packages, and publish the first standalone plugin package.
+Add the storage adapter registry and plugin SDK, extract memory, filesystem, SQLite, libSQL/D1, RedDB, and S3-compatible storage into standalone packages, publish the first standalone plugin package, and introduce provider-neutral storage contract names with deprecated compatibility aliases.

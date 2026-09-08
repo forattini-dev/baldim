@@ -1,9 +1,10 @@
-import { registerStorageAdapter, type FileSystemClientConfig, type StorageAdapterContext } from '@baldin/core/adapter';
+import { registerStorageAdapter, type StorageAdapterContext } from '@baldin/core/adapter';
+import type { FileSystemClientConfig } from './types.js';
 import { FileSystemClient } from './filesystem-client.class.js';
 
 export { FileSystemClient } from './filesystem-client.class.js';
 export { FileSystemStorage } from './filesystem-storage.class.js';
-export type { FileSystemClientConfig, FileSystemStorageConfig } from '@baldin/core/adapter';
+export type { FileSystemClientConfig, FileSystemStorageConfig, FileSystemStorageStats, CompressionConfig, TTLConfig, LockingConfig, BackupConfig, JournalConfig, StatsConfig } from './types.js';
 
 export function createFileSystemClient(context: StorageAdapterContext): FileSystemClient {
   return new FileSystemClient({

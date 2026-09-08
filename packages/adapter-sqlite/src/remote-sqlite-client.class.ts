@@ -17,22 +17,22 @@ import type { D1DatabaseLike } from './d1-executor.class.js';
 import type { LogLevel } from '@baldin/core/adapter';
 import type {
   ClientConfig,
-  CopyObjectParams,
-  CopyObjectResponse,
-  DeleteObjectResponse,
-  DeleteObjectsResponse,
+  StorageCopyObjectParams,
+  StorageCopyObjectResponse,
+  StorageDeleteObjectResponse,
+  StorageDeleteObjectsResponse,
   GetKeysPageParams,
-  ListObjectsParams,
-  ListObjectsResponse,
+  StorageListObjectsParams,
+  StorageListObjectsResponse,
   Logger,
   MonitoringConfig,
-  PutObjectParams,
-  PutObjectResponse,
+  StoragePutObjectParams,
+  StoragePutObjectResponse,
   QueueStats,
-  RemoteSqliteClientConfig,
-  S3Object,
+  StorageObject,
   TaskManager
 } from '@baldin/core/adapter';
+import type { RemoteSqliteClientConfig } from './client-types.js';
 import type { SqlExecutor, SqlStatement } from './sql-executor.types.js';
 
 const pathPosix = path.posix;
@@ -143,7 +143,7 @@ export class RemoteSqliteClient extends EventEmitter {
     return null;
   }
 
-  async putObject(params: PutObjectParams): Promise<PutObjectResponse> {
+  async putObject(params: StoragePutObjectParams): Promise<StoragePutObjectResponse> {
     await this.ensureInitialized();
 
     const fullKey = this.applyKeyPrefix(params.key);
@@ -230,7 +230,7 @@ export class RemoteSqliteClient extends EventEmitter {
     return response;
   }
 
-  async getObject(key: string): Promise<S3Object> {
+  async getObject(key: string): Promise<StorageObject> {
     await this.ensureInitialized();
     const row = await this.getStoredObject(this.applyKeyPrefix(key), { includeBody: true });
     if (!row) {
@@ -241,7 +241,7 @@ export class RemoteSqliteClient extends EventEmitter {
     return result;
   }
 
-  async headObject(key: string): Promise<S3Object> {
+  async headObject(key: string): Promise<StorageObject> {
     await this.ensureInitialized();
     const row = await this.getStoredObject(this.applyKeyPrefix(key), { includeBody: false });
     if (!row) {
@@ -252,7 +252,7 @@ export class RemoteSqliteClient extends EventEmitter {
     return result;
   }
 
-  async copyObject(params: CopyObjectParams): Promise<CopyObjectResponse> {
+  async copyObject(params: StorageCopyObjectParams): Promise<StorageCopyObjectResponse> {
     const source = await this.getStoredObject(this.applyKeyPrefix(params.from), { includeBody: true });
     if (!source) {
       throw new NoSuchKey({ bucket: this.bucket, key: params.from });
@@ -315,7 +315,7 @@ export class RemoteSqliteClient extends EventEmitter {
     return Boolean(row);
   }
 
-  async deleteObject(key: string): Promise<DeleteObjectResponse> {
+  async deleteObject(key: string): Promise<StorageDeleteObjectResponse> {
     await this.ensureInitialized();
     await this.exec('DELETE FROM objects WHERE bucket = ? AND key = ?', [this.bucket, this.applyKeyPrefix(key)]);
     const response = { DeleteMarker: true, VersionId: null, _rowsRead: 0, _rowsWritten: 1 };
@@ -323,10 +323,10 @@ export class RemoteSqliteClient extends EventEmitter {
     return response;
   }
 
-  async deleteObjects(keys: string[]): Promise<DeleteObjectsResponse> {
+  async deleteObjects(keys: string[]): Promise<StorageDeleteObjectsResponse> {
     await this.ensureInitialized();
 
-    const allResults: DeleteObjectsResponse = { Deleted: [], Errors: [] };
+    const allResults: StorageDeleteObjectsResponse = { Deleted: [], Errors: [] };
     const batches = chunk(keys, 50);
 
     for (const batch of batches) {
@@ -345,7 +345,7 @@ export class RemoteSqliteClient extends EventEmitter {
     return allResults;
   }
 
-  async listObjects(params: ListObjectsParams = {}): Promise<ListObjectsResponse> {
+  async listObjects(params: StorageListObjectsParams = {}): Promise<StorageListObjectsResponse> {
     await this.ensureInitialized();
 
     const prefix = params.prefix || '';
@@ -368,7 +368,7 @@ export class RemoteSqliteClient extends EventEmitter {
         : [this.bucket, `${fullPrefix}%`, maxKeys + 1]
     );
 
-    const contents: ListObjectsResponse['Contents'] = [];
+    const contents: StorageListObjectsResponse['Contents'] = [];
     const commonPrefixes = new Set<string>();
     const visibleRows = rows.rows as unknown as RemoteSqliteRow[];
     let processed = 0;
@@ -682,9 +682,9 @@ export class RemoteSqliteClient extends EventEmitter {
     return decoded;
   }
 
-  private toS3Object(row: RemoteSqliteRow, includeBody: boolean): S3Object {
+  private toS3Object(row: RemoteSqliteRow, includeBody: boolean): StorageObject {
     const metadata = this.parseMetadata(row.metadata);
-    const response: S3Object = {
+    const response: StorageObject = {
       Metadata: this.decodeMetadata(metadata) as Record<string, string>,
       ContentType: row.content_type,
       ContentLength: Number(row.content_length),
@@ -701,8 +701,8 @@ export class RemoteSqliteClient extends EventEmitter {
     return response;
   }
 
-  private createBodyStream(buffer: Buffer): S3Object['Body'] {
-    const bodyStream = Readable.from(buffer) as S3Object['Body'];
+  private createBodyStream(buffer: Buffer): StorageObject['Body'] {
+    const bodyStream = Readable.from(buffer) as StorageObject['Body'];
     bodyStream!.transformToString = async (encoding: string = 'utf-8') => {
       return buffer.toString(encoding as BufferEncoding);
     };

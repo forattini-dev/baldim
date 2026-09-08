@@ -28,16 +28,16 @@ import type {
   QueueStats,
   MonitoringConfig,
   TaskManager,
-  PutObjectParams,
-  CopyObjectParams,
-  ListObjectsParams,
+  StoragePutObjectParams,
+  StorageCopyObjectParams,
+  StorageListObjectsParams,
   GetKeysPageParams,
-  S3Object,
-  PutObjectResponse,
-  CopyObjectResponse,
-  DeleteObjectResponse,
-  DeleteObjectsResponse,
-  ListObjectsResponse,
+  StorageObject,
+  StoragePutObjectResponse,
+  StorageCopyObjectResponse,
+  StorageDeleteObjectResponse,
+  StorageDeleteObjectsResponse,
+  StorageListObjectsResponse,
 } from '@baldin/core/adapter';
 
 const pathPosix = path.posix;
@@ -81,8 +81,8 @@ interface RedDbPrefixPage {
 }
 
 interface NativeDeleteBatchResult {
-  Deleted: DeleteObjectsResponse['Deleted'];
-  Errors: DeleteObjectsResponse['Errors'];
+  Deleted: StorageDeleteObjectsResponse['Deleted'];
+  Errors: StorageDeleteObjectsResponse['Errors'];
 }
 
 function escapeSqlIdentifier(value: string): string {
@@ -603,7 +603,7 @@ export class RedDbClient extends EventEmitter {
     }
   }
 
-  private _entityToS3Object(entity: RedDbEntity, includeBody = true): S3Object {
+  private _entityToS3Object(entity: RedDbEntity, includeBody = true): StorageObject {
     const named = entity.data?.named || {};
     const bodyStr = named._body as string | undefined;
     const bodyEncoding = named._body_encoding as string | undefined;
@@ -627,7 +627,7 @@ export class RedDbClient extends EventEmitter {
       decodedMetadata[k] = metadataDecode(v);
     }
 
-    const obj: S3Object = {
+    const obj: StorageObject = {
       Metadata: decodedMetadata as Record<string, string>,
       ContentType: contentType,
       ETag: etag,
@@ -636,7 +636,7 @@ export class RedDbClient extends EventEmitter {
 
     if (includeBody && decodedBody !== undefined) {
       const bodyBuf = Buffer.isBuffer(decodedBody) ? decodedBody : Buffer.from(decodedBody);
-      obj.Body = Readable.from(bodyBuf) as S3Object['Body'];
+      obj.Body = Readable.from(bodyBuf) as StorageObject['Body'];
     }
 
     if (contentEncoding) obj.ContentEncoding = contentEncoding;
@@ -697,7 +697,7 @@ export class RedDbClient extends EventEmitter {
     return null;
   }
 
-  async putObject(params: PutObjectParams): Promise<PutObjectResponse> {
+  async putObject(params: StoragePutObjectParams): Promise<StoragePutObjectResponse> {
     const { key, metadata, contentType, body, contentEncoding, contentLength, ifMatch, ifNoneMatch } = params;
     const fullKey = this._applyKeyPrefix(key);
     const existing = await this._queryByKey(fullKey);
@@ -784,7 +784,7 @@ export class RedDbClient extends EventEmitter {
 
     const etag = fields._etag as string;
 
-    const response: PutObjectResponse = {
+    const response: StoragePutObjectResponse = {
       ETag: etag,
       VersionId: String(resultId || existing?.id || ''),
       ServerSideEncryption: null,
@@ -795,7 +795,7 @@ export class RedDbClient extends EventEmitter {
     return response;
   }
 
-  async getObject(key: string): Promise<S3Object> {
+  async getObject(key: string): Promise<StorageObject> {
     const fullKey = this._applyKeyPrefix(key);
     const entity = await this._queryByKey(fullKey);
 
@@ -812,7 +812,7 @@ export class RedDbClient extends EventEmitter {
     return obj;
   }
 
-  async headObject(key: string): Promise<S3Object> {
+  async headObject(key: string): Promise<StorageObject> {
     const fullKey = this._applyKeyPrefix(key);
     const entity = await this._queryByKey(fullKey);
 
@@ -829,7 +829,7 @@ export class RedDbClient extends EventEmitter {
     return obj;
   }
 
-  async copyObject(params: CopyObjectParams): Promise<CopyObjectResponse> {
+  async copyObject(params: StorageCopyObjectParams): Promise<StorageCopyObjectResponse> {
     const { from, to, metadata, metadataDirective, contentType } = params;
     const fullFrom = this._applyKeyPrefix(from);
     const fullTo = this._applyKeyPrefix(to);
@@ -908,7 +908,7 @@ export class RedDbClient extends EventEmitter {
       }
     }
 
-    const response: CopyObjectResponse = {
+    const response: StorageCopyObjectResponse = {
       CopyObjectResult: {
         ETag: fields._etag as string,
         LastModified: new Date().toISOString(),
@@ -928,7 +928,7 @@ export class RedDbClient extends EventEmitter {
     return entity !== null;
   }
 
-  async deleteObject(key: string): Promise<DeleteObjectResponse> {
+  async deleteObject(key: string): Promise<StorageDeleteObjectResponse> {
     if (this._nativeClient) {
       const fullKey = this._applyKeyPrefix(key);
       await this._nativeClient.sql.query(
@@ -958,15 +958,15 @@ export class RedDbClient extends EventEmitter {
       }
     }
 
-    const response: DeleteObjectResponse = { DeleteMarker: false, VersionId: '' };
+    const response: StorageDeleteObjectResponse = { DeleteMarker: false, VersionId: '' };
     this.emit('cl:response', 'DeleteObjectCommand', response, { Key: key });
     return response;
   }
 
-  async deleteObjects(keys: string[]): Promise<DeleteObjectsResponse> {
+  async deleteObjects(keys: string[]): Promise<StorageDeleteObjectsResponse> {
     const nativeBatchSize = 200;
     const batches = chunk(keys, this._nativeClient ? nativeBatchSize : (this.taskManager.concurrency || 5));
-    const allResults: DeleteObjectsResponse = { Deleted: [], Errors: [] };
+    const allResults: StorageDeleteObjectsResponse = { Deleted: [], Errors: [] };
 
     const { results } = await this.taskManager.process(
       batches,
@@ -975,7 +975,7 @@ export class RedDbClient extends EventEmitter {
           return await this._deleteKeysNative(batch);
         }
 
-        const batchResults: DeleteObjectsResponse = { Deleted: [], Errors: [] };
+        const batchResults: StorageDeleteObjectsResponse = { Deleted: [], Errors: [] };
         for (const key of batch) {
           try {
             await this.deleteObject(key);
@@ -1004,7 +1004,7 @@ export class RedDbClient extends EventEmitter {
     return allResults;
   }
 
-  async listObjects(params: ListObjectsParams = {}): Promise<ListObjectsResponse> {
+  async listObjects(params: StorageListObjectsParams = {}): Promise<StorageListObjectsResponse> {
     const { prefix = '', delimiter = null, maxKeys = 1000, continuationToken = null, startAfter = null } = params;
     const fullPrefix = this._applyKeyPrefix(prefix || '');
 
@@ -1065,7 +1065,7 @@ export class RedDbClient extends EventEmitter {
       ? Buffer.from(String(nextOffset), 'utf8').toString('base64')
       : undefined;
 
-    const response: ListObjectsResponse = {
+    const response: StorageListObjectsResponse = {
       Contents: contents,
       CommonPrefixes: Array.from(commonPrefixSet).sort().map((p) => ({ Prefix: p })),
       IsTruncated: isTruncated,

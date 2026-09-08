@@ -1,10 +1,11 @@
-import { registerStorageAdapter, type RemoteSqliteClientConfig, type SqliteClientConfig, type StorageAdapterContext } from '@baldin/core/adapter';
+import { registerStorageAdapter, type StorageAdapterContext } from '@baldin/core/adapter';
+import type { RemoteSqliteClientConfig, SqliteClientConfig } from './client-types.js';
 import { SqliteClient } from './sqlite-client.class.js';
 import { RemoteSqliteClient } from './remote-sqlite-client.class.js';
 
 export { SqliteClient } from './sqlite-client.class.js';
 export { RemoteSqliteClient } from './remote-sqlite-client.class.js';
-export type { SqliteClientConfig, RemoteSqliteClientConfig } from '@baldin/core/adapter';
+export type { SqliteClientConfig, RemoteSqliteClientConfig } from './client-types.js';
 
 function createLocal(context: StorageAdapterContext): SqliteClient {
   return new SqliteClient({ ...context.clientOptions, logLevel: context.logLevel, logger: context.logger as SqliteClientConfig['logger'] });

@@ -3,7 +3,7 @@ import { tryFn } from '../concerns/try-fn.js';
 import { mapWithConcurrency } from '../concerns/map-with-concurrency.js';
 import { isNotFoundError } from '../concerns/s3-errors.js';
 import { validateS3KeySegment } from '../concerns/s3-key.js';
-import { mapAwsError, PartitionError, ResourceError } from '../errors.js';
+import { mapStorageError, PartitionError, ResourceError } from '../errors.js';
 import type { StringRecord } from '../types/common.types.js';
 
 export interface PartitionFields {
@@ -126,7 +126,7 @@ export class ResourcePartitions {
     }
 
     const safeError = error instanceof Error ? error : new Error(String(error ?? 'Unknown error'));
-    return mapAwsError(safeError, {
+    return mapStorageError(safeError, {
       resourceName: this.resource.name,
       ...context
     });

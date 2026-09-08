@@ -15,7 +15,7 @@ import type {
   AwsHttpRequest,
   AwsHttpResponse,
   HandleOptions
-} from '@baldin/core/adapter';
+} from './types.js';
 
 interface CircuitBreakerOptions {
   threshold?: number;

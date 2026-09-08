@@ -1,28 +1,28 @@
 import { chunk } from 'lodash-es';
 
 import { tryFn } from '@baldin/core/adapter';
-import { mapAwsError, DatabaseError, BaseError } from '@baldin/core/adapter';
+import { mapStorageError, DatabaseError, BaseError } from '@baldin/core/adapter';
 import type {
-  ListObjectsParams,
+  StorageListObjectsParams,
   GetKeysPageParams,
   GetFilteredObjectsPageParams,
   GetFilteredObjectsWindowParams,
   FilteredObjectsWindowResponse,
-  S3Object,
-  ListObjectsResponse,
-  DeleteObjectsResponse
+  StorageObject,
+  StorageListObjectsResponse,
+  StorageDeleteObjectsResponse
 } from '@baldin/core/adapter';
 import type { DbListRow, DbCountRow, DbDeleteSummaryRow } from './types.js';
 import { SqliteClientCrud } from './crud.js';
 
 export class SqliteClientQuery extends SqliteClientCrud {
-  async deleteObjects(keys: string[]): Promise<DeleteObjectsResponse> {
+  async deleteObjects(keys: string[]): Promise<StorageDeleteObjectsResponse> {
     return this._runWriteTask(async () => {
       const fullKeys = keys.map(key => this._applyKeyPrefix(key));
       const input = { Delete: { Objects: keys.map(key => ({ Key: key })) } };
 
       const batches = chunk(fullKeys, this.taskManager.concurrency || 5);
-      const allResults: DeleteObjectsResponse = { Deleted: [], Errors: [] };
+      const allResults: StorageDeleteObjectsResponse = { Deleted: [], Errors: [] };
 
       const { results, errors } = await this.taskManager.process(
         batches,
@@ -87,7 +87,7 @@ export class SqliteClientQuery extends SqliteClientCrud {
     });
   }
 
-  async listObjects(params: ListObjectsParams = {}): Promise<ListObjectsResponse> {
+  async listObjects(params: StorageListObjectsParams = {}): Promise<StorageListObjectsResponse> {
     const {
       prefix = '',
       delimiter = null,
@@ -186,7 +186,7 @@ export class SqliteClientQuery extends SqliteClientCrud {
 
       hasMore = hasMore || hasExtraRow;
 
-      const response: ListObjectsResponse = {
+      const response: StorageListObjectsResponse = {
         Contents: contents,
         CommonPrefixes: commonPrefixes,
         IsTruncated: hasMore,
@@ -206,7 +206,7 @@ export class SqliteClientQuery extends SqliteClientCrud {
         throw error;
       }
       if (error instanceof Error) {
-        throw mapAwsError(error, {
+        throw mapStorageError(error, {
           bucket: this.bucket,
           operation: 'listObjects',
           commandName: 'ListObjectsV2Command',
@@ -252,7 +252,7 @@ export class SqliteClientQuery extends SqliteClientCrud {
     return keys;
   }
 
-  async getFilteredObjectsPage(params: GetFilteredObjectsPageParams): Promise<Array<{ key: string; object: S3Object }>> {
+  async getFilteredObjectsPage(params: GetFilteredObjectsPageParams): Promise<Array<{ key: string; object: StorageObject }>> {
     const { prefix, offset = 0, amount = 100, filters = [] } = params;
     const fullPrefix = this._applyKeyPrefix(prefix || '');
     const safeAmount = Math.max(0, Math.trunc(amount));

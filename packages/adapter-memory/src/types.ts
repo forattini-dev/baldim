@@ -76,7 +76,7 @@ export interface ClientConfig {
   [key: string]: unknown;
 }
 
-export interface PutObjectParams {
+export interface StoragePutObjectParams {
   key: string;
   metadata?: Record<string, unknown>;
   contentType?: string;
@@ -87,7 +87,7 @@ export interface PutObjectParams {
   ifNoneMatch?: string;
 }
 
-export interface CopyObjectParams {
+export interface StorageCopyObjectParams {
   from: string;
   to: string;
   metadata?: Record<string, unknown>;
@@ -95,7 +95,7 @@ export interface CopyObjectParams {
   contentType?: string;
 }
 
-export interface ListObjectsParams {
+export interface StorageListObjectsParams {
   prefix?: string;
   delimiter?: string | null;
   maxKeys?: number;
@@ -109,7 +109,7 @@ export interface GetKeysPageParams {
   amount?: number;
 }
 
-export interface S3Object {
+export interface StorageObject {
   Body?: Readable & {
     transformToString?: (encoding?: string) => Promise<string>;
     transformToByteArray?: () => Promise<Uint8Array>;
@@ -123,7 +123,7 @@ export interface S3Object {
   ContentEncoding?: string;
 }
 
-export interface S3ObjectInfo {
+export interface StorageObjectInfo {
   Key: string;
   Size: number;
   LastModified: Date;
@@ -131,32 +131,32 @@ export interface S3ObjectInfo {
   StorageClass?: string;
 }
 
-export interface PutObjectResponse {
+export interface StoragePutObjectResponse {
   ETag: string;
   VersionId: string | null;
   ServerSideEncryption: string | null;
   Location: string;
 }
 
-export interface CopyObjectResponse {
+export interface StorageCopyObjectResponse {
   CopyObjectResult: { ETag: string; LastModified: string };
   BucketKeyEnabled: boolean;
   VersionId: string | null;
   ServerSideEncryption: string | null;
 }
 
-export interface DeleteObjectResponse {
+export interface StorageDeleteObjectResponse {
   DeleteMarker: boolean;
   VersionId: string | null;
 }
 
-export interface DeleteObjectsResponse {
+export interface StorageDeleteObjectsResponse {
   Deleted: Array<{ Key: string }>;
   Errors: Array<{ Key: string; Code: string; Message: string }>;
 }
 
-export interface ListObjectsResponse {
-  Contents: S3ObjectInfo[];
+export interface StorageListObjectsResponse {
+  Contents: StorageObjectInfo[];
   CommonPrefixes: Array<{ Prefix: string }>;
   IsTruncated: boolean;
   ContinuationToken?: string;
@@ -167,6 +167,27 @@ export interface ListObjectsResponse {
   Delimiter?: string | null;
   StartAfter?: string;
 }
+
+/** @deprecated Use StoragePutObjectParams. */
+export type PutObjectParams = StoragePutObjectParams;
+/** @deprecated Use StorageCopyObjectParams. */
+export type CopyObjectParams = StorageCopyObjectParams;
+/** @deprecated Use StorageListObjectsParams. */
+export type ListObjectsParams = StorageListObjectsParams;
+/** @deprecated Use StorageObject. */
+export type S3Object = StorageObject;
+/** @deprecated Use StorageObjectInfo. */
+export type S3ObjectInfo = StorageObjectInfo;
+/** @deprecated Use StoragePutObjectResponse. */
+export type PutObjectResponse = StoragePutObjectResponse;
+/** @deprecated Use StorageCopyObjectResponse. */
+export type CopyObjectResponse = StorageCopyObjectResponse;
+/** @deprecated Use StorageDeleteObjectResponse. */
+export type DeleteObjectResponse = StorageDeleteObjectResponse;
+/** @deprecated Use StorageDeleteObjectsResponse. */
+export type DeleteObjectsResponse = StorageDeleteObjectsResponse;
+/** @deprecated Use StorageListObjectsResponse. */
+export type ListObjectsResponse = StorageListObjectsResponse;
 
 export interface StorageObjectData {
   body: Buffer;

@@ -1,14 +1,14 @@
-import { mapAwsError, DatabaseError, BaseError } from '@baldin/core/adapter';
+import { mapStorageError, DatabaseError, BaseError } from '@baldin/core/adapter';
 import type {
-  PutObjectParams,
-  CopyObjectParams,
-  PutObjectResponse,
-  S3Object,
-  CopyObjectResponse,
-  DeleteObjectResponse,
-  DeleteObjectsResponse,
-  ListObjectsParams,
-  ListObjectsResponse,
+  StoragePutObjectParams,
+  StorageCopyObjectParams,
+  StoragePutObjectResponse,
+  StorageObject,
+  StorageCopyObjectResponse,
+  StorageDeleteObjectResponse,
+  StorageDeleteObjectsResponse,
+  StorageListObjectsParams,
+  StorageListObjectsResponse,
   QueueStats
 } from '@baldin/core/adapter';
 import type { CommandInput, Command } from './sqlite/types.js';
@@ -69,7 +69,7 @@ export class SqliteClient extends SqliteClientVec {
       if (error instanceof BaseError) {
         throw error;
       }
-      const mappedError = mapAwsError(error as Error, {
+      const mappedError = mapStorageError(error as Error, {
         bucket: this.bucket,
         key: input.Key,
         commandName,
@@ -79,12 +79,12 @@ export class SqliteClient extends SqliteClientVec {
     }
   }
 
-  private async _handlePutObject(input: CommandInput): Promise<PutObjectResponse> {
+  private async _handlePutObject(input: CommandInput): Promise<StoragePutObjectResponse> {
     return this.putObject({
       key: input.Key ?? '',
       metadata: input.Metadata,
       contentType: input.ContentType,
-      body: input.Body as PutObjectParams['body'],
+      body: input.Body as StoragePutObjectParams['body'],
       contentEncoding: input.ContentEncoding,
       contentLength: input.ContentLength,
       ifMatch: input.IfMatch,
@@ -92,15 +92,15 @@ export class SqliteClient extends SqliteClientVec {
     });
   }
 
-  private async _handleGetObject(input: CommandInput): Promise<S3Object> {
+  private async _handleGetObject(input: CommandInput): Promise<StorageObject> {
     return this.getObject(input.Key || '');
   }
 
-  private async _handleHeadObject(input: CommandInput): Promise<S3Object> {
+  private async _handleHeadObject(input: CommandInput): Promise<StorageObject> {
     return this.headObject(input.Key || '');
   }
 
-  private async _handleCopyObject(input: CommandInput): Promise<CopyObjectResponse> {
+  private async _handleCopyObject(input: CommandInput): Promise<StorageCopyObjectResponse> {
     const { sourceBucket, sourceKey } = this._parseCopySource(input.CopySource);
 
     if (sourceBucket && sourceBucket !== this.bucket) {
@@ -120,17 +120,17 @@ export class SqliteClient extends SqliteClientVec {
     });
   }
 
-  private async _handleDeleteObject(input: CommandInput): Promise<DeleteObjectResponse> {
+  private async _handleDeleteObject(input: CommandInput): Promise<StorageDeleteObjectResponse> {
     return this.deleteObject(input.Key || '');
   }
 
-  private async _handleDeleteObjects(input: CommandInput): Promise<DeleteObjectsResponse> {
+  private async _handleDeleteObjects(input: CommandInput): Promise<StorageDeleteObjectsResponse> {
     const objects = input.Delete?.Objects || [];
     const keys = objects.map(obj => obj.Key);
     return this.deleteObjects(keys);
   }
 
-  private async _handleListObjects(input: CommandInput): Promise<ListObjectsResponse> {
+  private async _handleListObjects(input: CommandInput): Promise<StorageListObjectsResponse> {
     return this.listObjects({
       prefix: input.Prefix || '',
       delimiter: input.Delimiter,

@@ -24,8 +24,9 @@ working core from a completed product migration.
 
 `@baldin/core` contains no storage implementation source. It installs the independent
 `@baldin/adapter-memory` package so `memory:` works by default, while external
-providers resolve through a public protocol registry. Provider-named contract types
-still need neutral names with compatibility aliases.
+providers resolve through a public protocol registry. Provider configuration types
+live in their adapter packages; core publishes neutral storage contracts and deprecated
+aliases for the former S3-named types.
 
 The source still carries legacy names such as `s3db.json`, `s3dbVersion`, and
 `S3DB_*`. Persisted manifest names and operational environment variables are
@@ -39,7 +40,7 @@ contract has not yet run against live targets for each provider.
 ## Corrective order
 
 1. Run the storage contract suite against AWS S3, R2, MinIO, and a custom endpoint.
-2. Replace provider-named core contract types with neutral names and compatibility aliases.
+2. Move provider-specific connection parsing out of `Database` and `ConnectionString`.
 3. Migrate the remaining 22 plugin families to `@baldin/plugin-<name>` with their
    relevant original tests.
 4. Restore public utilities, Factory/Seeder, TypeScript generation, and explicitly

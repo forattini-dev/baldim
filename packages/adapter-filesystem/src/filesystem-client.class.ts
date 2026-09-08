@@ -2,27 +2,26 @@ import path from 'path';
 import EventEmitter from 'events';
 import { chunk } from 'lodash-es';
 
-import { BaseError, DatabaseError, TasksRunner, idGenerator, mapAwsError, metadataDecode, metadataEncode, tryFn } from '@baldin/core/adapter';
+import { BaseError, DatabaseError, TasksRunner, idGenerator, mapStorageError, metadataDecode, metadataEncode, tryFn } from '@baldin/core/adapter';
+import type { FileSystemClientConfig, FileSystemStorageStats } from './types.js';
 import { FileSystemStorage } from './filesystem-storage.class.js';
 import { createLogger, type LogLevel } from '@baldin/core/adapter';
 import type {
   Logger,
-  FileSystemClientConfig,
   TaskManager,
   ClientConfig,
   QueueStats,
   MonitoringConfig,
-  PutObjectParams,
-  CopyObjectParams,
-  ListObjectsParams,
+  StoragePutObjectParams,
+  StorageCopyObjectParams,
+  StorageListObjectsParams,
   GetKeysPageParams,
-  S3Object,
-  PutObjectResponse,
-  CopyObjectResponse,
-  DeleteObjectResponse,
-  DeleteObjectsResponse,
-  ListObjectsResponse,
-  FileSystemStorageStats
+  StorageObject,
+  StoragePutObjectResponse,
+  StorageCopyObjectResponse,
+  StorageDeleteObjectResponse,
+  StorageDeleteObjectsResponse,
+  StorageListObjectsResponse,
 } from '@baldin/core/adapter';
 
 const pathPosix = path.posix;
@@ -200,7 +199,7 @@ export class FileSystemClient extends EventEmitter {
       if (error instanceof BaseError) {
         throw error;
       }
-      const mappedError = mapAwsError(error as Error, {
+      const mappedError = mapStorageError(error as Error, {
         bucket: this.bucket,
         key: input.Key,
         commandName,
@@ -210,7 +209,7 @@ export class FileSystemClient extends EventEmitter {
     }
   }
 
-  private async _handlePutObject(input: CommandInput): Promise<PutObjectResponse> {
+  private async _handlePutObject(input: CommandInput): Promise<StoragePutObjectResponse> {
     const key = this._applyKeyPrefix(input.Key);
     const metadata = this._encodeMetadata(input.Metadata || {});
     const contentType = input.ContentType;
@@ -231,19 +230,19 @@ export class FileSystemClient extends EventEmitter {
     });
   }
 
-  private async _handleGetObject(input: CommandInput): Promise<S3Object> {
+  private async _handleGetObject(input: CommandInput): Promise<StorageObject> {
     const key = this._applyKeyPrefix(input.Key);
     const response = await this.storage.get(key);
     return this._decodeMetadataResponse(response);
   }
 
-  private async _handleHeadObject(input: CommandInput): Promise<Omit<S3Object, 'Body'>> {
+  private async _handleHeadObject(input: CommandInput): Promise<Omit<StorageObject, 'Body'>> {
     const key = this._applyKeyPrefix(input.Key);
     const response = await this.storage.head(key);
     return this._decodeMetadataResponse(response);
   }
 
-  private async _handleCopyObject(input: CommandInput): Promise<CopyObjectResponse> {
+  private async _handleCopyObject(input: CommandInput): Promise<StorageCopyObjectResponse> {
     const { sourceBucket, sourceKey } = this._parseCopySource(input.CopySource);
 
     if (sourceBucket !== this.bucket) {
@@ -264,20 +263,20 @@ export class FileSystemClient extends EventEmitter {
     });
   }
 
-  private async _handleDeleteObject(input: CommandInput): Promise<DeleteObjectResponse> {
+  private async _handleDeleteObject(input: CommandInput): Promise<StorageDeleteObjectResponse> {
     const key = this._applyKeyPrefix(input.Key);
     return await this.storage.delete(key);
   }
 
-  private async _handleDeleteObjects(input: CommandInput): Promise<DeleteObjectsResponse> {
+  private async _handleDeleteObjects(input: CommandInput): Promise<StorageDeleteObjectsResponse> {
     const objects = input.Delete?.Objects || [];
     const keys = objects.map(obj => this._applyKeyPrefix(obj.Key));
     return await this.storage.deleteMultiple(keys);
   }
 
-  private async _handleListObjects(input: CommandInput): Promise<ListObjectsResponse> {
+  private async _handleListObjects(input: CommandInput): Promise<StorageListObjectsResponse> {
     const fullPrefix = this._applyKeyPrefix(input.Prefix || '');
-    const params: ListObjectsParams & { startAfter?: string } = {
+    const params: StorageListObjectsParams & { startAfter?: string } = {
       prefix: fullPrefix,
       delimiter: input.Delimiter,
       maxKeys: input.MaxKeys,
@@ -292,7 +291,7 @@ export class FileSystemClient extends EventEmitter {
     return this._normalizeListResponse(response);
   }
 
-  async putObject(params: PutObjectParams): Promise<PutObjectResponse> {
+  async putObject(params: StoragePutObjectParams): Promise<StoragePutObjectResponse> {
     const { key, metadata, contentType, body, contentEncoding, contentLength, ifMatch, ifNoneMatch } = params;
     const fullKey = this._applyKeyPrefix(key);
     const stringMetadata = this._encodeMetadata(metadata) || {};
@@ -314,7 +313,7 @@ export class FileSystemClient extends EventEmitter {
     return response;
   }
 
-  async getObject(key: string): Promise<S3Object> {
+  async getObject(key: string): Promise<StorageObject> {
     const fullKey = this._applyKeyPrefix(key);
     const input = { Key: key };
     const response = await this.storage.get(fullKey);
@@ -325,7 +324,7 @@ export class FileSystemClient extends EventEmitter {
     return decodedResponse;
   }
 
-  async headObject(key: string): Promise<S3Object> {
+  async headObject(key: string): Promise<StorageObject> {
     const fullKey = this._applyKeyPrefix(key);
     const input = { Key: key };
     const response = await this.storage.head(fullKey);
@@ -333,10 +332,10 @@ export class FileSystemClient extends EventEmitter {
 
     this.emit('cl:response', 'HeadObjectCommand', decodedResponse, input);
 
-    return decodedResponse as S3Object;
+    return decodedResponse as StorageObject;
   }
 
-  async copyObject(params: CopyObjectParams): Promise<CopyObjectResponse> {
+  async copyObject(params: StorageCopyObjectParams): Promise<StorageCopyObjectResponse> {
     const { from, to, metadata, metadataDirective, contentType } = params;
     const fullFrom = this._applyKeyPrefix(from);
     const fullTo = this._applyKeyPrefix(to);
@@ -360,7 +359,7 @@ export class FileSystemClient extends EventEmitter {
     return this.storage.exists(fullKey);
   }
 
-  async deleteObject(key: string): Promise<DeleteObjectResponse> {
+  async deleteObject(key: string): Promise<StorageDeleteObjectResponse> {
     const fullKey = this._applyKeyPrefix(key);
     const input = { Key: key };
     const response = await this.storage.delete(fullKey);
@@ -370,13 +369,13 @@ export class FileSystemClient extends EventEmitter {
     return response;
   }
 
-  async deleteObjects(keys: string[]): Promise<DeleteObjectsResponse> {
+  async deleteObjects(keys: string[]): Promise<StorageDeleteObjectsResponse> {
     const fullKeys = keys.map(key => this._applyKeyPrefix(key));
 
     const input = { Delete: { Objects: keys.map(key => ({ Key: key })) } };
 
     const batches = chunk(fullKeys, this.taskManager.concurrency || 5);
-    const allResults: DeleteObjectsResponse = { Deleted: [], Errors: [] };
+    const allResults: StorageDeleteObjectsResponse = { Deleted: [], Errors: [] };
 
     const { results } = await this.taskManager.process(
       batches,
@@ -395,10 +394,10 @@ export class FileSystemClient extends EventEmitter {
     return allResults;
   }
 
-  async listObjects(params: ListObjectsParams = {}): Promise<ListObjectsResponse> {
+  async listObjects(params: StorageListObjectsParams = {}): Promise<StorageListObjectsResponse> {
     const { prefix = '', delimiter = null, maxKeys = 1000, continuationToken = null, startAfter = null } = params;
     const fullPrefix = this._applyKeyPrefix(prefix || '');
-    const listParams: ListObjectsParams & { startAfter?: string } = {
+    const listParams: StorageListObjectsParams & { startAfter?: string } = {
       prefix: fullPrefix,
       delimiter,
       maxKeys,
@@ -660,7 +659,7 @@ export class FileSystemClient extends EventEmitter {
     };
   }
 
-  private _normalizeListResponse(response: ListObjectsResponse): ListObjectsResponse {
+  private _normalizeListResponse(response: StorageListObjectsResponse): StorageListObjectsResponse {
     const rawContents = Array.isArray(response.Contents) ? response.Contents : [];
     const contents = rawContents.map(item => ({
       ...item,

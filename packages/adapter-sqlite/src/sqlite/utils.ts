@@ -4,7 +4,7 @@ import { createHash } from 'crypto';
 
 import { metadataEncode, metadataDecode } from '@baldin/core/adapter';
 import { DatabaseError, ResourceError, ValidationError } from '@baldin/core/adapter';
-import type { S3Object } from '@baldin/core/adapter';
+import type { StorageObject } from '@baldin/core/adapter';
 import type {
   DbRow,
   DbObjectHeaderRow,
@@ -225,13 +225,13 @@ export class SqliteClientUtils extends SqliteClientBase {
     };
   }
 
-  protected _normalizePartitionObject(row: DbPartitionRow, headOnly: boolean): S3Object {
+  protected _normalizePartitionObject(row: DbPartitionRow, headOnly: boolean): StorageObject {
     const metadata = this._decodeMetadataRow(row);
-    let bodyStream: S3Object['Body'] | undefined;
+    let bodyStream: StorageObject['Body'] | undefined;
 
     if (!headOnly) {
       const bodyBuffer = Buffer.alloc(0);
-      bodyStream = Readable.from(bodyBuffer) as S3Object['Body'];
+      bodyStream = Readable.from(bodyBuffer) as StorageObject['Body'];
       bodyStream!.transformToString = async () => bodyBuffer.toString('utf-8');
       bodyStream!.transformToByteArray = async () => new Uint8Array(bodyBuffer);
       bodyStream!.transformToWebStream = () => Readable.toWeb(bodyStream as Readable) as ReadableStream;
@@ -247,13 +247,13 @@ export class SqliteClientUtils extends SqliteClientBase {
     };
   }
 
-  protected _normalizeObject(row: DbRow | DbObjectHeaderRow, headOnly: boolean): S3Object {
+  protected _normalizeObject(row: DbRow | DbObjectHeaderRow, headOnly: boolean): StorageObject {
     const metadata = this._decodeMetadataRow(row);
-    let bodyStream: S3Object['Body'] | undefined;
+    let bodyStream: StorageObject['Body'] | undefined;
 
     if (!headOnly) {
       const bodyBuffer = Buffer.from((row as DbRow).body);
-      bodyStream = Readable.from(bodyBuffer) as S3Object['Body'];
+      bodyStream = Readable.from(bodyBuffer) as StorageObject['Body'];
       bodyStream!.transformToString = async () => bodyBuffer.toString('utf-8');
       bodyStream!.transformToByteArray = async () => new Uint8Array(bodyBuffer);
       bodyStream!.transformToWebStream = () => Readable.toWeb(bodyStream as Readable) as ReadableStream;

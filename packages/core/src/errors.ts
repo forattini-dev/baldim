@@ -575,7 +575,7 @@ export const ErrorMap = {
   InvalidResourceItem,
 } as const;
 
-export interface MapAwsErrorContext {
+export interface MapStorageErrorContext {
   bucket?: string;
   key?: string;
   resourceName?: string;
@@ -586,7 +586,7 @@ export interface MapAwsErrorContext {
   retriable?: boolean;
 }
 
-export function mapAwsError(err: AwsErrorLike | Error, context: MapAwsErrorContext = {}): S3dbError {
+export function mapStorageError(err: AwsErrorLike | Error, context: MapStorageErrorContext = {}): S3dbError {
   const awsErr = err as AwsErrorLike;
   const code = awsErr.code || awsErr.Code || awsErr.name;
   const statusCode = awsErr.statusCode || awsErr.$metadata?.httpStatusCode;
@@ -624,7 +624,7 @@ export function mapAwsError(err: AwsErrorLike | Error, context: MapAwsErrorConte
   }
 
   if (code === 'AccessDenied' || statusCode === 403 || code === 'Forbidden') {
-    description = 'Access denied. Check your AWS credentials, IAM permissions, and bucket policy.';
+    description = 'Access denied. Check the adapter credentials, permissions, and storage policy.';
     return new PermissionError('Access denied', {
       ...context,
       original: err,
@@ -687,7 +687,7 @@ export function mapAwsError(err: AwsErrorLike | Error, context: MapAwsErrorConte
     .filter(Boolean)
     .join(' | ');
 
-  description = `Check the error details and AWS documentation. Original error: ${err.message || err.toString()}`;
+  description = `Check the error details and storage provider documentation. Original error: ${err.message || err.toString()}`;
   return new UnknownError(errorDetails, {
     ...context,
     original: err,
@@ -726,6 +726,11 @@ export class CryptoError extends S3dbError {
     super(message, merged);
   }
 }
+
+/** @deprecated Use MapStorageErrorContext. */
+export type MapAwsErrorContext = MapStorageErrorContext;
+/** @deprecated Use mapStorageError. */
+export const mapAwsError = mapStorageError;
 
 export class SchemaError extends S3dbError {
   constructor(message: string, details: S3dbErrorDetails = {}) {

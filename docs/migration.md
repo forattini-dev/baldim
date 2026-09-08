@@ -18,6 +18,8 @@ Original project and data remain unchanged. Source license: Unlicense.
   lookup, duplicate-name protection, reconnect-safe event forwarding, and
   connect rollback.
 - A public storage adapter registry selects external clients by URL protocol.
+- Storage contracts use provider-neutral names; previous S3-shaped type names remain deprecated aliases.
+- Provider configuration and transport tuning types are exported by their owning adapter packages.
 - Memory storage lives in the independent `@baldin/adapter-memory` package; core installs it so `memory:` remains automatic.
 - Filesystem storage lives in `@baldin/adapter-filesystem`.
 - RedDB transport lives in `@baldin/adapter-reddb`; Recker is no longer a core dependency.
@@ -35,7 +37,7 @@ Original project and data remain unchanged. Source license: Unlicense.
 
 1. Run one storage contract suite against MinIO in CI and configured AWS S3/R2
    targets outside pull requests.
-2. Rename provider-specific storage contract types while keeping deprecated aliases.
+2. Move provider-specific connection parsing from core into adapter factories.
 3. Migrate the remaining plugin families one package at a time with their
    relevant original tests, starting with TTL and scheduler.
 4. Expand compatibility fixtures for schema metadata, document bodies,

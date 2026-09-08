@@ -1,24 +1,24 @@
 import EventEmitter from "events";
 import { ReadableStream, ReadableStreamDefaultController, ReadableStreamDefaultReader } from "node:stream/web";
 
-interface S3Object {
+interface StorageObjectSummary {
   Key: string;
 }
 
-interface ListObjectsResponse {
-  Contents: S3Object[];
+interface StorageListResponse {
+  Contents: StorageObjectSummary[];
   NextContinuationToken?: string;
   IsTruncated: boolean;
 }
 
-interface S3ClientConfig {
+interface StorageClientConfig {
   keyPrefix: string;
 }
 
 interface S3Client {
   parallelism: number;
-  config: S3ClientConfig;
-  listObjects(options: { prefix: string; continuationToken: string | null }): Promise<ListObjectsResponse>;
+  config: StorageClientConfig;
+  listObjects(options: { prefix: string; continuationToken: string | null }): Promise<StorageListResponse>;
 }
 
 interface Resource {

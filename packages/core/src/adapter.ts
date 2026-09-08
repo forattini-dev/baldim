@@ -13,44 +13,31 @@ export { tryFn } from './concerns/try-fn.js';
 export { md5 } from './concerns/crypto.js';
 export { idGenerator } from './concerns/id.js';
 export { metadataEncode, metadataDecode } from './concerns/metadata-encoding.js';
-export { mapAwsError, UnknownError, BaseError, DatabaseError, MetadataLimitError, ResourceError, ValidationError, NoSuchKey } from './errors.js';
+export { mapStorageError, mapAwsError, UnknownError, BaseError, DatabaseError, MetadataLimitError, ResourceError, ValidationError, NoSuchKey } from './errors.js';
 export { TasksPool } from './tasks/tasks-pool.class.js';
 export { TasksRunner } from './tasks/tasks-runner.class.js';
 export { createLogger } from './concerns/logger.js';
 export { getCronManager } from './concerns/cron-manager.js';
 export { normalizeEtagHeader } from './clients/client-compat.js';
 export { AdaptiveTuning } from './concerns/adaptive-tuning.js';
-export { HTTP_CLIENT_PROFILES } from './clients/types.js';
 export type {
   Logger,
-  S3ClientConfig,
-  HttpClientOptions,
-  HttpClientProfile,
   TaskExecutorConfig,
   AutotuneConfig,
   MonitoringConfig,
-  PutObjectParams,
-  CopyObjectParams,
-  ListObjectsParams,
+  StoragePutObjectParams,
+  StorageCopyObjectParams,
+  StorageListObjectsParams,
   GetKeysPageParams,
   QueueStats,
-  ReckerHttpHandlerOptions,
-  CircuitStats,
-  HandlerMetrics,
-  AwsHttpRequest,
-  AwsHttpResponse,
-  HandleOptions,
-  FileSystemClientConfig,
   TaskManager,
   ClientConfig,
-  S3Object,
-  PutObjectResponse,
-  CopyObjectResponse,
-  DeleteObjectResponse,
-  DeleteObjectsResponse,
-  ListObjectsResponse,
-  FileSystemStorageConfig,
-  FileSystemStorageStats,
+  StorageObject,
+  StoragePutObjectResponse,
+  StorageCopyObjectResponse,
+  StorageDeleteObjectResponse,
+  StorageDeleteObjectsResponse,
+  StorageListObjectsResponse,
   StorageObjectData,
   StoragePutParams,
   StorageCopyParams,

@@ -1,7 +1,7 @@
 import { tryFn } from '../concerns/try-fn.js';
 import { isNotFoundError } from '../concerns/s3-errors.js';
 import { metadataEncode } from '../concerns/metadata-encoding.js';
-import { PartitionError, mapAwsError } from '../errors.js';
+import { PartitionError, mapStorageError } from '../errors.js';
 import type { StringRecord } from '../types/common.types.js';
 import { createHash } from 'node:crypto';
 
@@ -1140,7 +1140,7 @@ export class ResourceQuery {
       }
     }
 
-    throw mapAwsError(error, {
+    throw mapStorageError(error, {
       resourceName: this.resource.name,
       operation: 'list'
     });

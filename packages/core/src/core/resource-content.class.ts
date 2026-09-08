@@ -1,6 +1,6 @@
 import { tryFn } from '../concerns/try-fn.js';
 import { isNotFoundError } from '../concerns/s3-errors.js';
-import { mapAwsError, ResourceError } from '../errors.js';
+import { mapStorageError, ResourceError } from '../errors.js';
 import type { StringRecord } from '../types/common.types.js';
 
 export interface S3Response {
@@ -70,7 +70,7 @@ export class ResourceContent {
     const [ok, err, currentData] = await tryFn(() => this.resource.get(id));
     if (!ok || !currentData) {
       if (err && !isNotFoundError(err)) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           resourceName: this.resource.name,
           operation: 'setContent',
           id,
@@ -103,7 +103,7 @@ export class ResourceContent {
     }));
 
     if (!ok2) {
-      throw mapAwsError(err2 as Error, {
+      throw mapStorageError(err2 as Error, {
         resourceName: this.resource.name,
         operation: 'setContent',
         id,
@@ -127,7 +127,7 @@ export class ResourceContent {
           contentType: null
         };
       }
-      throw mapAwsError(error, {
+      throw mapStorageError(error, {
         resourceName: this.resource.name,
         operation: 'content',
         id,
@@ -154,7 +154,7 @@ export class ResourceContent {
       if (isNotFoundError(err)) {
         return false;
       }
-      throw mapAwsError(err as Error, {
+      throw mapStorageError(err as Error, {
         resourceName: this.resource.name,
         operation: 'hasContent',
         id,
@@ -169,7 +169,7 @@ export class ResourceContent {
     const key = this.resource.getResourceKey(id);
     const [ok, err, existingObject] = await tryFn(() => this.client.headObject(key));
     if (!ok) {
-      throw mapAwsError(err as Error, {
+      throw mapStorageError(err as Error, {
         resourceName: this.resource.name,
         operation: 'deleteContent',
         id,
@@ -187,7 +187,7 @@ export class ResourceContent {
     }));
 
     if (!ok2) {
-      throw mapAwsError(err2 as Error, {
+      throw mapStorageError(err2 as Error, {
         resourceName: this.resource.name,
         operation: 'deleteContent',
         id,

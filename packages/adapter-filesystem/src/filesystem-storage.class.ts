@@ -12,20 +12,19 @@ const gunzipAsync = promisify(zlib.gunzip);
 import { chunk } from 'lodash-es';
 
 import { MetadataLimitError, ResourceError, ValidationError, createLogger, getCronManager, idGenerator, normalizeEtagHeader, tryFn, type CronManager, type LogLevel } from '@baldin/core/adapter';
+import type { FileSystemStorageConfig, FileSystemStorageStats } from './types.js';
 import type {
   Logger,
-  FileSystemStorageConfig,
-  FileSystemStorageStats,
   StorageObjectData,
   StoragePutParams,
   StorageCopyParams,
   StorageListParams,
-  S3Object,
-  PutObjectResponse,
-  CopyObjectResponse,
-  DeleteObjectResponse,
-  DeleteObjectsResponse,
-  ListObjectsResponse
+  StorageObject,
+  StoragePutObjectResponse,
+  StorageCopyObjectResponse,
+  StorageDeleteObjectResponse,
+  StorageDeleteObjectsResponse,
+  StorageListObjectsResponse
 } from '@baldin/core/adapter';
 
 interface InternalStats {
@@ -593,7 +592,7 @@ export class FileSystemStorage {
     }
   }
 
-  async put(key: string, params: StoragePutParams & { ttl?: number }): Promise<PutObjectResponse> {
+  async put(key: string, params: StoragePutParams & { ttl?: number }): Promise<StoragePutObjectResponse> {
     const { body, metadata, contentType, contentEncoding, contentLength, ifMatch, ifNoneMatch, ttl } = params;
 
     await this._acquireLock(key);
@@ -734,7 +733,7 @@ export class FileSystemStorage {
     }
   }
 
-  async get(key: string): Promise<S3Object> {
+  async get(key: string): Promise<StorageObject> {
     const objectPath = this._getObjectPath(key);
     const metaPath = this._getMetadataPath(key);
 
@@ -764,7 +763,7 @@ export class FileSystemStorage {
     }
     this.logger.debug({ key, size: metadata.size, compressed: metadata.compressed }, `GET ${key} (${info.join(', ')})`);
 
-    const bodyStream = Readable.from(finalBuffer) as S3Object['Body'];
+    const bodyStream = Readable.from(finalBuffer) as StorageObject['Body'];
 
     bodyStream!.transformToString = async (encoding: string = 'utf-8') => {
       const chunks: Buffer[] = [];
@@ -797,7 +796,7 @@ export class FileSystemStorage {
     };
   }
 
-  async head(key: string): Promise<Omit<S3Object, 'Body'>> {
+  async head(key: string): Promise<Omit<StorageObject, 'Body'>> {
     const metaPath = this._getMetadataPath(key);
 
     const [ok, err, metaData] = await tryFn<StorageObjectData>(() => this._readMetadata(key));
@@ -821,7 +820,7 @@ export class FileSystemStorage {
     };
   }
 
-  async copy(from: string, to: string, params: StorageCopyParams): Promise<CopyObjectResponse> {
+  async copy(from: string, to: string, params: StorageCopyParams): Promise<StorageCopyObjectResponse> {
     const { metadata, metadataDirective, contentType } = params;
     const sourceObjectPath = this._getObjectPath(from);
     const sourceMetaPath = this._getMetadataPath(from);
@@ -881,7 +880,7 @@ export class FileSystemStorage {
     };
   }
 
-  async delete(key: string): Promise<DeleteObjectResponse> {
+  async delete(key: string): Promise<StorageDeleteObjectResponse> {
     const objectPath = this._getObjectPath(key);
     const metaPath = this._getMetadataPath(key);
 
@@ -907,7 +906,7 @@ export class FileSystemStorage {
     };
   }
 
-  async deleteMultiple(keys: string[]): Promise<DeleteObjectsResponse> {
+  async deleteMultiple(keys: string[]): Promise<StorageDeleteObjectsResponse> {
     const deleted: Array<{ Key: string }> = [];
     const errors: Array<{ Key: string; Code: string; Message: string }> = [];
 
@@ -982,7 +981,7 @@ export class FileSystemStorage {
     }
   }
 
-  async list(params: StorageListParams): Promise<ListObjectsResponse> {
+  async list(params: StorageListParams): Promise<StorageListObjectsResponse> {
     const { prefix = '', delimiter = null, maxKeys = 1000, continuationToken = null, startAfter = null } = params;
     const prefixFilter = prefix || '';
     this.logger.debug({ prefix, delimiter, maxKeys, continuationToken, startAfter }, '[FileSystemStorage.list] Initial params');

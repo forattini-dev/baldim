@@ -1,20 +1,20 @@
 import { chunk } from 'lodash-es';
 
 import { normalizeEtagHeader } from '@baldin/core/adapter';
-import { mapAwsError, DatabaseError, ResourceError, BaseError, NoSuchKey } from '@baldin/core/adapter';
+import { mapStorageError, DatabaseError, ResourceError, BaseError, NoSuchKey } from '@baldin/core/adapter';
 import type {
-  PutObjectParams,
-  CopyObjectParams,
-  S3Object,
-  PutObjectResponse,
-  CopyObjectResponse,
-  DeleteObjectResponse
+  StoragePutObjectParams,
+  StorageCopyObjectParams,
+  StorageObject,
+  StoragePutObjectResponse,
+  StorageCopyObjectResponse,
+  StorageDeleteObjectResponse
 } from '@baldin/core/adapter';
 import type { DbRow } from './types.js';
 import { SqliteClientPartitions } from './partitions.js';
 
 export class SqliteClientCrud extends SqliteClientPartitions {
-  async putObject(params: PutObjectParams): Promise<PutObjectResponse> {
+  async putObject(params: StoragePutObjectParams): Promise<StoragePutObjectResponse> {
     return this._runWriteTask(async () => {
       const {
         key,
@@ -158,7 +158,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
               VersionId: null,
               ServerSideEncryption: null,
               Location: `/${this.bucket}/${fullKey}`
-            } satisfies PutObjectResponse;
+            } satisfies StoragePutObjectResponse;
           });
 
           this.emit('cl:response', 'PutObjectCommand', response, responseInput);
@@ -260,7 +260,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
             VersionId: null,
             ServerSideEncryption: null,
             Location: `/${this.bucket}/${fullKey}`
-          } satisfies PutObjectResponse;
+          } satisfies StoragePutObjectResponse;
         });
 
         this.emit('cl:response', 'PutObjectCommand', response, responseInput);
@@ -269,7 +269,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
         if (error instanceof BaseError) {
           throw error;
         }
-        throw mapAwsError(error as Error, {
+        throw mapStorageError(error as Error, {
           bucket: this.bucket,
           key: fullKey,
           operation: 'putObject',
@@ -280,7 +280,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
     });
   }
 
-  async getObject(key: string): Promise<S3Object> {
+  async getObject(key: string): Promise<StorageObject> {
     const fullKey = this._applyKeyPrefix(key);
     const responseInput = { Key: key };
 
@@ -312,7 +312,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
       if (error instanceof BaseError) {
         throw error;
       }
-      throw mapAwsError(error as Error, {
+      throw mapStorageError(error as Error, {
         bucket: this.bucket,
         key: fullKey,
         operation: 'getObject',
@@ -322,7 +322,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
     }
   }
 
-  async getObjects(keys: string[]): Promise<Array<{ key: string; object: S3Object }>> {
+  async getObjects(keys: string[]): Promise<Array<{ key: string; object: StorageObject }>> {
     if (!Array.isArray(keys) || keys.length === 0) {
       return [];
     }
@@ -367,7 +367,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
     });
   }
 
-  async headObject(key: string): Promise<S3Object> {
+  async headObject(key: string): Promise<StorageObject> {
     const fullKey = this._applyKeyPrefix(key);
     const responseInput = { Key: key };
 
@@ -399,7 +399,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
       if (error instanceof BaseError) {
         throw error;
       }
-      throw mapAwsError(error as Error, {
+      throw mapStorageError(error as Error, {
         bucket: this.bucket,
         key: fullKey,
         operation: 'headObject',
@@ -409,7 +409,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
     }
   }
 
-  async copyObject(params: CopyObjectParams): Promise<CopyObjectResponse> {
+  async copyObject(params: StorageCopyObjectParams): Promise<StorageCopyObjectResponse> {
     return this._runWriteTask(async () => {
       const { from, to, metadata, metadataDirective, contentType } = params;
       const fullFrom = this._applyKeyPrefix(from);
@@ -555,7 +555,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
             BucketKeyEnabled: false,
             VersionId: null,
             ServerSideEncryption: null
-          } satisfies CopyObjectResponse;
+          } satisfies StorageCopyObjectResponse;
         });
 
         this.emit('cl:response', 'CopyObjectCommand', response, responseInput);
@@ -564,7 +564,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
         if (error instanceof BaseError) {
           throw error;
         }
-        throw mapAwsError(error as Error, {
+        throw mapStorageError(error as Error, {
           bucket: this.bucket,
           key: fullTo,
           operation: 'copyObject',
@@ -583,7 +583,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
     return this._hasKey(fullKey);
   }
 
-  async deleteObject(key: string): Promise<DeleteObjectResponse> {
+  async deleteObject(key: string): Promise<StorageDeleteObjectResponse> {
     return this._runWriteTask(async () => {
       const fullKey = this._applyKeyPrefix(key);
       const responseInput = { Key: key };
@@ -609,7 +609,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
           return {
             DeleteMarker: false,
             VersionId: null
-          } satisfies DeleteObjectResponse;
+          } satisfies StorageDeleteObjectResponse;
         });
 
         this.emit('cl:response', 'DeleteObjectCommand', response, responseInput);
@@ -618,7 +618,7 @@ export class SqliteClientCrud extends SqliteClientPartitions {
         if (error instanceof BaseError) {
           throw error;
         }
-        throw mapAwsError(error as Error, {
+        throw mapStorageError(error as Error, {
           bucket: this.bucket,
           key: fullKey,
           operation: 'deleteObject',
