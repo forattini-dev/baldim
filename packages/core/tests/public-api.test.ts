@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import BaldinDefault, {
   Baldin,
   BuckieDB,
@@ -19,6 +19,7 @@ describe('@baldin/core public API', () => {
       if (database.isConnected()) await database.disconnect();
     }
     MemoryClient.clearAllStorage();
+    vi.unstubAllEnvs();
   });
 
   it('exports Baldin as the primary and default database class', () => {
@@ -39,6 +40,20 @@ describe('@baldin/core public API', () => {
     expect(error).toBeInstanceOf(S3dbError);
     expect(error.providerMessage).toBe('low-level failure');
     expect(error.awsMessage).toBe('low-level failure');
+  });
+
+  it('prefers BALDIN environment settings and accepts S3DB fallbacks', () => {
+    vi.stubEnv('BALDIN_LOG_LEVEL', 'error');
+    vi.stubEnv('S3DB_LOG_LEVEL', 'debug');
+    vi.stubEnv('BALDIN_DISABLE_CRON', 'true');
+    vi.stubEnv('S3DB_DISABLE_CRON', 'false');
+
+    const database = new Baldin({
+      connectionString: 'memory://environment-test',
+      exitOnSignal: false,
+    });
+    expect(database.logger.level).toBe('error');
+    expect(database.cronManager.disabled).toBe(true);
   });
 
   it('performs a document lifecycle through the memory client', async () => {

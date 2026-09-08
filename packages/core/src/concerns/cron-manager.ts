@@ -1,4 +1,5 @@
 import { createLogger, BaldinLogger, LogLevel } from './logger.js';
+import { getBaldinEnvironment } from './environment.js';
 import { bumpProcessMaxListeners } from './process-max-listeners.js';
 
 export interface CronManagerOptions {
@@ -133,7 +134,7 @@ export class CronManager {
   disabled: boolean;
 
   constructor(options: CronManagerOptions = {}) {
-    const envDisabled = typeof process !== 'undefined' && process.env.S3DB_DISABLE_CRON === 'true';
+    const envDisabled = typeof process !== 'undefined' && getBaldinEnvironment('DISABLE_CRON') === 'true';
     const explicitDisabled = typeof options.disabled === 'boolean' ? options.disabled : undefined;
     const isDisabled = explicitDisabled !== undefined ? explicitDisabled : envDisabled;
 

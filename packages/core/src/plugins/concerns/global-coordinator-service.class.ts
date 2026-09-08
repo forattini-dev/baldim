@@ -4,6 +4,7 @@ import { tryFn } from '../../concerns/try-fn.js';
 import { LatencyBuffer, type LatencyStats } from '../../concerns/ring-buffer.js';
 import type { Database } from '../../database.class.js';
 import type { BaldinLogger } from '../../concerns/logger.js';
+import { getBaldinEnvironment } from '../../concerns/environment.js';
 import type { Client } from '../../clients/types.js';
 
 let serviceCounter = 0;
@@ -252,7 +253,7 @@ export class GlobalCoordinatorService extends EventEmitter {
     this.currentLeaderId = null;
     this.currentEpoch = 0;
     this._lastKnownEpoch = 0;
-    const gcoordProfile = this._getPerfThresholdMs('S3DB_GCOORD_SLOW_PROFILE', 0);
+    const gcoordProfile = this._getPerfThresholdMs('GCOORD_SLOW_PROFILE', 0);
     const gcoordDefaults = gcoordProfile === 2
       ? {
           heartbeatMs: 5000,
@@ -263,14 +264,14 @@ export class GlobalCoordinatorService extends EventEmitter {
           registerMs: 300
         };
 
-    this._slowHeartbeatMs = this._getPerfThresholdMs('S3DB_GCOORD_SLOW_HEARTBEAT_MS', gcoordDefaults.heartbeatMs);
-    this._slowRegisterMs = this._getPerfThresholdMs('S3DB_GCOORD_SLOW_REGISTER_MS', gcoordDefaults.registerMs);
+    this._slowHeartbeatMs = this._getPerfThresholdMs('GCOORD_SLOW_HEARTBEAT_MS', gcoordDefaults.heartbeatMs);
+    this._slowRegisterMs = this._getPerfThresholdMs('GCOORD_SLOW_REGISTER_MS', gcoordDefaults.registerMs);
     this._warnSlowCoordinatorLogs = this._getPerfBoolean(
-      'S3DB_GCOORD_SLOW_LOGS_ENABLED',
-      this._getPerfBoolean('S3DB_SLOW_LOGS_ENABLED', true)
+      'GCOORD_SLOW_LOGS_ENABLED',
+      this._getPerfBoolean('SLOW_LOGS_ENABLED', true)
     );
     this._warnSlowRegisterWorkerLogs = this._getPerfBoolean(
-      'S3DB_GCOORD_SLOW_REGISTER_LOGS_ENABLED',
+      'GCOORD_SLOW_REGISTER_LOGS_ENABLED',
       this._warnSlowCoordinatorLogs
     );
 
@@ -1309,7 +1310,7 @@ export class GlobalCoordinatorService extends EventEmitter {
   }
 
   private _getPerfThresholdMs(envName: string, fallback: number): number {
-    const value = process.env[envName];
+    const value = getBaldinEnvironment(envName);
     if (!value) {
       return fallback;
     }
@@ -1323,7 +1324,7 @@ export class GlobalCoordinatorService extends EventEmitter {
   }
 
   private _getPerfBoolean(envName: string, fallback: boolean): boolean {
-    const raw = process.env[envName];
+    const raw = getBaldinEnvironment(envName);
     if (!raw) {
       return fallback;
     }

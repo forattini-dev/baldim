@@ -17,7 +17,7 @@ working core from a completed product migration.
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Not exported or migrated | Missing |
 | Public subpaths | root, lite, concerns, plugins, generator | root, lite, encoding, adapter SDK, plugin SDK | Partial |
-| Test suites | 118 core and 176 plugin test files | 14 focused test files, 88 tests plus 4 MinIO contract cases in CI | Partial |
+| Test suites | 118 core and 176 plugin test files | 14 focused test files, 89 tests plus 4 MinIO contract cases in CI | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps
@@ -33,8 +33,8 @@ infer provider behavior from protocols, regions, or endpoints.
 
 The source still carries legacy names such as `s3db.json`, `s3dbVersion`, and
 `S3DB_*`. Persisted manifest names and operational environment variables are
-intentional compatibility boundaries. Comments, logger names, generated TypeScript
-module names, and other non-persisted branding still need classification.
+intentional compatibility boundaries. All remaining legacy names are classified in `docs/compatibility-boundaries.md`;
+new APIs and operational names use Baldin while persisted and deprecated contracts remain stable.
 
 The S3 adapter accepts AWS S3, Cloudflare R2, MinIO, and custom compatible endpoints.
 CI runs the shared storage contract against MinIO; configured AWS S3 and R2 target

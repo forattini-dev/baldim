@@ -63,7 +63,7 @@ dependencies and release independently.
 ## Compatibility contract
 
 - Existing buckets keep the `s3db.json` manifest name and `s3dbVersion` metadata.
-- Existing `S3DB_*` environment variables continue to work.
+- `BALDIN_*` is canonical; existing `S3DB_*` environment variables continue to work as fallbacks.
 - Storage defaults remain unchanged so an import rename cannot silently select a
   different bucket, directory, or SQLite file.
 - `BuckieDB` and `S3db` remain importable while callers move to `Baldin`.

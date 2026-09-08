@@ -1,5 +1,6 @@
 import pino, { Logger as PinoLogger, LoggerOptions as PinoLoggerOptions, TransportSingleOptions, DestinationStream } from 'pino';
 import { createRedactRules } from './logger-redact.js';
+import { getBaldinEnvironment } from './environment.js';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'silent';
 export type LogFormat = 'json' | 'pretty';
@@ -62,7 +63,7 @@ function getSharedPrettyTransport(): ReturnType<typeof pino.transport> {
 }
 
 function getSharedDestination(format?: LogFormat): DestinationStream | undefined {
-  const envFormat = process.env.S3DB_LOG_FORMAT?.toLowerCase();
+  const envFormat = getBaldinEnvironment('LOG_FORMAT')?.toLowerCase();
   const effectiveFormat = format ?? (envFormat === 'json' ? 'json' : 'pretty');
 
   if (effectiveFormat === 'json') {
@@ -76,7 +77,7 @@ function getSharedDestination(format?: LogFormat): DestinationStream | undefined
 }
 
 function createDefaultTransport(): TransportSingleOptions | undefined {
-  const envFormat = process.env.S3DB_LOG_FORMAT?.toLowerCase();
+  const envFormat = getBaldinEnvironment('LOG_FORMAT')?.toLowerCase();
 
   if (envFormat === 'json') {
     return undefined;
@@ -161,18 +162,19 @@ export function resetGlobalLogger(): void {
 export function getLoggerOptionsFromEnv(configOptions: LoggerOptions = {}): LoggerOptions {
   const options: LoggerOptions = { ...configOptions };
 
-  if (process.env.S3DB_LOG_LEVEL) {
-    options.level = process.env.S3DB_LOG_LEVEL as LogLevel;
-  }
+  const level = getBaldinEnvironment('LOG_LEVEL');
+  if (level) options.level = level as LogLevel;
 
-  if (process.env.S3DB_LOG_FORMAT) {
-    const format = process.env.S3DB_LOG_FORMAT.toLowerCase();
+  const configuredFormat = getBaldinEnvironment('LOG_FORMAT');
+  const pretty = getBaldinEnvironment('LOG_PRETTY');
+  if (configuredFormat) {
+    const format = configuredFormat.toLowerCase();
     if (format === 'json' || format === 'pretty') {
       options.format = format as LogFormat;
     }
-  } else if (process.env.S3DB_LOG_PRETTY === 'false') {
+  } else if (pretty === 'false') {
     options.format = 'json';
-  } else if (process.env.S3DB_LOG_PRETTY === 'true') {
+  } else if (pretty === 'true') {
     options.format = 'pretty';
   }
 
