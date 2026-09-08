@@ -1,0 +1,53 @@
+{
+  "name": "@baldin/plugin-costs",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Provider-aware request, row, storage, and transfer cost accounting for Baldin.",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">=24"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "directory": "packages/plugin-costs"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./pricing": {
+      "types": "./dist/pricing.d.ts",
+      "import": "./dist/pricing.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "UNLICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "peerDependencies": {
+    "@baldin/core": "^0.0.0"
+  },
+  "devDependencies": {
+    "@baldin/core": "workspace:*",
+    "@types/node": "25.5.2",
+    "typescript": "6.0.2",
+    "vitest": "4.1.3",
+    "@baldin/adapter-memory": "workspace:*"
+  }
+}
