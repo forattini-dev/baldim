@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { DatabaseError, DatabaseManager, MemoryClient } from '@buckiedb/core';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { BuckieDB, DatabaseError, DatabaseManager, MemoryClient } from '@buckiedb/core';
 
 describe('DatabaseManager public API', () => {
   let manager: DatabaseManager | undefined;
@@ -72,5 +72,68 @@ describe('DatabaseManager public API', () => {
 
   it('requires at least one named connection', () => {
     expect(() => new DatabaseManager({ connections: {} })).toThrow(DatabaseError);
+  });
+
+  it('indexes resources created through a named connection', async () => {
+    manager = new DatabaseManager({
+      defaults: { logLevel: 'silent', deferMetadataWrites: true, exitOnSignal: false },
+      connections: {
+        primary: { connectionString: 'memory://manager-direct' },
+      },
+    });
+    await manager.connect();
+
+    await manager.connection('primary').createResource({
+      name: 'direct-resource',
+      attributes: { value: 'string' },
+    });
+
+    expect(manager.getConnectionForResource('direct-resource')).toBe('primary');
+  });
+
+  it('reattaches event forwarding after reconnecting', async () => {
+    manager = new DatabaseManager({
+      defaults: { logLevel: 'silent', deferMetadataWrites: true, exitOnSignal: false },
+      connections: {
+        primary: { connectionString: 'memory://manager-reconnect' },
+      },
+    });
+    const connected = vi.fn();
+    manager.on('primary:db:connected', connected);
+
+    await manager.connect();
+    await manager.disconnect();
+    await manager.connect();
+
+    expect(connected).toHaveBeenCalledTimes(2);
+  });
+
+  it('rolls back every connection when restored resources have duplicate names', async () => {
+    const seed = async (connectionString: string) => {
+      const database = new BuckieDB({
+        connectionString,
+        logLevel: 'silent',
+        deferMetadataWrites: false,
+        exitOnSignal: false,
+      });
+      await database.connect();
+      await database.createResource({ name: 'duplicate', attributes: { value: 'string' } });
+      await database.disconnect();
+    };
+    await seed('memory://manager-duplicate-a');
+    await seed('memory://manager-duplicate-b');
+
+    manager = new DatabaseManager({
+      defaults: { logLevel: 'silent', exitOnSignal: false },
+      connections: {
+        first: { connectionString: 'memory://manager-duplicate-a' },
+        second: { connectionString: 'memory://manager-duplicate-b' },
+      },
+    });
+
+    await expect(manager.connect()).rejects.toThrow(/exists on both/);
+    expect(manager.isConnected()).toBe(false);
+    expect(manager.connection('first').isConnected()).toBe(false);
+    expect(manager.connection('second').isConnected()).toBe(false);
   });
 });

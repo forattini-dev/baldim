@@ -1,11 +1,14 @@
 # BuckieDB 🪣
 
-A small document database for object storage — the modular successor to s3db.js.
+A small document database for object storage — being rebuilt from s3db.js as a modular monorepo.
 
 **Status: core migration.** The database engine behind the former `s3db.js/lite`
 entrypoint now runs as `@buckiedb/core`. Database CRUD, schemas, resources,
 multidatabase management, behaviors, streams, concurrency, and the built-in clients are present. The large
 plugin catalog and CLI still need to be split into their own packages.
+
+This is not yet a feature-complete replacement for `s3db.js`. The tracked gaps
+and completion criteria live in the [parity audit](docs/parity-audit.md).
 
 ```ts
 import { BuckieDB } from '@buckiedb/core';

@@ -59,7 +59,6 @@ export class DatabaseManager extends SafeEventEmitter {
       const merged = merge({}, defaults, dbOptions) as DatabaseOptions;
       const db = new Database(merged);
       this._databases.set(name, db);
-      this._forwardEvents(name, db);
     }
   }
 
@@ -162,8 +161,20 @@ export class DatabaseManager extends SafeEventEmitter {
    */
   get resources(): Record<string, Resource> {
     const merged: Record<string, Resource> = {};
-    for (const db of this._databases.values()) {
-      Object.assign(merged, db.resources);
+    for (const [connectionName, db] of this._databases) {
+      for (const [resourceName, resource] of Object.entries(db.resources)) {
+        if (merged[resourceName]) {
+          throw new DatabaseError(
+            `Resource "${resourceName}" exists on more than one connection, including "${connectionName}"`,
+            {
+              operation: 'resources',
+              retriable: false,
+              suggestion: 'Create resources through DatabaseManager so names remain unique.',
+            }
+          );
+        }
+        merged[resourceName] = resource;
+      }
     }
     return merged;
   }
@@ -196,6 +207,7 @@ export class DatabaseManager extends SafeEventEmitter {
     if (this._connected) return;
 
     const entries = Array.from(this._databases.entries());
+    this._attachEventForwarders();
     const results = await Promise.allSettled(
       entries.map(async ([name, db]) => {
         try {
@@ -217,11 +229,19 @@ export class DatabaseManager extends SafeEventEmitter {
           .filter((_, i) => results[i]!.status === 'fulfilled')
           .map(([, db]) => db.disconnect())
       );
+      this._detachEventForwarders();
       throw failures[0]!.reason;
     }
 
-    this._connected = true;
-    this._rebuildResourceIndex();
+    try {
+      this._rebuildResourceIndex();
+      this._connected = true;
+    } catch (error) {
+      await Promise.allSettled(entries.map(([, db]) => db.disconnect()));
+      this._resourceIndex.clear();
+      this._detachEventForwarders();
+      throw error;
+    }
   }
 
   /**
@@ -243,8 +263,7 @@ export class DatabaseManager extends SafeEventEmitter {
       })
     );
 
-    for (const cleanup of this._eventCleanups) cleanup();
-    this._eventCleanups = [];
+    this._detachEventForwarders();
     this._resourceIndex.clear();
     this._connected = false;
 
@@ -265,6 +284,7 @@ export class DatabaseManager extends SafeEventEmitter {
   }
 
   private _rebuildResourceIndex(): void {
+    this._resourceIndex.clear();
     for (const [connName, db] of this._databases) {
       for (const resourceName of Object.keys(db.resources)) {
         const existing = this._resourceIndex.get(resourceName);
@@ -279,18 +299,39 @@ export class DatabaseManager extends SafeEventEmitter {
     }
   }
 
+  private _attachEventForwarders(): void {
+    this._detachEventForwarders();
+    for (const [connectionName, database] of this._databases) {
+      this._forwardEvents(connectionName, database);
+    }
+  }
+
+  private _detachEventForwarders(): void {
+    for (const cleanup of this._eventCleanups) cleanup();
+    this._eventCleanups = [];
+  }
+
   private _forwardEvents(connectionName: string, db: Database): void {
     const forwardedEvents = [
       'db:connected',
       'db:disconnected',
       'db:resource-created',
       'db:resource-updated',
-      'db:resource-deleted',
+      'db:resource-definitions-changed',
       'db:metadata-uploaded',
-    ];
+      'db:metadata-healed',
+      'db:plugin:uninstalled',
+    ] as const;
 
     for (const event of forwardedEvents) {
       const handler = (...args: unknown[]) => {
+        if ((event === 'db:resource-created' || event === 'db:resource-updated') && typeof args[0] === 'string') {
+          const resourceName = args[0];
+          const existingConnection = this._resourceIndex.get(resourceName);
+          if (!existingConnection || existingConnection === connectionName) {
+            this._resourceIndex.set(resourceName, connectionName);
+          }
+        }
         this.emit(`${connectionName}:${event}`, ...args);
         this.emit(event, connectionName, ...args);
       };

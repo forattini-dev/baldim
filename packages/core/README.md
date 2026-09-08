@@ -44,8 +44,10 @@ await databases.createResource({
 });
 ```
 
-Resource names are unique across the manager. Use `connection(name)` for direct
-database access or `resource(name)` for unified lookup.
+Resource names created through the manager are unique across its connections.
+Use `connection(name)` for direct database access or `resource(name)` for unified
+lookup; direct resource creation is indexed, but cross-connection creation should
+go through the manager so it can reject duplicates before writing metadata.
 
 The core currently includes the S3-compatible, memory, filesystem, SQLite,
 libSQL/D1, and RedDB clients inherited from s3db.js. Provider packages will be
