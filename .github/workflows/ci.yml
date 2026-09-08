@@ -54,6 +54,7 @@ jobs:
           pnpm --filter @baldin/plugin-ttl pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-scheduler pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-fulltext pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-geo pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
@@ -67,6 +68,7 @@ jobs:
           ttl_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-ttl-*.tgz)
           scheduler_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-scheduler-*.tgz)
           fulltext_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-fulltext-*.tgz)
+          geo_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-geo-*.tgz)
           test "${#core[@]}" -eq 1
           test "${#memory[@]}" -eq 1
           test "${#filesystem[@]}" -eq 1
@@ -77,10 +79,11 @@ jobs:
           test "${#ttl_plugin[@]}" -eq 1
           test "${#scheduler_plugin[@]}" -eq 1
           test "${#fulltext_plugin[@]}" -eq 1
+          test "${#geo_plugin[@]}" -eq 1
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -90,6 +93,7 @@ jobs:
           import { TTLPlugin } from '@baldin/plugin-ttl';
           import { SchedulerPlugin } from '@baldin/plugin-scheduler';
           import { FullTextPlugin } from '@baldin/plugin-fulltext';
+          import { GeoPlugin } from '@baldin/plugin-geo';
           import { MemoryClient } from '@baldin/adapter-memory';
           import '@baldin/adapter-filesystem';
           import '@baldin/adapter-reddb';
@@ -131,5 +135,14 @@ jobs:
           const notes = await database.createResource({ name: 'notes', attributes: { title: 'string|required' } });
           await notes.insert({ id: 'searchable', title: 'Packed Baldin search' });
           assert.equal((await fulltext.searchRecords('notes', 'baldin'))[0]?.id, 'searchable');
+          const places = await database.createResource({
+            name: 'places',
+            attributes: { latitude: 'number|required', longitude: 'number|required' },
+          });
+          await database.usePlugin(new GeoPlugin({
+            resources: { places: { latField: 'latitude', lonField: 'longitude', addGeohash: true } },
+          }));
+          await places.insert({ id: 'origin', latitude: 0, longitude: 0 });
+          assert.equal((await places.findNearby({ lat: 0, lon: 0, radius: 1 }))[0]?.id, 'origin');
           await database.disconnect();
           JS

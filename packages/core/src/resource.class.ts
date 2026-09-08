@@ -883,6 +883,10 @@ export class Resource extends AsyncEventEmitter implements Disposable {
     this._hooksModule.addHook(event, fn);
   }
 
+  removeHook(event: HookEvent, fn: HookFunction): boolean {
+    return this._hooksModule.removeHook(event, fn);
+  }
+
   async executeHooks(event: HookEvent, data: unknown): Promise<unknown> {
     return this._hooksModule.executeHooks(event, data);
   }

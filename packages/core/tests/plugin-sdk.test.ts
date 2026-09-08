@@ -60,4 +60,100 @@ describe('@baldin/core plugin SDK', () => {
     await plugin.stop();
     expect((await notes.insert({ id: 'without', title: 'stopped' })).title).toBe('stopped');
   });
+
+  test('removes plugin-owned resource hooks when the plugin stops', async () => {
+    class HookPlugin extends Plugin {
+      override async onInstall(): Promise<void> {
+        const resource = this.database.resources.notes!;
+        this.addResourceHook(resource as unknown as ResourceLike, 'beforeInsert', (data) => ({
+          ...(data as Record<string, unknown>),
+          title: `hook:${String((data as Record<string, unknown>).title)}`,
+        }));
+      }
+    }
+
+    const database = createDatabase('hooks');
+    await database.connect();
+    const notes = await database.createResource({ name: 'notes', attributes: { title: 'string|required' } });
+    const plugin = new HookPlugin({ logLevel: 'silent' });
+    await database.usePlugin(plugin);
+
+    expect((await notes.insert({ id: 'with-hook', title: 'active' })).title).toBe('hook:active');
+    await plugin.stop();
+    expect((await notes.insert({ id: 'without-hook', title: 'stopped' })).title).toBe('stopped');
+  });
+
+  test('restores plugin-owned resource extensions when the plugin stops', async () => {
+    class HelpersPlugin extends Plugin {
+      override async onInstall(): Promise<void> {
+        const resource = this.database.resources.notes!;
+        this.extendResource(resource as unknown as ResourceLike, {
+          helper: () => 'available',
+          pluginState: { enabled: true },
+        });
+      }
+    }
+
+    const database = createDatabase('extensions');
+    await database.connect();
+    const notes = await database.createResource({ name: 'notes', attributes: { title: 'string|required' } });
+    const plugin = new HelpersPlugin({ logLevel: 'silent' });
+    await database.usePlugin(plugin);
+
+    expect((notes as unknown as { helper(): string }).helper()).toBe('available');
+    expect((notes as unknown as { pluginState: unknown }).pluginState).toEqual({ enabled: true });
+    await plugin.stop();
+    expect('helper' in notes).toBe(false);
+    expect('pluginState' in notes).toBe(false);
+  });
+
+  test('refuses to replace an existing resource API property', async () => {
+    class CollisionPlugin extends Plugin {
+      override async onInstall(): Promise<void> {
+        const resource = this.database.resources.notes!;
+        this.extendResource(resource as unknown as ResourceLike, {
+          insert: () => undefined,
+        });
+      }
+    }
+
+    const database = createDatabase('collision');
+    await database.connect();
+    await database.createResource({ name: 'notes', attributes: { title: 'string|required' } });
+    const plugin = new CollisionPlugin({ logLevel: 'silent' });
+
+    await expect(database.usePlugin(plugin)).rejects.toThrow('Cannot replace existing resource property "insert"');
+    expect(database.plugins.collision).toBeUndefined();
+    expect(database.pluginList).not.toContain(plugin);
+  });
+
+  test('rolls back registration and installed behavior when plugin start fails', async () => {
+    class FailingPlugin extends Plugin {
+      override async onInstall(): Promise<void> {
+        const resource = this.database.resources.notes!;
+        this.addMiddleware(resource as unknown as ResourceLike, 'insert', async (next, data, options) => {
+          return next({ ...(data as Record<string, unknown>), title: 'leaked' }, options);
+        });
+        this.extendResource(resource as unknown as ResourceLike, {
+          leakedHelper: () => true,
+        });
+      }
+
+      override async onStart(): Promise<void> {
+        throw new Error('start failed');
+      }
+    }
+
+    const database = createDatabase('rollback');
+    await database.connect();
+    const notes = await database.createResource({ name: 'notes', attributes: { title: 'string|required' } });
+    const plugin = new FailingPlugin({ logLevel: 'silent' });
+
+    await expect(database.usePlugin(plugin)).rejects.toThrow('start failed');
+    expect(database.plugins.failing).toBeUndefined();
+    expect(database.pluginList).not.toContain(plugin);
+    expect('leakedHelper' in notes).toBe(false);
+    expect((await notes.insert({ id: 'clean', title: 'clean' })).title).toBe('clean');
+  });
+
 });

@@ -126,14 +126,36 @@ export class DatabasePlugins {
       plugin.logger = db.getChildLogger(`Plugin:${pluginName}`, { plugin: pluginName });
     }
 
+    const previousPlugin = db.plugins[pluginName];
     db.plugins[pluginName] = plugin;
+    let addedToList = false;
     if (!db.pluginList.includes(plugin as PluginConstructor)) {
       db.pluginList.push(plugin as PluginConstructor);
+      addedToList = true;
     }
 
-    if (db.isConnected()) {
-      await plugin.install(db);
-      await plugin.start();
+    try {
+      if (db.isConnected()) {
+        await plugin.install(db);
+        await plugin.start();
+      }
+    } catch (error) {
+      try {
+        await plugin.stop?.();
+      } catch {
+        // Preserve the installation/start failure as the actionable error.
+      }
+
+      if (previousPlugin) {
+        db.plugins[pluginName] = previousPlugin;
+      } else {
+        delete db.plugins[pluginName];
+      }
+      if (addedToList) {
+        const index = db.pluginList.indexOf(plugin as PluginConstructor);
+        if (index > -1) db.pluginList.splice(index, 1);
+      }
+      throw error;
     }
 
     return plugin;

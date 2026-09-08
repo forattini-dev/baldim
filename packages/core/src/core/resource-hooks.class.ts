@@ -121,6 +121,20 @@ export class ResourceHooks {
     return false;
   }
 
+  removeHook(event: string, fn: HookFunction): boolean {
+    const hooks = this._hooks[event];
+    if (!hooks) return false;
+
+    const index = hooks.findIndex((hook) =>
+      hook === fn ||
+      hook.__baldin_original === fn ||
+      hook.__s3db_original === fn
+    );
+    if (index === -1) return false;
+    hooks.splice(index, 1);
+    return true;
+  }
+
   async executeHooks<T = unknown>(event: string, data: T): Promise<T> {
     const hooks = this._hooks[event];
     if (!hooks || hooks.length === 0) {

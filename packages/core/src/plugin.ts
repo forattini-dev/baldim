@@ -26,6 +26,8 @@ export interface ResourceLike {
     method: SupportedMethod,
     middleware: (context: MiddlewareContext, next: NextFunction) => Promise<unknown>
   ): void | (() => void);
+  addHook?(event: string, hook: (data: unknown) => unknown | Promise<unknown>): void;
+  removeHook?(event: string, hook: (data: unknown) => unknown | Promise<unknown>): boolean;
 }
 
 export type PluginMiddleware = (
@@ -59,6 +61,7 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
   protected _cronJobs: string[] = [];
   protected _storage: PluginStorage | null = null;
   private _middlewareDisposers: Array<() => void> = [];
+  private _resourceDisposers: Array<() => void> = [];
   logger: Logger;
   logLevel: string;
   database!: Database;
@@ -108,6 +111,7 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
     try {
       await this.onStop();
     } finally {
+      for (const dispose of this._resourceDisposers.splice(0).reverse()) dispose();
       for (const dispose of this._middlewareDisposers.splice(0)) dispose();
       this.stopAllCronJobs();
       this.removeAllListeners();
@@ -203,6 +207,62 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
       return middleware(invokeNext, ...context.args);
     });
     if (dispose) this._middlewareDisposers.push(dispose);
+  }
+
+  addResourceHook(
+    resource: ResourceLike,
+    event: string,
+    hook: (data: unknown) => unknown | Promise<unknown>
+  ): void {
+    if (!resource.addHook || !resource.removeHook) {
+      throw new PluginError(`Cannot add resource hook "${event}"`, {
+        pluginName: this.name,
+        operation: 'addResourceHook',
+        resourceName: resource.name || 'unknown',
+        event,
+        statusCode: 400,
+        retriable: false,
+        suggestion: 'Ensure the resource exposes addHook() and removeHook().',
+      });
+    }
+
+    resource.addHook(event, hook);
+    this._resourceDisposers.push(() => {
+      resource.removeHook?.(event, hook);
+    });
+  }
+
+  /**
+   * Adds plugin-owned properties or methods to a resource for this plugin's
+   * lifetime. The properties are removed when it stops.
+   */
+  extendResource(resource: ResourceLike, extensions: Record<string, unknown>): void {
+    const target = resource as ResourceLike & Record<string, unknown>;
+
+    for (const [property, value] of Object.entries(extensions)) {
+      if (property in target) {
+        throw new PluginError(`Cannot replace existing resource property "${property}"`, {
+          pluginName: this.name,
+          operation: 'extendResource',
+          resourceName: resource.name || 'unknown',
+          property,
+          statusCode: 409,
+          retriable: false,
+          suggestion: 'Choose a plugin extension name that does not overlap with the Resource API.',
+        });
+      }
+
+      Object.defineProperty(target, property, {
+        configurable: true,
+        enumerable: false,
+        writable: true,
+        value,
+      });
+
+      this._resourceDisposers.push(() => {
+        delete target[property];
+      });
+    }
   }
 
   wrapResourceMethod(resource: ResourceLike, method: SupportedMethod, wrapper: PluginWrapper): void {
