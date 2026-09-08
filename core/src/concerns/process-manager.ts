@@ -48,8 +48,6 @@ export class ProcessManager {
   private isShuttingDown: boolean;
   private shutdownPromise: Promise<void> | null;
   private _boundSignalHandler: (signal: string) => Promise<void>;
-  private _boundUncaughtHandler: ((err: Error) => void) | null;
-  private _boundUnhandledHandler: ((reason: unknown, promise: Promise<unknown>) => void) | null;
   private _signalHandlersSetup: boolean;
 
   constructor(options: ProcessManagerOptions = {}) {
@@ -74,8 +72,6 @@ export class ProcessManager {
     this._signalHandlersSetup = false;
 
     this._boundSignalHandler = this._handleSignal.bind(this);
-    this._boundUncaughtHandler = null;
-    this._boundUnhandledHandler = null;
     this._setupSignalHandlers();
 
     this.logger.debug({ shutdownTimeout: this.options.shutdownTimeout }, 'ProcessManager initialized');
@@ -106,8 +102,12 @@ export class ProcessManager {
         for (let i = 0; i < executions; i++) fn();
       } finally {
         expected += executions * interval;
-        const nextDelay = Math.max(0, interval - (drift % interval));
-        timerId = setTimeout(tick, nextDelay);
+        const entry = this.intervals.get(name);
+        if (entry) {
+          const nextDelay = Math.max(0, interval - (drift % interval));
+          timerId = setTimeout(tick, nextDelay);
+          entry.id = timerId;
+        }
       }
     };
 
@@ -144,8 +144,11 @@ export class ProcessManager {
     }
 
     const id = setTimeout(() => {
-      fn();
-      this.timeouts.delete(name);
+      try {
+        fn();
+      } finally {
+        this.timeouts.delete(name);
+      }
     }, delay);
 
     this.timeouts.set(name, { id, fn, delay });
@@ -188,25 +191,13 @@ export class ProcessManager {
   private _setupSignalHandlers(): void {
     if (this._signalHandlersSetup) return;
 
-    this._boundUncaughtHandler = (err: Error) => {
-      this.logger.error({ error: err.message, stack: err.stack }, 'uncaught exception');
-      this._handleSignal('uncaughtException');
-    };
-
-    this._boundUnhandledHandler = (reason: unknown, promise: Promise<unknown>) => {
-      this.logger.error({ reason, promise: String(promise) }, 'unhandled rejection');
-      this._handleSignal('unhandledRejection');
-    };
-
-    bumpProcessMaxListeners(4);
+    bumpProcessMaxListeners(2);
     process.on('SIGTERM', this._boundSignalHandler as NodeJS.SignalsListener);
     process.on('SIGINT', this._boundSignalHandler as NodeJS.SignalsListener);
-    process.on('uncaughtException', this._boundUncaughtHandler);
-    process.on('unhandledRejection', this._boundUnhandledHandler);
 
     this._signalHandlersSetup = true;
 
-    this.logger.debug('signal handlers registered (SIGTERM, SIGINT, uncaughtException, unhandledRejection)');
+    this.logger.debug('signal handlers registered (SIGTERM, SIGINT)');
   }
 
   private async _handleSignal(signal: string): Promise<void> {
@@ -269,16 +260,18 @@ export class ProcessManager {
     if (this.cleanups.size > 0) {
       const cleanupPromises = Array.from(this.cleanups.entries()).map(async ([name, cleanupFn]) => {
         try {
-          const cleanupTimeout = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`Cleanup '${name}' timed out`)), timeout)
-          );
+          let timeoutId: ReturnType<typeof setTimeout> | undefined;
+          const cleanupTimeout = new Promise<never>((_, reject) => {
+            timeoutId = setTimeout(() => reject(new Error(`Cleanup '${name}' timed out`)), timeout);
+            timeoutId.unref?.();
+          });
 
-          await Promise.race([
-            cleanupFn(),
-            cleanupTimeout
-          ]);
-
-          this.logger.debug({ name }, `cleanup '${name}' completed`);
+          try {
+            await Promise.race([cleanupFn(), cleanupTimeout]);
+            this.logger.debug({ name }, `cleanup '${name}' completed`);
+          } finally {
+            if (timeoutId) clearTimeout(timeoutId);
+          }
         } catch (err) {
           const error = err as Error;
           this.logger.error({ name, error: error.message }, `cleanup '${name}' failed`);
@@ -313,18 +306,8 @@ export class ProcessManager {
     process.removeListener('SIGTERM', this._boundSignalHandler as NodeJS.SignalsListener);
     process.removeListener('SIGINT', this._boundSignalHandler as NodeJS.SignalsListener);
 
-    if (this._boundUncaughtHandler) {
-      process.removeListener('uncaughtException', this._boundUncaughtHandler);
-      this._boundUncaughtHandler = null;
-    }
-
-    if (this._boundUnhandledHandler) {
-      process.removeListener('unhandledRejection', this._boundUnhandledHandler);
-      this._boundUnhandledHandler = null;
-    }
-
     this._signalHandlersSetup = false;
-    bumpProcessMaxListeners(-4);
+    bumpProcessMaxListeners(-2);
 
     this.logger.debug('signal handlers removed');
   }

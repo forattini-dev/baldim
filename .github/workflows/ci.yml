@@ -98,6 +98,10 @@ jobs:
           test "${#queue_plugin[@]}" -eq 1
           test "${#testing_package[@]}" -eq 1
           test "${#typegen_package[@]}" -eq 1
+          if tar -tzf "${core[0]}" | grep -Eq 'package/dist/clients/(filesystem|memory|reddb|sqlite|remote-sqlite|d1|libsql)'; then
+            echo "Core tarball contains a storage adapter implementation"
+            exit 1
+          fi
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y

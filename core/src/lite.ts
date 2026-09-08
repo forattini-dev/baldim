@@ -93,6 +93,9 @@ export { encodeBuffer, decodeBuffer, encodeBits, decodeBits } from './concerns/b
 
 // Lifecycle management
 export { ProcessManager, getProcessManager, resetProcessManager } from './concerns/process-manager.js';
+export type { ProcessManagerOptions, ProcessManagerStatus, CleanupFn } from './concerns/process-manager.js';
+export { CronManager, getCronManager, resetCronManager, createCronManager, intervalToCron, CRON_PRESETS } from './concerns/cron-manager.js';
+export type { CronManagerOptions, CronTask, CronStats, ScheduleOptions } from './concerns/cron-manager.js';
 export { SafeEventEmitter, createSafeEventEmitter } from './concerns/safe-event-emitter.js';
 
 // Map utilities

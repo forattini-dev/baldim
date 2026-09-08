@@ -135,9 +135,9 @@ function decodeBody(encoded: string | undefined, encoding: string | undefined): 
 }
 
 /**
- * RedDB Client for s3db.js
+ * RedDB client for Baldin
  *
- * Maps the s3db.js key-value object interface to RedDB using Recker's V2
+ * Maps the Baldin storage interface to RedDB using Recker's V2
  * transport-aware client, with HTTP fallback retained for compatibility.
  * Each object is stored as a RedDB row with _key, _body, _content_type,
  * _content_encoding, _etag fields. Object metadata maps to RedDB metadata.

@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import BaldinDefault, {
   Baldin,
   BuckieDB,
+  CronManager,
+  createCronManager,
   Database,
   S3db,
   StorageError,
@@ -25,6 +27,12 @@ describe('@baldin/core public API', () => {
   it('exports Baldin as the primary and default database class', () => {
     expect(BaldinDefault).toBe(Baldin);
     expect(new Baldin({ connectionString: 'memory://api-test', logLevel: 'silent' })).toBeInstanceOf(Database);
+  });
+
+  it('exports lifecycle managers from the core entry point', () => {
+    const manager = createCronManager({ disabled: true, exitOnSignal: false, logLevel: 'silent' });
+    expect(manager).toBeInstanceOf(CronManager);
+    manager.removeSignalHandlers();
   });
 
   it('keeps the old public names as migration aliases', () => {

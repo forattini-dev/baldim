@@ -130,7 +130,6 @@ export class CronManager {
   private _destroyed: boolean;
   private _signalHandlersSetup: boolean;
   private _boundShutdownHandler?: (signal: string) => void;
-  private _boundErrorHandler?: (error: Error) => void;
   disabled: boolean;
 
   constructor(options: CronManagerOptions = {}) {
@@ -169,14 +168,9 @@ export class CronManager {
     if (this.disabled || this._signalHandlersSetup) return;
 
     this._boundShutdownHandler = this._handleShutdown.bind(this);
-    this._boundErrorHandler = this._handleError.bind(this);
-
-    bumpProcessMaxListeners(5);
+    bumpProcessMaxListeners(2);
     process.once('SIGTERM', this._boundShutdownHandler);
     process.once('SIGINT', this._boundShutdownHandler);
-    process.once('beforeExit', this._boundShutdownHandler);
-    process.once('uncaughtException', this._boundErrorHandler);
-    process.once('unhandledRejection', this._boundErrorHandler as (reason: unknown) => void);
 
     this._signalHandlersSetup = true;
 
@@ -189,15 +183,9 @@ export class CronManager {
     if (this._boundShutdownHandler) {
       process.removeListener('SIGTERM', this._boundShutdownHandler);
       process.removeListener('SIGINT', this._boundShutdownHandler);
-      process.removeListener('beforeExit', this._boundShutdownHandler);
     }
-    if (this._boundErrorHandler) {
-      process.removeListener('uncaughtException', this._boundErrorHandler);
-      process.removeListener('unhandledRejection', this._boundErrorHandler as (reason: unknown) => void);
-    }
-
     this._signalHandlersSetup = false;
-    bumpProcessMaxListeners(-5);
+    bumpProcessMaxListeners(-2);
 
     this.logger.debug('Signal handlers removed');
   }
@@ -215,21 +203,6 @@ export class CronManager {
       })
       .catch((error: Error) => {
         this.logger.error({ error: error.message, stack: error.stack }, 'Shutdown error');
-        if (this.options.exitOnSignal) {
-          process.exit(1);
-        }
-      });
-  }
-
-  private _handleError(error: Error): void {
-    this.logger.error({ error: error.message, stack: error.stack }, 'Uncaught error');
-    this.shutdown({ error })
-      .then(() => {
-        if (this.options.exitOnSignal) {
-          process.exit(1);
-        }
-      })
-      .catch(() => {
         if (this.options.exitOnSignal) {
           process.exit(1);
         }
@@ -485,16 +458,20 @@ export class CronManager {
         }
       });
 
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Stop timeout for job '${name}'`)), timeout)
-      );
-
-      stopPromises.push(
-        Promise.race([stopPromise, timeoutPromise])
-          .catch(error => {
-            this.logger.warn({ name, error: (error as Error).message }, `Error stopping job '${name}'`);
-          })
-      );
+      stopPromises.push((async () => {
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error(`Stop timeout for job '${name}'`)), timeout);
+          timeoutId.unref?.();
+        });
+        try {
+          await Promise.race([stopPromise, timeoutPromise]);
+        } catch (error) {
+          this.logger.warn({ name, error: (error as Error).message }, `Error stopping job '${name}'`);
+        } finally {
+          if (timeoutId) clearTimeout(timeoutId);
+        }
+      })());
     }
 
     await Promise.allSettled(stopPromises);
