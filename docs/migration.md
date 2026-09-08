@@ -11,7 +11,7 @@ Original project and data remain unchanged. Source license: Unlicense.
 - pnpm workspace, Turborepo task graph, TypeScript ESM build, independent Changesets versioning.
 - The complete dependency closure of the old `s3db.js/lite` entrypoint is now
   compiled inside `@buckiedb/core`: Database, Resource, Schema, Validator,
-  behaviors, streams, concurrency, tasks, and built-in storage clients.
+  DatabaseManager, behaviors, streams, concurrency, tasks, and built-in storage clients.
 - `BuckieDB` is the primary named and default class. `S3db` is a deprecated
   compatibility subclass and `Database` remains available.
 - The numeric encoding implementation is preserved from src/concerns/base62.ts.
@@ -19,6 +19,8 @@ Original project and data remain unchanged. Source license: Unlicense.
   Their imports now target the built @buckiedb/core/encoding export.
 - A public-API integration test exercises connect, resource creation, insert,
   get, update, and delete through MemoryClient.
+- DatabaseManager tests cover named connections, default routing, cross-database
+  resource lookup, and duplicate-name protection.
 - GitHub Actions installs from a frozen lockfile, typechecks, builds, tests,
   packs the package, installs that tarball in an empty consumer, and imports
   both public entrypoints.

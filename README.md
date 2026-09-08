@@ -4,7 +4,7 @@ A small document database for object storage — the modular successor to s3db.j
 
 **Status: core migration.** The database engine behind the former `s3db.js/lite`
 entrypoint now runs as `@buckiedb/core`. Database CRUD, schemas, resources,
-behaviors, streams, concurrency, and the built-in clients are present. The large
+multidatabase management, behaviors, streams, concurrency, and the built-in clients are present. The large
 plugin catalog and CLI still need to be split into their own packages.
 
 ```ts
@@ -21,11 +21,25 @@ const notes = await database.createResource({
 await notes.insert({ title: 'Hello from BuckieDB', done: false });
 ```
 
+Multiple named databases are coordinated by `DatabaseManager`:
+
+```ts
+import { DatabaseManager } from '@buckiedb/core';
+
+const databases = new DatabaseManager({
+  default: 'primary',
+  connections: {
+    primary: { connectionString: 's3://app-data' },
+    analytics: { connectionString: 's3://analytics-data' },
+  },
+});
+```
+
 ## Workspace
 
 | Path | Package | Status |
 | --- | --- | --- |
-| packages/core | @buckiedb/core | Working database engine and built-in clients |
+| packages/core | @buckiedb/core | Database engine, multidatabase manager, and built-in clients |
 | packages/adapter-s3 | @buckiedb/adapter-s3 | Planned; design notes only |
 | packages/plugin-* | @buckiedb/plugin-<name> | Future plugin packages |
 | apps | Docs, CLI, demos | Reserved |

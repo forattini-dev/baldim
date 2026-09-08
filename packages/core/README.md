@@ -22,6 +22,31 @@ const notes = await database.createResource({
 await notes.insert({ id: 'first', title: 'Try BuckieDB', done: false });
 ```
 
+For multiple databases, use the manager with named connections:
+
+```ts
+import { DatabaseManager } from '@buckiedb/core';
+
+const databases = new DatabaseManager({
+  default: 'primary',
+  connections: {
+    primary: { connectionString: 's3://app-data' },
+    analytics: { connectionString: 's3://analytics-data' },
+  },
+});
+
+await databases.connect();
+await databases.createResource({ name: 'users', attributes: { name: 'string' } });
+await databases.createResource({
+  connection: 'analytics',
+  name: 'events',
+  attributes: { type: 'string' },
+});
+```
+
+Resource names are unique across the manager. Use `connection(name)` for direct
+database access or `resource(name)` for unified lookup.
+
 The core currently includes the S3-compatible, memory, filesystem, SQLite,
 libSQL/D1, and RedDB clients inherited from s3db.js. Provider packages will be
 extracted behind a stable client contract in later migration slices.

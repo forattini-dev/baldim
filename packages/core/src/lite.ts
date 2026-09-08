@@ -33,6 +33,11 @@
 // =============================================================================
 
 export { BuckieDB, Database, S3db } from './database.class.js';
+export {
+  DatabaseManager,
+  type DatabaseManagerOptions,
+  type ManagerCreateResourceConfig
+} from './database-manager.class.js';
 export { S3Client, S3Client as Client } from './clients/s3-client.class.js';
 export { Resource } from './resource.class.js';
 export { Schema, type SchemaRegistry } from './schema.class.js';
