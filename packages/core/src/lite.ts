@@ -50,8 +50,6 @@ export type { StorageAdapterContext, StorageAdapterFactory, Client } from './sto
 // =============================================================================
 
 export { MemoryClient } from './clients/memory-client.class.js';
-export { SqliteClient } from './clients/sqlite-client.class.js';
-export { RemoteSqliteClient } from './clients/remote-sqlite-client.class.js';
 export { RedDbClient } from './clients/reddb-client.class.js';
 
 // =============================================================================

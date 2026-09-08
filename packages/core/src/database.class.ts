@@ -366,17 +366,18 @@ export class Database extends SafeEventEmitter {
             executorPool: this.executorPool,
           });
         } else if (url.protocol === 'sqlite:') {
-          this._clientFactory = async () => {
-            const { SqliteClient } = await import('./clients/sqlite-client.class.js');
-            const sqliteOptions = this._applyTaskExecutorMonitoring(this._deepMerge({
+          this._clientFactory = async () => createStorageClient('sqlite', {
+            connectionString,
+            clientOptions: this._applyTaskExecutorMonitoring(this._deepMerge({
               basePath: (connStr as any)?.basePath,
               bucket: (connStr as any)?.bucket,
               keyPrefix: (connStr as any)?.keyPrefix,
-              logLevel: this.logger.level,
               region: (connStr as any)?.region,
-            }, mergedClientOptions as any) as any);
-            return new SqliteClient(sqliteOptions) as unknown as Client;
-          };
+            }, mergedClientOptions as any) as any) as Record<string, unknown>,
+            logLevel: this.logger.level,
+            logger: this.getChildLogger('StorageAdapter'),
+            executorPool: this.executorPool,
+          });
         } else if (url.protocol === 'reddb:') {
           this._clientFactory = async () => {
             const { RedDbClient } = await import('./clients/reddb-client.class.js');
@@ -393,19 +394,19 @@ export class Database extends SafeEventEmitter {
             return new RedDbClient(reddbOptions) as unknown as Client;
           };
         } else if (url.protocol === 'sqlite+libsql:' || url.protocol === 'sqlite+d1:') {
-          this._clientFactory = async () => {
-            const { RemoteSqliteClient } = await import('./clients/remote-sqlite-client.class.js');
-            const sqliteRemoteOptions = this._applyTaskExecutorMonitoring(this._deepMerge({
+          this._clientFactory = async () => createStorageClient(url.protocol, {
+            connectionString,
+            clientOptions: this._applyTaskExecutorMonitoring(this._deepMerge({
               bucket: (connStr as any)?.bucket,
               keyPrefix: (connStr as any)?.keyPrefix,
-              logLevel: this.logger.level,
               region: (connStr as any)?.region,
               endpoint: (connStr as any)?.endpoint,
-              connectionString,
               sqliteDriver: (connStr as any)?.sqliteDriver,
-            }, mergedClientOptions as any) as any);
-            return new RemoteSqliteClient(sqliteRemoteOptions) as unknown as Client;
-          };
+            }, mergedClientOptions as any) as any) as Record<string, unknown>,
+            logLevel: this.logger.level,
+            logger: this.getChildLogger('StorageAdapter'),
+            executorPool: this.executorPool,
+          });
         } else {
           this._clientFactory = async () => createStorageClient(url.protocol, {
             connectionString,

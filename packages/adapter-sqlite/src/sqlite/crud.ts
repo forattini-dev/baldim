@@ -1,7 +1,7 @@
 import { chunk } from 'lodash-es';
 
-import { normalizeEtagHeader } from '../client-compat.js';
-import { mapAwsError, DatabaseError, ResourceError, BaseError, NoSuchKey } from '../../errors.js';
+import { normalizeEtagHeader } from '@baldin/core/adapter';
+import { mapAwsError, DatabaseError, ResourceError, BaseError, NoSuchKey } from '@baldin/core/adapter';
 import type {
   PutObjectParams,
   CopyObjectParams,
@@ -9,7 +9,7 @@ import type {
   PutObjectResponse,
   CopyObjectResponse,
   DeleteObjectResponse
-} from '../types.js';
+} from '@baldin/core/adapter';
 import type { DbRow } from './types.js';
 import { SqliteClientPartitions } from './partitions.js';
 

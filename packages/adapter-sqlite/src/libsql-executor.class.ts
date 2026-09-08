@@ -1,4 +1,4 @@
-import { DatabaseError } from '../errors.js';
+import { DatabaseError } from '@baldin/core/adapter';
 import type { SqlExecutor, SqlExecutorResult, SqlExecutorResultRow, SqlStatement } from './sql-executor.types.js';
 
 interface LibsqlClientLike {

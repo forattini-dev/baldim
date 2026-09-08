@@ -1,4 +1,4 @@
-import { tryFn } from '../../concerns/try-fn.js';
+import { tryFn } from '@baldin/core/adapter';
 import { SqliteClientQuery } from './query.js';
 
 export class SqliteClientVec extends SqliteClientQuery {

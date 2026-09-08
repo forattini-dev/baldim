@@ -11,13 +11,13 @@ working core from a completed product migration.
 | Source | 558 files, 555 TypeScript | 113 core TypeScript files plus extracted package sources | Partial |
 | Core engine | Database, Resource, Schema, Validator, manager | Migrated from the `lite` dependency closure | Working |
 | Plugin catalog | 23 plugin families, 411 TypeScript files | Public plugin SDK and `@baldin/plugin-audit`; 22 families remain | Partial |
-| Installable packages | One all-in-one package | `core`, two storage adapters, and `plugin-audit` | Partial |
-| Storage adapters | Built into the package | S3 and filesystem extracted; SQLite/libSQL/D1 and RedDB remain in core | Partial |
+| Installable packages | One all-in-one package | `core`, three storage adapters, and `plugin-audit` | Partial |
+| Storage adapters | Built into the package | S3, filesystem, and SQLite/libSQL/D1 extracted; RedDB remains in core | Partial |
 | CLI | 6 TypeScript modules plus 2 bin files | No CLI application/package | Missing |
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Not exported or migrated | Missing |
 | Public subpaths | root, lite, concerns, plugins, generator | root, lite, encoding, adapter SDK, plugin SDK | Partial |
-| Test suites | 118 core and 176 plugin test files | 8 focused test files, 54 tests | Partial |
+| Test suites | 118 core and 176 plugin test files | 9 focused test files, 55 tests | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps
@@ -39,7 +39,7 @@ contract has not yet run against live targets for each provider.
 ## Corrective order
 
 1. Run the storage contract suite against AWS S3, R2, MinIO, and a custom endpoint.
-2. Extract SQLite/libSQL/D1 and RedDB adapters and remove their runtime
+2. Extract the RedDB adapter and remove their runtime
    dependencies from core.
 3. Migrate the remaining 22 plugin families to `@baldin/plugin-<name>` with their
    relevant original tests.

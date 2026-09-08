@@ -1,4 +1,4 @@
-import { mapAwsError, DatabaseError, BaseError } from '../errors.js';
+import { mapAwsError, DatabaseError, BaseError } from '@baldin/core/adapter';
 import type {
   PutObjectParams,
   CopyObjectParams,
@@ -10,7 +10,7 @@ import type {
   ListObjectsParams,
   ListObjectsResponse,
   QueueStats
-} from './types.js';
+} from '@baldin/core/adapter';
 import type { CommandInput, Command } from './sqlite/types.js';
 import { SqliteClientVec } from './sqlite/vec.js';
 

@@ -62,11 +62,9 @@
     "tuiuiu.js": "1.0.63"
   },
   "optionalDependencies": {
-    "@libsql/client": "^0.14.0",
     "argon2": "^0.44.0",
     "bcrypt": "^6.0.0",
-    "node-cron": "^4.0.0",
-    "sqlite-vec": "^0.1.0"
+    "node-cron": "^4.0.0"
   },
   "devDependencies": {
     "@types/argon2": "^0.15.4",

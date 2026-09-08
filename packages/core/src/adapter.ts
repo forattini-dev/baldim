@@ -13,7 +13,7 @@ export { tryFn } from './concerns/try-fn.js';
 export { md5 } from './concerns/crypto.js';
 export { idGenerator } from './concerns/id.js';
 export { metadataEncode, metadataDecode } from './concerns/metadata-encoding.js';
-export { mapAwsError, UnknownError, BaseError, DatabaseError, MetadataLimitError, ResourceError, ValidationError } from './errors.js';
+export { mapAwsError, UnknownError, BaseError, DatabaseError, MetadataLimitError, ResourceError, ValidationError, NoSuchKey } from './errors.js';
 export { TasksPool } from './tasks/tasks-pool.class.js';
 export { TasksRunner } from './tasks/tasks-runner.class.js';
 export { createLogger } from './concerns/logger.js';
@@ -58,3 +58,5 @@ export type {
 } from './clients/types.js';
 export type { LogLevel } from './types/common.types.js';
 export type { CronManager } from './concerns/cron-manager.js';
+
+export type * from './clients/types.js';
