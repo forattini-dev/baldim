@@ -137,4 +137,87 @@ describe('DatabaseManager public API', () => {
     expect(manager.connection('first').isConnected()).toBe(false);
     expect(manager.connection('second').isConnected()).toBe(false);
   });
+
+  it('rejects an unknown default connection during construction', () => {
+    expect(() => new DatabaseManager({
+      default: 'missing',
+      connections: { primary: { connectionString: 'memory://manager-default' } },
+    })).toThrow(/Default connection "missing" not found/);
+  });
+
+  it('reports unknown connections and resources with useful context', () => {
+    manager = new DatabaseManager({
+      connections: { primary: { connectionString: 'memory://manager-errors', logLevel: 'silent' } },
+    });
+
+    try {
+      manager.connection('missing');
+    } catch (error) {
+      expect(error).toBeInstanceOf(DatabaseError);
+      expect((error as DatabaseError).suggestion).toBe('Available connections: primary');
+    }
+    try {
+      manager.resource('missing');
+    } catch (error) {
+      expect(error).toBeInstanceOf(DatabaseError);
+      expect((error as DatabaseError).suggestion).toBe('Available resources: (none)');
+    }
+  });
+
+  it('rolls back connected databases after a partial connection failure', async () => {
+    manager = new DatabaseManager({
+      defaults: { logLevel: 'silent', exitOnSignal: false },
+      connections: {
+        good: { connectionString: 'memory://manager-partial-good' },
+        bad: { connectionString: 'unregistered://manager-partial-bad' },
+      },
+    });
+
+    await expect(manager.connect()).rejects.toThrow(/Failed to connect "bad"/);
+    expect(manager.connection('good').isConnected()).toBe(false);
+    expect(manager.connection('bad').isConnected()).toBe(false);
+    expect(manager.isConnected()).toBe(false);
+  });
+
+  it('attempts every disconnect and clears manager state when one fails', async () => {
+    manager = new DatabaseManager({
+      defaults: { logLevel: 'silent', exitOnSignal: false },
+      connections: {
+        first: { connectionString: 'memory://manager-disconnect-first' },
+        second: { connectionString: 'memory://manager-disconnect-second' },
+      },
+    });
+    await manager.connect();
+
+    const first = manager.connection('first');
+    const second = manager.connection('second');
+    const originalFirstDisconnect = first.disconnect.bind(first);
+    const originalSecondDisconnect = second.disconnect.bind(second);
+    const firstDisconnect = vi.spyOn(first, 'disconnect').mockImplementation(async () => {
+      await originalFirstDisconnect();
+      throw new Error('disconnect failed');
+    });
+    const secondDisconnect = vi.spyOn(second, 'disconnect').mockImplementation(originalSecondDisconnect);
+
+    await expect(manager.disconnect()).rejects.toThrow(/Failed to disconnect "first"/);
+    expect(firstDisconnect).toHaveBeenCalledOnce();
+    expect(secondDisconnect).toHaveBeenCalledOnce();
+    expect(manager.isConnected()).toBe(false);
+  });
+
+  it('detects duplicate names created directly on separate databases', async () => {
+    manager = new DatabaseManager({
+      defaults: { logLevel: 'silent', deferMetadataWrites: true, exitOnSignal: false },
+      connections: {
+        first: { connectionString: 'memory://manager-direct-duplicate-first' },
+        second: { connectionString: 'memory://manager-direct-duplicate-second' },
+      },
+    });
+    await manager.connect();
+    await manager.connection('first').createResource({ name: 'same', attributes: { value: 'string' } });
+    await manager.connection('second').createResource({ name: 'same', attributes: { value: 'string' } });
+
+    expect(() => manager!.resources).toThrow(/exists on more than one connection/);
+  });
+
 });
