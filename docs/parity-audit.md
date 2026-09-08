@@ -10,14 +10,14 @@ working core from a completed product migration.
 | --- | ---: | --- | --- |
 | Source | 558 files, 555 TypeScript | 113 core TypeScript files plus extracted package sources | Partial |
 | Core engine | Database, Resource, Schema, Validator, manager | Migrated from the `lite` dependency closure | Working |
-| Plugin catalog | 23 plugin families, 411 TypeScript files | Public plugin SDK plus audit, TTL, scheduler, fulltext, geo, graph, and costs packages; 16 families remain | Partial |
-| Installable packages | One all-in-one package | `core`, five storage adapters, and seven standalone plugins | Partial |
+| Plugin catalog | 23 plugin families, 411 TypeScript files | Public plugin SDK plus audit, TTL, scheduler, fulltext, geo, graph, costs, and metrics packages; 15 families remain | Partial |
+| Installable packages | One all-in-one package | `core`, five storage adapters, and eight standalone plugins | Partial |
 | Storage adapters | Built into the package | Memory, S3, filesystem, SQLite/libSQL/D1, and RedDB are separate packages | Working |
 | CLI | 6 TypeScript modules plus 2 bin files | No CLI application/package | Missing |
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Not exported or migrated | Missing |
 | Public subpaths | root, lite, concerns, plugins, generator | root, lite, encoding, adapter SDK, plugin SDK | Partial |
-| Test suites | 118 core and 176 plugin test files | 23 focused test files, 197 tests plus 4 MinIO contract cases in CI | Partial |
+| Test suites | 118 core and 176 plugin test files | 25 focused test files, 233 tests plus 4 MinIO contract cases in CI | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps
@@ -44,7 +44,7 @@ runs are still needed before release.
 
 1. Run the storage contract suite against configured AWS S3 and R2 targets.
 2. Extend the shared contract to RedDB and remote SQLite test services.
-3. Migrate the remaining 16 plugin families to `@baldin/plugin-<name>` with their
+3. Migrate the remaining 15 plugin families to `@baldin/plugin-<name>` with their
    relevant original tests.
 4. Restore public utilities, Factory/Seeder, TypeScript generation, and explicitly
    retire or migrate every old subpath export.

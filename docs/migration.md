@@ -33,14 +33,15 @@ Original project and data remain unchanged. Source license: Unlicense.
 - S3 transport and the AWS SDK live in `@baldin/adapter-s3`, with registration
   for AWS S3, Cloudflare R2, MinIO, and other compatible HTTP endpoints.
 - A public plugin SDK lives at `@baldin/core/plugin`, with coordinator support at
-  `@baldin/core/coordinator`. Audit, TTL, scheduler, fulltext, geo, graph, and costs now live in standalone
+  `@baldin/core/coordinator`. Audit, TTL, scheduler, fulltext, geo, graph, costs, and metrics now live in standalone
   `@baldin/plugin-*` packages.
 - Tests cover the numeric codec, memory-backed document lifecycle, manager
   lifecycle and collisions, adapter registration, S3 client initialization,
   plugin installation, persisted audit records, indexed and lazy TTL expiration,
   scheduler validation, execution, locking, retries, history, and management,
   persistent fulltext indexing, geohash-backed spatial queries, graph traversal with weighted shortest paths, and
-  provider-aware cost accounting and projections. A shared object-storage
+  provider-aware cost accounting and projections, and persistent telemetry with
+  Prometheus export. A shared object-storage
   contract runs against Memory, filesystem, SQLite, and MinIO in CI.
 - CI builds and tests every workspace package, then installs all public tarballs
   together in an empty consumer and exercises their public entrypoints.
@@ -76,7 +77,7 @@ dependencies and release independently.
 
 ## Status and limits
 
-The core, manager, storage adapters, audit, TTL, scheduler, fulltext, geo, graph, and costs plugins are working package slices. The
+The core, manager, storage adapters, audit, TTL, scheduler, fulltext, geo, graph, costs, and metrics plugins are working package slices. The
 full plugin, adapter, CLI, MCP, utilities, and compatibility-suite migration is
 incomplete. No npm package has been published and the `@baldin` scope has not
 been registered.

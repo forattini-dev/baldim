@@ -57,6 +57,7 @@ const databases = new DatabaseManager({
 | packages/plugin-geo | @baldin/plugin-geo | Geohash indexes, distance calculations, and spatial queries |
 | packages/plugin-graph | @baldin/plugin-graph | Indexed edges, traversal, and weighted shortest paths |
 | packages/plugin-costs | @baldin/plugin-costs | Provider-aware usage accounting and cost projections |
+| packages/plugin-metrics | @baldin/plugin-metrics | Persistent telemetry and Prometheus export |
 | apps | Docs, CLI, demos | Reserved |
 
 ## Development
