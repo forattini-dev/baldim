@@ -81,3 +81,7 @@ The core, manager, storage adapters, audit, TTL, scheduler, fulltext, geo, graph
 full plugin, adapter, CLI, MCP, utilities, and compatibility-suite migration is
 incomplete. No npm package has been published and the `@baldin` scope has not
 been registered.
+
+## Testing utilities
+
+Import `Factory` and `Seeder` from `@baldin/testing`.
