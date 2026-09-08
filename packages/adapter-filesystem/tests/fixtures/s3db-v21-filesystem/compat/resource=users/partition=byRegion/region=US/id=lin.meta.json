@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "_v": "v1"
+  },
+  "contentType": "application/octet-stream",
+  "etag": "d41d8cd98f00b204e9800998ecf8427e",
+  "lastModified": "2026-09-08T18:02:35.555Z",
+  "size": 0,
+  "contentLength": 0,
+  "compressed": false,
+  "expiresAt": null,
+  "body": {
+    "type": "Buffer",
+    "data": []
+  }
+}

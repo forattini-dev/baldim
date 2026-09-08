@@ -1,0 +1,128 @@
+{
+  "version": "1",
+  "s3dbVersion": "0.0.0-dev",
+  "lastUpdated": "2026-09-08T18:02:35.567Z",
+  "resources": {
+    "users": {
+      "currentVersion": "v1",
+      "partitions": {
+        "byRegion": {
+          "fields": {
+            "region": "string"
+          }
+        }
+      },
+      "createdBy": "user",
+      "versions": {
+        "v1": {
+          "hash": "sha256:283a80d20a7b24e02792958c65311f9bc344cbbac1d2faf9c91cc7dfc15bb5de",
+          "attributes": {
+            "id": "string|optional",
+            "name": "string|required",
+            "email": "email|required",
+            "region": "string|required",
+            "active": "boolean|required",
+            "score": "number|required"
+          },
+          "behavior": "user-managed",
+          "timestamps": false,
+          "partitions": {
+            "byRegion": {
+              "fields": {
+                "region": "string"
+              }
+            }
+          },
+          "paranoid": true,
+          "allNestedObjectsOptional": true,
+          "autoDecrypt": true,
+          "cache": false,
+          "hooks": {
+            "afterInsert": {
+              "count": 1,
+              "handlers": [
+                {
+                  "name": null,
+                  "length": 1,
+                  "type": "function"
+                }
+              ]
+            },
+            "afterDelete": {
+              "count": 1,
+              "handlers": [
+                {
+                  "name": null,
+                  "length": 1,
+                  "type": "function"
+                }
+              ]
+            }
+          },
+          "idSize": 22,
+          "idGenerator": "default",
+          "createdAt": "2026-09-08T18:02:35.537Z"
+        }
+      },
+      "schemaRegistry": {
+        "nextIndex": 6,
+        "mapping": {
+          "id": 0,
+          "name": 1,
+          "email": 2,
+          "region": 3,
+          "active": 4,
+          "score": 5
+        },
+        "burned": []
+      },
+      "pluginSchemaRegistry": {}
+    },
+    "articles": {
+      "currentVersion": "v1",
+      "partitions": {},
+      "createdBy": "user",
+      "versions": {
+        "v1": {
+          "hash": "sha256:08eb9d60fe40e2239e34e8a6ca58daae3525a21745940c89002149181f966e9c",
+          "attributes": {
+            "id": "string|optional",
+            "title": "string|required",
+            "tags": {
+              "type": "array",
+              "items": "string"
+            },
+            "details": {
+              "type": "object"
+            }
+          },
+          "behavior": "body-only",
+          "timestamps": false,
+          "partitions": {},
+          "paranoid": true,
+          "allNestedObjectsOptional": true,
+          "autoDecrypt": true,
+          "cache": false,
+          "hooks": {},
+          "idSize": 22,
+          "idGenerator": "default",
+          "createdAt": "2026-09-08T18:02:35.567Z"
+        }
+      },
+      "schemaRegistry": {
+        "nextIndex": 7,
+        "mapping": {
+          "id": 0,
+          "title": 1,
+          "tags.type": 2,
+          "tags.items": 3,
+          "details.type": 4,
+          "tags": 5,
+          "details": 6
+        },
+        "burned": []
+      },
+      "pluginSchemaRegistry": {}
+    }
+  }
+}

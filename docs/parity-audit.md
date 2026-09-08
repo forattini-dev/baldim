@@ -17,7 +17,7 @@ working core from a completed product migration.
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Not exported or migrated | Missing |
 | Public subpaths | root, lite, concerns, plugins, generator | root, lite, encoding, adapter SDK, plugin SDK | Partial |
-| Test suites | 118 core and 176 plugin test files | 12 focused test files, 77 tests plus 4 MinIO contract cases in CI | Partial |
+| Test suites | 118 core and 176 plugin test files | 13 focused test files, 78 tests plus 4 MinIO contract cases in CI | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps
@@ -49,7 +49,8 @@ runs are still needed before release.
 4. Restore public utilities, Factory/Seeder, TypeScript generation, and explicitly
    retire or migrate every old subpath export.
 5. Migrate CLI and MCP into applications that consume public workspace packages.
-6. Run persisted-data fixtures against databases written by the baseline version.
+6. Extend baseline persisted-data fixtures beyond the current filesystem coverage
+   to S3-compatible and SQLite representations.
 7. Publish prereleases and validate an application migration before declaring
    Baldin a replacement for `s3db.js`.
 
