@@ -67,6 +67,7 @@ and dependency rules.
 | plugins/backup | @baldin/plugin-backup | Full and incremental backups to filesystem or object storage |
 | plugins/cache | @baldin/plugin-cache | Memory, filesystem, Redis, object-storage, partition-aware, and multi-tier caching |
 | plugins/state-machine | @baldin/plugin-state-machine | Persistent workflows with guards, hooks, triggers, TTL, and transition history |
+| plugins/tree | @baldin/plugin-tree | Adjacency-list and nested-set hierarchies with resource and node helpers |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |

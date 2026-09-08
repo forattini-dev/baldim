@@ -87,6 +87,30 @@ describe('@baldin/core plugin SDK', () => {
     expect((await notes.insert({ id: 'without-hook', title: 'stopped' })).title).toBe('stopped');
   });
 
+  test('removes plugin-owned database hooks when the plugin stops', async () => {
+    class ResourceObserverPlugin extends Plugin {
+      created: string[] = [];
+
+      override async onInstall(): Promise<void> {
+        this.addDatabaseHook('afterCreateResource', ({ resource }) => {
+          this.created.push((resource as { name: string }).name);
+        });
+      }
+    }
+
+    const database = createDatabase('database-hooks');
+    await database.connect();
+    const plugin = new ResourceObserverPlugin({ logLevel: 'silent' });
+    await database.usePlugin(plugin);
+
+    await database.createResource({ name: 'observed', attributes: { title: 'string|required' } });
+    expect(plugin.created).toEqual(['observed']);
+
+    await plugin.stop();
+    await database.createResource({ name: 'ignored', attributes: { title: 'string|required' } });
+    expect(plugin.created).toEqual(['observed']);
+  });
+
   test('restores plugin-owned resource extensions when the plugin stops', async () => {
     class HelpersPlugin extends Plugin {
       override async onInstall(): Promise<void> {

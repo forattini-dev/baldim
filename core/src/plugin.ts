@@ -3,6 +3,7 @@ import { createLogger, type Logger } from './concerns/logger.js';
 import { PluginError } from './errors.js';
 import { PluginStorage, type PluginClient } from './plugins/concerns/plugin-storage.js';
 import type { Database } from './database.class.js';
+import type { DatabaseHookFunction, HookEventName } from './database/types.js';
 import type {
   MiddlewareContext,
   NextFunction,
@@ -62,6 +63,7 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
   protected _storage: PluginStorage | null = null;
   private _middlewareDisposers: Array<() => void> = [];
   private _resourceDisposers: Array<() => void> = [];
+  private _databaseHookDisposers: Array<() => void> = [];
   logger: Logger;
   logLevel: string;
   database!: Database;
@@ -111,6 +113,7 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
     try {
       await this.onStop();
     } finally {
+      for (const dispose of this._databaseHookDisposers.splice(0).reverse()) dispose();
       for (const dispose of this._resourceDisposers.splice(0).reverse()) dispose();
       for (const dispose of this._middlewareDisposers.splice(0)) dispose();
       this.stopAllCronJobs();
@@ -229,6 +232,16 @@ export abstract class Plugin<TOptions extends PluginOptions = PluginOptions> ext
     resource.addHook(event, hook);
     this._resourceDisposers.push(() => {
       resource.removeHook?.(event, hook);
+    });
+  }
+
+  addDatabaseHook(
+    event: HookEventName,
+    hook: DatabaseHookFunction
+  ): void {
+    this.database.addHook(event, hook);
+    this._databaseHookDisposers.push(() => {
+      this.database.removeHook(event, hook);
     });
   }
 
@@ -387,5 +400,6 @@ export { PluginError };
 export { PluginStorage };
 export type { PluginClient, PluginStorageOptions, PluginStorageSetOptions } from './plugins/concerns/plugin-storage.js';
 export type { Database } from './database.class.js';
+export type { DatabaseHookFunction, HookEventName } from './database/types.js';
 export type { Resource } from './resource.class.js';
 export type { MiddlewareContext, NextFunction, SupportedMethod } from './core/resource-middleware.class.js';
