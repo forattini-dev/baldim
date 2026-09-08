@@ -24,7 +24,9 @@ jobs:
       - name: Verify packed package in a clean consumer
         shell: bash
         run: |
-          package="$GITHUB_WORKSPACE/artifacts/buckiedb-core-0.0.0.tgz"
+          packages=("$GITHUB_WORKSPACE"/artifacts/buckiedb-core-*.tgz)
+          test "${#packages[@]}" -eq 1
+          package="${packages[0]}"
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
