@@ -1031,8 +1031,8 @@ export class Resource extends AsyncEventEmitter implements Disposable {
     return this._persistence.upsert({ id, ...attributes }) as Promise<ResourceData>;
   }
 
-  async count({ partition = null, partitionValues = {} }: CountOptions = {}): Promise<number> {
-    return this._query.count({ partition, partitionValues });
+  async count({ partition = null, partitionValues = {}, skipCache = false }: CountOptions = {}): Promise<number> {
+    return this._query.count({ partition, partitionValues, skipCache });
   }
 
   async insertMany(objects: Record<string, unknown>[]): Promise<ResourceData[]> {

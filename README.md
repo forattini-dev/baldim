@@ -42,6 +42,11 @@ const databases = new DatabaseManager({
 
 ## Workspace
 
+The workspace is organized by independently publishable package. Each entry owns
+its own `src/`, tests, manifest, and dependencies. See the
+[repository structure](docs/repository-structure.md) for directory responsibilities
+and dependency rules.
+
 | Path | Package | Status |
 | --- | --- | --- |
 | core | @baldin/core | Engine, multidatabase manager, adapter registry, and plugin SDK |
@@ -60,6 +65,7 @@ const databases = new DatabaseManager({
 | plugins/metrics | @baldin/plugin-metrics | Persistent telemetry and Prometheus export |
 | plugins/queue-consumer | @baldin/plugin-queue-consumer | Optional SQS, RabbitMQ, Redis, and BullMQ consumers |
 | plugins/backup | @baldin/plugin-backup | Full and incremental backups to filesystem or object storage |
+| plugins/cache | @baldin/plugin-cache | Memory, filesystem, Redis, object-storage, partition-aware, and multi-tier caching |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |

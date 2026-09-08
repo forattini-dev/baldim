@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Baldin, Database } from '@baldin/core';
 import { MemoryClient } from '@baldin/adapter-memory';
 
@@ -39,6 +39,32 @@ describe('Baldin core engine', () => {
     await expect(people.insert({ id: 'invalid', name: 'A', age: -1, email: 'bad' }))
       .rejects.toMatchObject({ statusCode: 422, retriable: false });
     expect(await people.listIds()).toEqual([]);
+  });
+
+  it('forwards skipCache from Resource.count to the query engine', async () => {
+    const database = await createDatabase('count-skip-cache');
+    const items = await database.createResource({
+      name: 'count_items',
+      timestamps: false,
+      attributes: { name: 'string|required' },
+    });
+    await items.insert({ id: 'one', name: 'One' });
+
+    const cache = {
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(undefined),
+    };
+    (items as unknown as { cache: typeof cache }).cache = cache;
+
+    expect(await items.count()).toBe(1);
+    expect(cache.get).toHaveBeenCalledOnce();
+    expect(cache.set).toHaveBeenCalledOnce();
+
+    cache.get.mockClear();
+    cache.set.mockClear();
+    expect(await items.count({ skipCache: true })).toBe(1);
+    expect(cache.get).not.toHaveBeenCalled();
+    expect(cache.set).not.toHaveBeenCalled();
   });
 
   it('moves partition indexes when a partition field changes', async () => {

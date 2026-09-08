@@ -60,6 +60,7 @@ jobs:
           pnpm --filter @baldin/plugin-metrics pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-queue-consumer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-backup pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-cache pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify packed packages in a clean consumer
@@ -81,6 +82,7 @@ jobs:
           metrics_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-metrics-*.tgz)
           queue_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-queue-consumer-*.tgz)
           backup_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-backup-*.tgz)
+          cache_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cache-*.tgz)
           testing_package=("$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz)
           typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz)
           test "${#core[@]}" -eq 1
@@ -99,6 +101,7 @@ jobs:
           test "${#metrics_plugin[@]}" -eq 1
           test "${#queue_plugin[@]}" -eq 1
           test "${#backup_plugin[@]}" -eq 1
+          test "${#cache_plugin[@]}" -eq 1
           test "${#testing_package[@]}" -eq 1
           test "${#typegen_package[@]}" -eq 1
           if tar -tzf "${core[0]}" | grep -Eq 'package/dist/clients/(filesystem|memory|reddb|sqlite|remote-sqlite|d1|libsql)'; then
@@ -108,7 +111,7 @@ jobs:
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -124,6 +127,7 @@ jobs:
           import { MetricsPlugin } from '@baldin/plugin-metrics';
           import { QueueConsumerPlugin } from '@baldin/plugin-queue-consumer';
           import { BackupPlugin } from '@baldin/plugin-backup';
+          import { CachePlugin } from '@baldin/plugin-cache';
           import { Factory, Seeder } from '@baldin/testing';
           import { printTypes } from '@baldin/typegen';
           import { MemoryClient } from '@baldin/adapter-memory';
@@ -232,6 +236,16 @@ jobs:
           await database.usePlugin(backup);
           const backupResult = await backup.backup('full', { resources: ['notes'] });
           assert.equal((await backup.getBackupStatus(backupResult.id)).status, 'completed');
+          const cache = new CachePlugin({
+            driver: 'memory',
+            logLevel: 'silent',
+            maxMemoryBytes: 1024 * 1024,
+            methodPolicies: { get: { minHitsBeforeStore: 1 } },
+          });
+          await database.usePlugin(cache);
+          await notes.get('searchable');
+          await notes.get('searchable');
+          assert.equal(cache.getStats().hits, 1);
           await database.disconnect();
           await rm(backupDir, { recursive: true, force: true });
           assert.equal(queueStopped, true);

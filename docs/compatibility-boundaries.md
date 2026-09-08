@@ -13,6 +13,9 @@ contracts or belong to the S3 adapter.
 - The S3 URL dictionary tokens remain stable because changing them would corrupt
   compressed persisted values.
 - Backup archives keep the internal `s3db.json` metadata entry and `s3db_version` manifest field so archives remain identifiable across the rename.
+- Cache drivers read the historical `__s3dbCacheV` envelope while new entries use
+  `__baldinCacheV`, so persisted filesystem and object-storage caches remain warm
+  across the package rename.
 - The historical default container name, local directory, and SQLite filename keep
   `s3db` in their values to avoid silently selecting an empty database after upgrade.
 

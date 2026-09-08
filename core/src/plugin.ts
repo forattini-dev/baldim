@@ -357,7 +357,7 @@ export { tryFn } from './concerns/try-fn.js';
 export { mapWithConcurrency, forEachWithConcurrency } from './concerns/map-with-concurrency.js';
 export { PluginError };
 export { PluginStorage };
-export type { PluginStorageOptions } from './plugins/concerns/plugin-storage.js';
+export type { PluginClient, PluginStorageOptions, PluginStorageSetOptions } from './plugins/concerns/plugin-storage.js';
 export type { Database } from './database.class.js';
 export type { Resource } from './resource.class.js';
 export type { MiddlewareContext, NextFunction, SupportedMethod } from './core/resource-middleware.class.js';
