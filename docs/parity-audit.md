@@ -17,7 +17,7 @@ working core from a completed product migration.
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Not exported or migrated | Missing |
 | Public subpaths | root, lite, concerns, plugins, generator | root, lite, encoding, adapter SDK, plugin SDK | Partial |
-| Test suites | 118 core and 176 plugin test files | 11 focused test files, 65 tests | Partial |
+| Test suites | 118 core and 176 plugin test files | 12 focused test files, 77 tests plus 4 MinIO contract cases in CI | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps
@@ -36,15 +36,14 @@ The source still carries legacy names such as `s3db.json`, `s3dbVersion`, and
 intentional compatibility boundaries. Comments, logger names, generated TypeScript
 module names, and other non-persisted branding still need classification.
 
-The S3 adapter accepts AWS S3, Cloudflare R2, MinIO, and custom compatible endpoints,
-but only registration and construction are tested today. The same behavioral
-contract has not yet run against live targets for each provider.
+The S3 adapter accepts AWS S3, Cloudflare R2, MinIO, and custom compatible endpoints.
+CI runs the shared storage contract against MinIO; configured AWS S3 and R2 target
+runs are still needed before release.
 
 ## Corrective order
 
-1. Run the storage contract suite against AWS S3, R2, MinIO, and a custom endpoint.
-2. Run the shared local storage contract against Memory, filesystem, and SQLite,
-   then extend it to configured remote adapters.
+1. Run the storage contract suite against configured AWS S3 and R2 targets.
+2. Extend the shared contract to RedDB and remote SQLite test services.
 3. Migrate the remaining 22 plugin families to `@baldin/plugin-<name>` with their
    relevant original tests.
 4. Restore public utilities, Factory/Seeder, TypeScript generation, and explicitly

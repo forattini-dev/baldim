@@ -20,6 +20,27 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm build
       - run: pnpm test
+      - name: Run S3 contract against MinIO
+        shell: bash
+        env:
+          BALDIN_S3_CONTRACT_URL: http://minioadmin:minioadmin@127.0.0.1:9000/baldin-contract?region=us-east-1&forcePathStyle=true
+        run: |
+          docker run --detach --name baldin-minio \
+            --publish 9000:9000 \
+            --env MINIO_ROOT_USER=minioadmin \
+            --env MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:9000/minio/health/ready >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              docker logs baldin-minio
+              exit 1
+            fi
+            sleep 1
+          done
+          pnpm --filter @baldin/adapter-s3 exec vitest run tests/storage-contract.test.ts
       - name: Pack public packages
         run: |
           mkdir -p "$GITHUB_WORKSPACE/artifacts"

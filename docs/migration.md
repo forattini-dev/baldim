@@ -34,16 +34,15 @@ Original project and data remain unchanged. Source license: Unlicense.
   first extracted package at `@baldin/plugin-audit`.
 - Tests cover the numeric codec, memory-backed document lifecycle, manager
   lifecycle and collisions, adapter registration, S3 client initialization,
-  plugin installation, and persisted audit records.
+  plugin installation, and persisted audit records. A shared object-storage
+  contract runs against Memory, filesystem, SQLite, and MinIO in CI.
 - CI builds and tests every workspace package, then installs all public tarballs
   together in an empty consumer and exercises their public entrypoints.
 
 ## Next extraction stages
 
-1. Run one storage contract suite against MinIO in CI and configured AWS S3/R2
-   targets outside pull requests.
-2. Run the shared local storage contract against Memory, filesystem, and SQLite,
-   then extend it to configured remote adapters.
+1. Run the storage contract against configured AWS S3/R2 targets outside pull requests.
+2. Extend the contract to RedDB and remote SQLite test services.
 3. Migrate the remaining plugin families one package at a time with their
    relevant original tests, starting with TTL and scheduler.
 4. Expand compatibility fixtures for schema metadata, document bodies,

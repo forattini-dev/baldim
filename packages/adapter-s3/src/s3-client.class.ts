@@ -834,6 +834,8 @@ export class S3Client extends EventEmitter {
 
     const results: unknown[] = [];
     const errors: Array<{ message: string; raw: Error }> = [];
+    const canonicalDeleted: Array<{ Key: string }> = [];
+    const canonicalErrors: Array<{ Key: string; Code: string; Message: string }> = [];
 
     for (const packageKeys of packages) {
       const [ok, err, response] = await tryFn(async () => {
@@ -860,13 +862,20 @@ export class S3Client extends EventEmitter {
 
       if (ok) {
         results.push(response);
+        canonicalDeleted.push(...packageKeys.map((Key) => ({ Key })));
       } else {
-        errors.push({ message: (err as Error).message, raw: err as Error });
+        const message = (err as Error).message;
+        errors.push({ message, raw: err as Error });
+        canonicalErrors.push(...packageKeys.map((Key) => ({ Key, Code: 'DeleteFailed', Message: message })));
       }
     }
 
     const report = {
+      Deleted: canonicalDeleted,
+      Errors: canonicalErrors,
+      /** @deprecated Use Deleted. */
       deleted: results,
+      /** @deprecated Use Errors. */
       notFound: errors,
     };
 
@@ -956,8 +965,33 @@ export class S3Client extends EventEmitter {
       this.logger.debug({ totalMs, prefix: prefix?.substring(0, 60), keys: (response as { KeyCount?: number })?.KeyCount || 0 }, `[S3Client.listObjects] complete`);
     }
 
-    this.emit('cl:ListObjects', response, options);
-    return response;
+    const raw = response as {
+      Contents?: Array<{ Key?: string; [key: string]: unknown }>;
+      CommonPrefixes?: Array<{ Prefix?: string; [key: string]: unknown }>;
+      [key: string]: unknown;
+    };
+    const configuredPrefix = this.config.keyPrefix
+      ? `${this.config.keyPrefix.replace(/\/+$/, '')}/`
+      : '';
+    const stripConfiguredPrefix = (key: string | undefined): string | undefined => {
+      if (!key || !configuredPrefix || !key.startsWith(configuredPrefix)) return key;
+      return key.slice(configuredPrefix.length);
+    };
+    const normalizedResponse = {
+      ...raw,
+      Contents: raw.Contents?.map((entry) => ({
+        ...entry,
+        Key: stripConfiguredPrefix(entry.Key),
+      })),
+      CommonPrefixes: raw.CommonPrefixes?.map((entry) => ({
+        ...entry,
+        Prefix: stripConfiguredPrefix(entry.Prefix),
+      })),
+      Prefix: prefix || '',
+    };
+
+    this.emit('cl:ListObjects', normalizedResponse, options);
+    return normalizedResponse;
   }
 
   async count({ prefix }: { prefix?: string } = {}): Promise<number> {
@@ -1011,11 +1045,6 @@ export class S3Client extends EventEmitter {
       this.logger.warn({ totalMs, iterations, keysCount: keys.length, prefix: prefix?.substring(0, 60) }, `[PERF] S3Client.getAllKeys SLOW TOTAL`);
     }
 
-    if (this.config.keyPrefix) {
-      keys = keys
-        .map((x) => x.replace(this.config.keyPrefix!, ''))
-        .map((x) => (x.startsWith('/') ? x.replace('/', '') : x));
-    }
     this.emit('cl:GetAllKeys', keys, { prefix });
     return keys;
   }
@@ -1092,11 +1121,6 @@ export class S3Client extends EventEmitter {
         keys = keys.slice(0, amount);
         break;
       }
-    }
-    if (this.config.keyPrefix) {
-      keys = keys
-        .map((x) => x.replace(this.config.keyPrefix!, ''))
-        .map((x) => (x.startsWith('/') ? x.replace('/', '') : x));
     }
 
     const totalMs = Date.now() - pageStart;

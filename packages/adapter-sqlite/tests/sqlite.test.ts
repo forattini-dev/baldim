@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Baldin } from '@baldin/core';
 import { SqliteClient } from '../src/index.js';
+import { runStorageAdapterContract } from '../../../tests/storage-adapter-contract.js';
 
 const paths: string[] = [];
 afterEach(async () => { for (const path of paths.splice(0)) await rm(path, { recursive: true, force: true }); });
@@ -31,4 +32,9 @@ describe('@baldin/adapter-sqlite', () => {
     expect(await notes.get('one')).toMatchObject({ title: 'stored' });
     await database.disconnect();
   });
+});
+runStorageAdapterContract('@baldin/adapter-sqlite', async () => {
+  const path = await mkdtemp(join(tmpdir(), 'baldin-sqlite-contract-'));
+  paths.push(path);
+  return new SqliteClient({ basePath: join(path, 'contract.sqlite'), bucket: 'contract', logLevel: 'silent' });
 });

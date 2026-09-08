@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MemoryClient, MemoryStorage, createMemoryClient } from '../src/index.js';
+import { runStorageAdapterContract } from '../../../tests/storage-adapter-contract.js';
 
 const paths: string[] = [];
 
@@ -49,3 +50,6 @@ describe('@baldin/adapter-memory', () => {
     expect((await loaded.get('entry')).Metadata).toEqual({ kind: 'test' });
   });
 });
+runStorageAdapterContract('@baldin/adapter-memory', () =>
+  new MemoryClient({ bucket: `contract-${Date.now()}-${Math.random()}`, logLevel: 'silent' })
+);

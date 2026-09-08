@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Baldin } from '@baldin/core';
 import { FileSystemClient } from '../src/index.js';
+import { runStorageAdapterContract } from '../../../tests/storage-adapter-contract.js';
 
 const paths: string[] = [];
 afterEach(async () => { for (const path of paths.splice(0)) await rm(path, { recursive: true, force: true }); });
@@ -29,4 +30,9 @@ describe('@baldin/adapter-filesystem', () => {
     expect(await notes.get('one')).toMatchObject({ title: 'stored' });
     await database.disconnect();
   });
+});
+runStorageAdapterContract('@baldin/adapter-filesystem', async () => {
+  const path = await mkdtemp(join(tmpdir(), 'baldin-fs-contract-'));
+  paths.push(path);
+  return new FileSystemClient({ basePath: path, bucket: 'contract', logLevel: 'silent' });
 });
