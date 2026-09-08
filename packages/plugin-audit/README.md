@@ -1,12 +1,12 @@
-# @buckiedb/plugin-audit
+# @baldin/plugin-audit
 
-Persistent audit records for creates, updates, and deletes in BuckieDB resources.
+Persistent audit records for creates, updates, and deletes in Baldin resources.
 
 ```ts
-import { BuckieDB } from '@buckiedb/core';
-import { AuditPlugin } from '@buckiedb/plugin-audit';
+import { Baldin } from '@baldin/core';
+import { AuditPlugin } from '@baldin/plugin-audit';
 
-const database = new BuckieDB({ connectionString: 'memory://app' });
+const database = new Baldin({ connectionString: 'memory://app' });
 await database.connect();
 await database.usePlugin(new AuditPlugin({ includeData: true }));
 ```

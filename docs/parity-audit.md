@@ -1,4 +1,4 @@
-# s3db.js → BuckieDB parity audit
+# s3db.js → Baldin parity audit
 
 Baseline: `forattini-dev/s3db.js` at
 `8264a009ce46b6f5b6e8a30a8916e9608fbffc11`. This inventory distinguishes a
@@ -6,11 +6,11 @@ working core from a completed product migration.
 
 ## Inventory
 
-| Surface | s3db.js baseline | BuckieDB status | Result |
+| Surface | s3db.js baseline | Baldin status | Result |
 | --- | ---: | --- | --- |
 | Source | 558 files, 555 TypeScript | 113 core TypeScript files plus extracted package sources | Partial |
 | Core engine | Database, Resource, Schema, Validator, manager | Migrated from the `lite` dependency closure | Working |
-| Plugin catalog | 23 plugin families, 411 TypeScript files | Public plugin SDK and `@buckiedb/plugin-audit`; 22 families remain | Partial |
+| Plugin catalog | 23 plugin families, 411 TypeScript files | Public plugin SDK and `@baldin/plugin-audit`; 22 families remain | Partial |
 | Installable packages | One all-in-one package | `core`, `adapter-s3`, and `plugin-audit` | Partial |
 | Storage adapters | Built into the package | S3 extracted; filesystem, SQLite/libSQL/D1, and RedDB remain in core | Partial |
 | CLI | 6 TypeScript modules plus 2 bin files | No CLI application/package | Missing |
@@ -22,10 +22,10 @@ working core from a completed product migration.
 
 ## Architectural gaps
 
-`@buckiedb/core` no longer depends on the AWS SDK and resolves external providers
+`@baldin/core` no longer depends on the AWS SDK and resolves external providers
 through a public protocol registry. It still contains filesystem, SQLite/libSQL/D1,
 and RedDB implementations and their runtime dependencies. Those implementations
-must move to `@buckiedb/adapter-*` packages before core is provider-neutral.
+must move to `@baldin/adapter-*` packages before core is provider-neutral.
 
 The source still carries legacy names such as `s3db.json`, `s3dbVersion`, and
 `S3DB_*`. Persisted manifest names and operational environment variables are
@@ -41,18 +41,18 @@ contract has not yet run against live targets for each provider.
 1. Run the storage contract suite against AWS S3, R2, MinIO, and a custom endpoint.
 2. Extract filesystem, SQLite/libSQL/D1, and RedDB adapters and remove their runtime
    dependencies from core.
-3. Migrate the remaining 22 plugin families to `@buckiedb/plugin-<name>` with their
+3. Migrate the remaining 22 plugin families to `@baldin/plugin-<name>` with their
    relevant original tests.
 4. Restore public utilities, Factory/Seeder, TypeScript generation, and explicitly
    retire or migrate every old subpath export.
 5. Migrate CLI and MCP into applications that consume public workspace packages.
 6. Run persisted-data fixtures against databases written by the baseline version.
 7. Publish prereleases and validate an application migration before declaring
-   BuckieDB a replacement for `s3db.js`.
+   Baldin a replacement for `s3db.js`.
 
 ## Definition of converted
 
-BuckieDB is converted only when every baseline public export and test family is
+Baldin is converted only when every baseline public export and test family is
 marked migrated, intentionally replaced, or intentionally retired; core imports
 no provider implementation; every package is independently buildable and
 publishable; compatibility fixtures open existing data without mutation surprises;

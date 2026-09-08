@@ -53,11 +53,11 @@ export async function createStorageClient(
 
   if (!factory) {
     const packageName = normalized === 's3' || normalized === 'http' || normalized === 'https'
-      ? '@buckiedb/adapter-s3'
+      ? '@baldin/adapter-s3'
       : `an adapter for the ${normalized}: protocol`;
 
     throw new Error(
-      `No storage adapter is registered for ${normalized}:. Import ${packageName} before creating this BuckieDB connection, or pass a client explicitly.`
+      `No storage adapter is registered for ${normalized}:. Import ${packageName} before creating this Baldin connection, or pass a client explicitly.`
     );
   }
 

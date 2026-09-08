@@ -23,15 +23,15 @@ jobs:
       - name: Pack public packages
         run: |
           mkdir -p "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @buckiedb/core pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @buckiedb/adapter-s3 pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @buckiedb/plugin-audit pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/core pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/adapter-s3 pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-audit pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
-          core=("$GITHUB_WORKSPACE"/artifacts/buckiedb-core-*.tgz)
-          adapter=("$GITHUB_WORKSPACE"/artifacts/buckiedb-adapter-s3-*.tgz)
-          plugin=("$GITHUB_WORKSPACE"/artifacts/buckiedb-plugin-audit-*.tgz)
+          core=("$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz)
+          adapter=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-s3-*.tgz)
+          plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-audit-*.tgz)
           test "${#core[@]}" -eq 1
           test "${#adapter[@]}" -eq 1
           test "${#plugin[@]}" -eq 1
@@ -41,11 +41,11 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund "${core[0]}" "${adapter[0]}" "${plugin[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { BuckieDB, encode, decode } from '@buckiedb/core';
-          import { hasStorageAdapter } from '@buckiedb/core/adapter';
-          import { encodeKey, decodeKey } from '@buckiedb/core/encoding';
-          import { AuditPlugin } from '@buckiedb/plugin-audit';
-          import '@buckiedb/adapter-s3';
+          import { Baldin, encode, decode } from '@baldin/core';
+          import { hasStorageAdapter } from '@baldin/core/adapter';
+          import { encodeKey, decodeKey } from '@baldin/core/encoding';
+          import { AuditPlugin } from '@baldin/plugin-audit';
+          import '@baldin/adapter-s3';
 
           assert.equal(encode(62), '10');
           assert.equal(decode('10'), 62);
@@ -53,7 +53,7 @@ jobs:
           assert.equal(decodeKey('10'), 36);
           assert.equal(hasStorageAdapter('s3'), true);
 
-          const database = new BuckieDB({ connectionString: 'memory://pack-smoke', logLevel: 'silent' });
+          const database = new Baldin({ connectionString: 'memory://pack-smoke', logLevel: 'silent' });
           await database.connect();
           await database.usePlugin(new AuditPlugin());
           assert.ok(database.resources.plg_audits);

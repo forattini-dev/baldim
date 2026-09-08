@@ -1,8 +1,8 @@
 {
-  "name": "@buckiedb/core",
+  "name": "@baldin/core",
   "version": "0.0.0",
   "type": "module",
-  "description": "Document database engine, resource model, extension contracts, and multidatabase manager for BuckieDB.",
+  "description": "Document database engine, resource model, extension contracts, and multidatabase manager for Baldin.",
   "license": "Unlicense",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/buckiedb.git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
     "directory": "packages/core"
   },
   "main": "./dist/index.js",

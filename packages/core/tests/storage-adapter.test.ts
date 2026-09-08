@@ -27,6 +27,6 @@ describe('storage adapter registry', () => {
   });
 
   it('explains how to enable S3 when no adapter is registered', async () => {
-    await expect(createStorageClient('s3', context)).rejects.toThrow('@buckiedb/adapter-s3');
+    await expect(createStorageClient('s3', context)).rejects.toThrow('@baldin/adapter-s3');
   });
 });

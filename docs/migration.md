@@ -10,18 +10,18 @@ Original project and data remain unchanged. Source license: Unlicense.
 
 - pnpm workspace, Turborepo task graph, TypeScript ESM builds, and Changesets.
 - The dependency closure of the old `s3db.js/lite` entrypoint compiles in
-  `@buckiedb/core`: Database, Resource, Schema, Validator, DatabaseManager,
+  `@baldin/core`: Database, Resource, Schema, Validator, DatabaseManager,
   behaviors, streams, concurrency, tasks, and the transitional local clients.
-- `BuckieDB` is the primary named and default class. `S3db` is a deprecated
+- `Baldin` is the primary named and default class. `BuckieDB` and `S3db` are deprecated
   compatibility subclass and `Database` remains available.
 - `DatabaseManager` owns named connections, default routing, unified resource
   lookup, duplicate-name protection, reconnect-safe event forwarding, and
   connect rollback.
 - A public storage adapter registry selects external clients by URL protocol.
-- S3 transport and the AWS SDK live in `@buckiedb/adapter-s3`, with registration
+- S3 transport and the AWS SDK live in `@baldin/adapter-s3`, with registration
   for AWS S3, Cloudflare R2, MinIO, and other compatible HTTP endpoints.
-- A public plugin SDK lives at `@buckiedb/core/plugin`; the audit plugin is the
-  first extracted package at `@buckiedb/plugin-audit`.
+- A public plugin SDK lives at `@baldin/core/plugin`; the audit plugin is the
+  first extracted package at `@baldin/plugin-audit`.
 - Tests cover the numeric codec, memory-backed document lifecycle, manager
   lifecycle and collisions, adapter registration, S3 client initialization,
   plugin installation, and persisted audit records.
@@ -43,7 +43,7 @@ Original project and data remain unchanged. Source license: Unlicense.
 ## Dependency rules
 
 Core does not import plugin packages or the S3 implementation. Adapters depend on
-`@buckiedb/core/adapter`; plugins depend on `@buckiedb/core/plugin` and the normal
+`@baldin/core/adapter`; plugins depend on `@baldin/core/plugin` and the normal
 core public API. Packages own their runtime dependencies and release independently.
 The remaining built-in provider clients are tracked extraction debt.
 
@@ -53,13 +53,13 @@ The remaining built-in provider clients are tracked extraction debt.
 - Existing `S3DB_*` environment variables continue to work.
 - Storage defaults remain unchanged so an import rename cannot silently select a
   different bucket, directory, or SQLite file.
-- `S3db` remains importable while callers move to `BuckieDB`.
+- `BuckieDB` and `S3db` remain importable while callers move to `Baldin`.
 - These names describe persisted or operational compatibility. New documentation
-  and public entrypoints use the BuckieDB name.
+  and public entrypoints use the Baldin name.
 
 ## Status and limits
 
 The core, manager, S3 adapter, and audit plugin are working package slices. The
 full plugin, adapter, CLI, MCP, utilities, and compatibility-suite migration is
-incomplete. No npm package has been published and the `@buckiedb` scope has not
+incomplete. No npm package has been published and the `@baldin` scope has not
 been registered.

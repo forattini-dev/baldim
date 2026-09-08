@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BuckieDB, DatabaseError, DatabaseManager, MemoryClient } from '@buckiedb/core';
+import { Baldin, DatabaseError, DatabaseManager, MemoryClient } from '@baldin/core';
 
 describe('DatabaseManager public API', () => {
   let manager: DatabaseManager | undefined;
@@ -110,7 +110,7 @@ describe('DatabaseManager public API', () => {
 
   it('rolls back every connection when restored resources have duplicate names', async () => {
     const seed = async (connectionString: string) => {
-      const database = new BuckieDB({
+      const database = new Baldin({
         connectionString,
         logLevel: 'silent',
         deferMetadataWrites: false,

@@ -1,14 +1,15 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import BuckieDBDefault, {
+import BaldinDefault, {
+  Baldin,
   BuckieDB,
   Database,
   MemoryClient,
   S3db,
   decode,
   encode,
-} from '@buckiedb/core';
+} from '@baldin/core';
 
-describe('@buckiedb/core public API', () => {
+describe('@baldin/core public API', () => {
   const databases: Database[] = [];
 
   afterEach(async () => {
@@ -18,18 +19,19 @@ describe('@buckiedb/core public API', () => {
     MemoryClient.clearAllStorage();
   });
 
-  it('exports BuckieDB as the primary and default database class', () => {
-    expect(BuckieDBDefault).toBe(BuckieDB);
-    expect(new BuckieDB({ connectionString: 'memory://api-test', logLevel: 'silent' })).toBeInstanceOf(Database);
+  it('exports Baldin as the primary and default database class', () => {
+    expect(BaldinDefault).toBe(Baldin);
+    expect(new Baldin({ connectionString: 'memory://api-test', logLevel: 'silent' })).toBeInstanceOf(Database);
   });
 
-  it('keeps the old S3db class as a migration alias', () => {
-    expect(new S3db({ connectionString: 'memory://compat-test', logLevel: 'silent' })).toBeInstanceOf(BuckieDB);
+  it('keeps the old public names as migration aliases', () => {
+    expect(new BuckieDB({ connectionString: 'memory://name-compat', logLevel: 'silent' })).toBeInstanceOf(Baldin);
+    expect(new S3db({ connectionString: 'memory://compat-test', logLevel: 'silent' })).toBeInstanceOf(Baldin);
   });
 
   it('performs a document lifecycle through the memory client', async () => {
-    const database = new BuckieDB({
-      connectionString: 'memory://buckiedb-tests/documents',
+    const database = new Baldin({
+      connectionString: 'memory://baldin-tests/documents',
       logLevel: 'silent',
     });
     databases.push(database);
@@ -39,9 +41,9 @@ describe('@buckiedb/core public API', () => {
       name: 'notes',
       attributes: { title: 'string', done: 'boolean' },
     });
-    const inserted = await notes.insert({ id: 'first', title: 'Ship BuckieDB', done: false });
+    const inserted = await notes.insert({ id: 'first', title: 'Ship Baldin', done: false });
     expect(inserted.id).toBe('first');
-    expect(await notes.get('first')).toMatchObject({ title: 'Ship BuckieDB', done: false });
+    expect(await notes.get('first')).toMatchObject({ title: 'Ship Baldin', done: false });
 
     await notes.update('first', { done: true });
     expect(await notes.get('first')).toMatchObject({ done: true });

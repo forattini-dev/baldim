@@ -9,7 +9,7 @@
     {
       "id": "packages/core/src/database/database-metadata.class.ts#s3db-json-read-write",
       "classification": "external",
-      "reason": "s3db.json remains JSON so BuckieDB can open and update existing databases without a data migration."
+      "reason": "s3db.json remains JSON so Baldin can open and update existing databases without a data migration."
     },
     {
       "id": "packages/core/src/database/database-recovery.class.ts#s3db-json-recovery",

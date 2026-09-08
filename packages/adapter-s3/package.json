@@ -1,14 +1,14 @@
 {
-  "name": "@buckiedb/adapter-s3",
+  "name": "@baldin/adapter-s3",
   "version": "0.0.0",
   "type": "module",
-  "description": "S3-compatible storage adapter for BuckieDB, including AWS S3, Cloudflare R2, and MinIO.",
+  "description": "S3-compatible storage adapter for Baldin, including AWS S3, Cloudflare R2, and MinIO.",
   "license": "Unlicense",
   "engines": { "node": ">=24" },
   "sideEffects": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/buckiedb.git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
     "directory": "packages/adapter-s3"
   },
   "main": "./dist/index.js",
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1026.0",
-    "@buckiedb/core": "workspace:*",
+    "@baldin/core": "workspace:*",
     "lodash-es": "^4.18.1",
     "recker": "1.0.103"
   },

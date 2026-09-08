@@ -1,14 +1,14 @@
-# @buckiedb/adapter-s3
+# @baldin/adapter-s3
 
-S3-compatible storage for BuckieDB. Importing the package registers the `s3:`,
-`http:`, and `https:` protocols with `@buckiedb/core`.
+S3-compatible storage for Baldin. Importing the package registers the `s3:`,
+`http:`, and `https:` protocols with `@baldin/core`.
 
 ```ts
-import { BuckieDB } from '@buckiedb/core';
-import '@buckiedb/adapter-s3';
+import { Baldin } from '@baldin/core';
+import '@baldin/adapter-s3';
 
-const database = new BuckieDB({
-  connectionString: process.env.BUCKIEDB_URL!,
+const database = new Baldin({
+  connectionString: process.env.BALDIN_URL!,
 });
 ```
 
@@ -19,7 +19,7 @@ transport options remain part of the connection string and `clientOptions`.
 You can also instantiate the client directly:
 
 ```ts
-import { S3Client } from '@buckiedb/adapter-s3';
+import { S3Client } from '@baldin/adapter-s3';
 
-const client = new S3Client({ connectionString: process.env.BUCKIEDB_URL! });
+const client = new S3Client({ connectionString: process.env.BALDIN_URL! });
 ```

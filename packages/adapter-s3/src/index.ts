@@ -1,8 +1,8 @@
-import { registerStorageAdapter, type S3ClientConfig, type StorageAdapterContext } from '@buckiedb/core/adapter';
+import { registerStorageAdapter, type S3ClientConfig, type StorageAdapterContext } from '@baldin/core/adapter';
 import { S3Client } from './s3-client.class.js';
 
 export { S3Client } from './s3-client.class.js';
-export type { S3ClientConfig, HttpClientOptions } from '@buckiedb/core/adapter';
+export type { S3ClientConfig, HttpClientOptions } from '@baldin/core/adapter';
 
 export function createS3Client(context: StorageAdapterContext): S3Client {
   return new S3Client({
@@ -16,7 +16,7 @@ export function createS3Client(context: StorageAdapterContext): S3Client {
 
 export const unregisterS3Adapter = registerStorageAdapter(
   ['s3', 'http', 'https'],
-  (context) => createS3Client(context) as unknown as import('@buckiedb/core/adapter').Client
+  (context) => createS3Client(context) as unknown as import('@baldin/core/adapter').Client
 );
 
 export default S3Client;

@@ -1,5 +1,5 @@
 /**
- * @buckiedb/core - BuckieDB's database engine and storage contracts
+ * @baldin/core - Baldin's database engine and storage contracts
  *
  * This entry point excludes all plugins with peer dependencies, making it
  * suitable for bundling with pkg, esbuild, or other tools that create
@@ -22,9 +22,9 @@
  *
  * Usage:
  * ```typescript
- * import { BuckieDB, Schema } from '@buckiedb/core';
+ * import { Baldin, Schema } from '@baldin/core';
  *
- * const db = new BuckieDB({ connectionString: 'memory://my-app' });
+ * const db = new Baldin({ connectionString: 'memory://my-app' });
  * ```
  */
 
@@ -32,7 +32,7 @@
 // Core Classes
 // =============================================================================
 
-export { BuckieDB, Database, S3db } from './database.class.js';
+export { Baldin, BuckieDB, Database, S3db } from './database.class.js';
 export {
   DatabaseManager,
   type DatabaseManagerOptions,
@@ -139,4 +139,4 @@ export { PerformanceMonitor } from './concerns/performance-monitor.js';
 // Default Export
 // =============================================================================
 
-export { BuckieDB as default } from './database.class.js';
+export { Baldin as default } from './database.class.js';

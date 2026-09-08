@@ -4,7 +4,7 @@ import {
   decode as fromBase62,
   encodeDecimal,
   decodeDecimal,
-} from '@buckiedb/core/encoding';
+} from '@baldin/core/encoding';
 
 describe('base62 encode/decode', () => {
   test('encodes and decodes 0', () => {

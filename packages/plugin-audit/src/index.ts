@@ -10,7 +10,7 @@ import {
   type LogLevel,
   type PluginOptions,
   type ResourceLike,
-} from '@buckiedb/core/plugin';
+} from '@baldin/core/plugin';
 
 export interface AuditPluginOptions {
   resourceNames?: {

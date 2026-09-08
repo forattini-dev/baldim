@@ -15,7 +15,7 @@ import type {
   AwsHttpRequest,
   AwsHttpResponse,
   HandleOptions
-} from '@buckiedb/core/adapter';
+} from '@baldin/core/adapter';
 
 interface CircuitBreakerOptions {
   threshold?: number;

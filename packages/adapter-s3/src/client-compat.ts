@@ -1,4 +1,4 @@
-import type { HttpClientOptions } from '@buckiedb/core/adapter';
+import type { HttpClientOptions } from '@baldin/core/adapter';
 
 export type NormalizedRetryProfile = 'dual' | 'recker-only' | 'sdk-only';
 

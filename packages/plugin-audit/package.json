@@ -1,14 +1,14 @@
 {
-  "name": "@buckiedb/plugin-audit",
+  "name": "@baldin/plugin-audit",
   "version": "0.0.0",
   "type": "module",
-  "description": "Persistent resource change audit logs for BuckieDB.",
+  "description": "Persistent resource change audit logs for Baldin.",
   "license": "Unlicense",
   "engines": { "node": ">=24" },
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/buckiedb.git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
     "directory": "packages/plugin-audit"
   },
   "main": "./dist/index.js",
@@ -25,9 +25,9 @@
     "test": "vitest run",
     "prepack": "pnpm run build"
   },
-  "peerDependencies": { "@buckiedb/core": "^0.0.0" },
+  "peerDependencies": { "@baldin/core": "^0.0.0" },
   "devDependencies": {
-    "@buckiedb/core": "workspace:*",
+    "@baldin/core": "workspace:*",
     "@types/node": "25.5.2",
     "typescript": "6.0.2",
     "vitest": "4.1.3"

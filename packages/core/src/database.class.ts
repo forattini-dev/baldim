@@ -425,7 +425,7 @@ export class Database extends SafeEventEmitter {
       }
     } else {
       this._clientFactory = async () => {
-        throw new Error('BuckieDB requires a connectionString or an explicit storage client.');
+        throw new Error('Baldin requires a connectionString or an explicit storage client.');
       };
     }
 
@@ -773,14 +773,21 @@ export class Database extends SafeEventEmitter {
   }
 }
 
-/** The primary BuckieDB database class. */
-export class BuckieDB extends Database {}
+/** The primary Baldin database class. */
+export class Baldin extends Database {}
+
+/**
+ * Compatibility alias for the project's earlier working name.
+ *
+ * @deprecated Import and instantiate `Baldin` instead.
+ */
+export class BuckieDB extends Baldin {}
 
 /**
  * Compatibility alias for applications migrating from s3db.js.
  *
- * @deprecated Import and instantiate `BuckieDB` instead.
+ * @deprecated Import and instantiate `Baldin` instead.
  */
-export class S3db extends BuckieDB {}
+export class S3db extends Baldin {}
 
-export default BuckieDB;
+export default Baldin;

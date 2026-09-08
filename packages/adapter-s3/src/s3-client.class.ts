@@ -27,7 +27,7 @@ import {
   metadataDecode,
   metadataEncode,
   tryFn,
-} from '@buckiedb/core/adapter';
+} from '@baldin/core/adapter';
 import { normalizeHttpClientRetryConfig } from './client-compat.js';
 import type {
   Logger,
@@ -43,7 +43,7 @@ import type {
   GetKeysPageParams,
   QueueStats,
   ReckerHttpHandlerOptions
-} from '@buckiedb/core/adapter';
+} from '@baldin/core/adapter';
 
 interface NormalizedTaskExecutorConfig {
   enabled: boolean;
