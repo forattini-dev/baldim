@@ -17,7 +17,7 @@ working core from a completed product migration.
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Not exported or migrated | Missing |
 | Public subpaths | root, lite, concerns, plugins, generator | root, lite, encoding, adapter SDK, plugin SDK | Partial |
-| Test suites | 118 core and 176 plugin test files | 13 focused test files, 83 tests plus 4 MinIO contract cases in CI | Partial |
+| Test suites | 118 core and 176 plugin test files | 14 focused test files, 88 tests plus 4 MinIO contract cases in CI | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps

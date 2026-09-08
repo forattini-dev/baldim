@@ -201,6 +201,12 @@ interface StorageErrorLike {
 export interface StorageErrorDetails {
   bucket?: string;
   key?: string;
+  code?: string;
+  requestId?: string;
+  providerMessage?: string;
+  /** @deprecated Use providerMessage. */
+  awsMessage?: string;
+  metadata?: StringRecord;
   original?: StorageErrorLike | Error | unknown;
   statusCode?: number;
   retriable?: boolean;
@@ -231,12 +237,12 @@ export class StorageError extends BaseError {
     super({
       message,
       ...details,
-      code,
-      statusCode,
-      requestId,
-      providerMessage,
+      code: details.code ?? code,
+      statusCode: details.statusCode ?? statusCode,
+      requestId: details.requestId ?? requestId,
+      providerMessage: details.providerMessage ?? details.awsMessage ?? providerMessage,
       original,
-      metadata,
+      metadata: details.metadata ?? metadata,
     });
   }
 }
