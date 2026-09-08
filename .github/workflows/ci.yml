@@ -20,7 +20,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm build
       - run: pnpm test
-      - run: pnpm --filter @buckiedb/core pack --pack-destination ../../artifacts
+      - run: pnpm --filter @buckiedb/core pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify packed package in a clean consumer
         shell: bash
         run: |
