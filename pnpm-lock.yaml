@@ -245,6 +245,27 @@ importers:
         specifier: 4.1.3
         version: 4.1.3(@types/node@25.5.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
 
+  plugins/backup:
+    devDependencies:
+      '@baldin/adapter-memory':
+        specifier: workspace:*
+        version: link:../../adapters/memory
+      '@baldin/adapter-s3':
+        specifier: workspace:*
+        version: link:../../adapters/s3
+      '@baldin/core':
+        specifier: workspace:*
+        version: link:../../core
+      '@types/node':
+        specifier: 25.5.2
+        version: 25.5.2
+      typescript:
+        specifier: 6.0.2
+        version: 6.0.2
+      vitest:
+        specifier: 4.1.3
+        version: 4.1.3(@types/node@25.5.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
+
   plugins/costs:
     devDependencies:
       '@baldin/adapter-memory':

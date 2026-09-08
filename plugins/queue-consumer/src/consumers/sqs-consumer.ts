@@ -1,4 +1,4 @@
-import tryFn from "../try-fn.js";
+import { tryFn } from '@baldin/core/plugin';
 import { loadOptionalDependency } from '../optional-dependency.js';
 import { PluginError } from '@baldin/core/plugin';
 

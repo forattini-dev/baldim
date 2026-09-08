@@ -12,6 +12,7 @@ contracts or belong to the S3 adapter.
   writable until a versioned data migration exists.
 - The S3 URL dictionary tokens remain stable because changing them would corrupt
   compressed persisted values.
+- Backup archives keep the internal `s3db.json` metadata entry and `s3db_version` manifest field so archives remain identifiable across the rename.
 - The historical default container name, local directory, and SQLite filename keep
   `s3db` in their values to avoid silently selecting an empty database after upgrade.
 

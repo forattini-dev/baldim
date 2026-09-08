@@ -59,6 +59,7 @@ const databases = new DatabaseManager({
 | plugins/costs | @baldin/plugin-costs | Provider-aware usage accounting and cost projections |
 | plugins/metrics | @baldin/plugin-metrics | Persistent telemetry and Prometheus export |
 | plugins/queue-consumer | @baldin/plugin-queue-consumer | Optional SQS, RabbitMQ, Redis, and BullMQ consumers |
+| plugins/backup | @baldin/plugin-backup | Full and incremental backups to filesystem or object storage |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |
