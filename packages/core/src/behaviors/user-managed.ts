@@ -1,5 +1,5 @@
 import { calculateTotalSize, calculateEffectiveLimit } from '../concerns/calculator.js';
-import { S3_METADATA_LIMIT_BYTES } from './enforce-limits.js';
+import { DEFAULT_METADATA_LIMIT_BYTES } from './enforce-limits.js';
 import { tryFn } from '../concerns/try-fn.js';
 import type { StringRecord } from '../types/common.types.js';
 import type {
@@ -15,7 +15,7 @@ export async function handleInsert({ resource, data, mappedData, originalData }:
   const totalSize = calculateTotalSize(mappedData);
 
   const effectiveLimit = calculateEffectiveLimit({
-    s3Limit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+    storageLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
     systemConfig: {
       version: resource.version,
       timestamps: resource.config.timestamps,
@@ -47,7 +47,7 @@ export async function handleUpdate({ resource, id, data, mappedData, originalDat
   const totalSize = calculateTotalSize(mappedData);
 
   const effectiveLimit = calculateEffectiveLimit({
-    s3Limit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+    storageLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
     systemConfig: {
       version: resource.version,
       timestamps: resource.config.timestamps,
@@ -72,7 +72,7 @@ export async function handleUpsert({ resource, id, data, mappedData }: BehaviorH
   const totalSize = calculateTotalSize(mappedData);
 
   const effectiveLimit = calculateEffectiveLimit({
-    s3Limit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+    storageLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
     systemConfig: {
       version: resource.version,
       timestamps: resource.config.timestamps,

@@ -54,6 +54,7 @@ interface Command {
 
 export class FileSystemClient extends EventEmitter {
   id: string;
+  readonly capabilities = { distributedMetadataLock: false } as const;
   logLevel: string;
   private logger: Logger;
   private taskExecutorMonitoring: MonitoringConfig | null;

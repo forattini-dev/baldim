@@ -6,7 +6,7 @@ import { TasksPool } from '../tasks/tasks-pool.class.js';
 import tryFn from "../concerns/try-fn.js";
 import { StreamError } from '../errors.js';
 
-interface S3Client {
+interface StorageClient {
   parallelism: number;
   config: { keyPrefix: string };
   listObjects(options: { prefix: string; continuationToken: string | null }): Promise<unknown>;
@@ -14,7 +14,7 @@ interface S3Client {
 
 interface Resource {
   name: string;
-  client: S3Client;
+  client: StorageClient;
   get(id: string): Promise<Record<string, unknown>>;
 }
 
@@ -26,7 +26,7 @@ interface ResourceReaderOptions {
 
 export class ResourceReader extends EventEmitter {
   resource: Resource;
-  client: S3Client;
+  client: StorageClient;
   batchSize: number;
   concurrency: number;
   input: ResourceIdsPageReader;

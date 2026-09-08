@@ -7,7 +7,7 @@ import { PluginStorageError, MetadataLimitError, BehaviorError } from '../../err
 import { DistributedLock, computeBackoff, sleep, isPreconditionFailure, isValidLockPayload, isExpiredLockPayload, StorageAdapter, LockHandle, AcquireOptions } from '../../concerns/distributed-lock.js';
 
 
-const S3_METADATA_LIMIT_DEFAULT = 2047;
+const STORAGE_METADATA_LIMIT_DEFAULT = 2047;
 
 const SEQUENCE_GATES = new Map<string, Promise<void>>();
 
@@ -255,7 +255,7 @@ export class PluginStorage {
       throw new PluginStorageError('PluginStorage requires a client instance', {
         operation: 'constructor',
         pluginSlug,
-        suggestion: 'Pass a valid S3db Client instance when creating PluginStorage'
+        suggestion: 'Pass a valid Baldin storage client when creating PluginStorage'
       });
     }
     if (!pluginSlug) {
@@ -333,7 +333,7 @@ export class PluginStorage {
         behavior,
         ttl,
         original: err,
-        suggestion: 'Check S3 permissions and key format'
+        suggestion: 'Check storage permissions and key format'
       });
     }
 
@@ -365,7 +365,7 @@ export class PluginStorage {
         key,
         operation: 'get',
         original: err,
-        suggestion: 'Check if the key exists and S3 permissions are correct'
+        suggestion: 'Check whether the key exists and storage permissions are correct'
       });
     }
 
@@ -543,7 +543,7 @@ export class PluginStorage {
         fullPrefix,
         limit,
         original: err,
-        suggestion: 'Check S3 permissions and bucket configuration'
+        suggestion: 'Check storage permissions and container configuration'
       });
     }
 
@@ -571,7 +571,7 @@ export class PluginStorage {
         fullPrefix,
         limit,
         original: err,
-        suggestion: 'Check resource name and S3 permissions'
+        suggestion: 'Check the resource name and storage permissions'
       });
     }
 
@@ -661,7 +661,7 @@ export class PluginStorage {
         key,
         operation: 'touch',
         original: headErr,
-        suggestion: 'Check if the key exists and S3 permissions are correct'
+        suggestion: 'Check whether the key exists and storage permissions are correct'
       });
     }
 
@@ -701,7 +701,7 @@ export class PluginStorage {
         key,
         operation: 'delete',
         original: err,
-        suggestion: 'Check S3 delete permissions'
+        suggestion: 'Check storage delete permissions'
       });
     }
   }
@@ -775,7 +775,7 @@ export class PluginStorage {
         key,
         operation: 'getWithVersion',
         original: err,
-        suggestion: 'Check if the key exists and S3 permissions are correct'
+        suggestion: 'Check whether the key exists and storage permissions are correct'
       });
     }
 
@@ -1132,8 +1132,8 @@ export class PluginStorage {
   }
 
   _applyBehavior(data: Record<string, unknown>, behavior: PluginBehavior): BehaviorResult {
-    const metadataLimit = (this.client as unknown as { metadataLimit?: number }).metadataLimit ?? S3_METADATA_LIMIT_DEFAULT;
-    const effectiveLimit = calculateEffectiveLimit({ s3Limit: metadataLimit });
+    const metadataLimit = (this.client as unknown as { metadataLimit?: number }).metadataLimit ?? STORAGE_METADATA_LIMIT_DEFAULT;
+    const effectiveLimit = calculateEffectiveLimit({ storageLimit: metadataLimit });
     let metadata: Record<string, unknown> = {};
     let body: Record<string, unknown> | null = null;
 

@@ -1,6 +1,6 @@
 import { ResourceReader, ResourceWriter } from '../stream/index.js';
 
-interface S3Client {
+interface StorageClient {
   parallelism: number;
   config: { keyPrefix: string };
   listObjects(options: { prefix: string; continuationToken: string | null }): Promise<unknown>;
@@ -8,7 +8,7 @@ interface S3Client {
 
 export interface Resource {
   name: string;
-  client: S3Client;
+  client: StorageClient;
   get(id: string): Promise<Record<string, unknown>>;
   insert(data: Record<string, unknown>): Promise<Record<string, unknown>>;
 }

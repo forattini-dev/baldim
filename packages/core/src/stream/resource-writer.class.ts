@@ -3,14 +3,14 @@ import { Writable, WritableOptions } from 'node:stream';
 import { TasksPool } from '../tasks/tasks-pool.class.js';
 import tryFn from "../concerns/try-fn.js";
 
-interface S3Client {
+interface StorageClient {
   parallelism: number;
   config: { keyPrefix: string };
 }
 
 interface Resource {
   name: string;
-  client: S3Client;
+  client: StorageClient;
   insert(data: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
 
@@ -22,7 +22,7 @@ interface ResourceWriterOptions {
 
 export class ResourceWriter extends EventEmitter {
   resource: Resource;
-  client: S3Client;
+  client: StorageClient;
   batchSize: number;
   concurrency: number;
   buffer: Record<string, unknown>[];

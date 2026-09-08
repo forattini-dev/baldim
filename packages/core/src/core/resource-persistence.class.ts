@@ -1,7 +1,7 @@
 import { tryFn } from '../concerns/try-fn.js';
 import { isEmpty, isObject } from 'lodash-es';
 import { getBehavior } from '../behaviors/index.js';
-import { isNotFoundError } from '../concerns/s3-errors.js';
+import { isNotFoundError } from '../concerns/storage-errors.js';
 import { sanitizeDeep } from '../concerns/safe-merge.js';
 import { calculateTotalSize, calculateEffectiveLimit } from '../concerns/calculator.js';
 import { mapStorageError, InvalidResourceItem, ResourceError, ValidationError } from '../errors.js';
@@ -64,7 +64,7 @@ export interface StorageClientConfig {
   bucket: string;
 }
 
-export interface S3Response {
+export interface StorageResponse {
   Metadata?: StringRecord<string>;
   ContentLength?: number;
   ContentType?: string;
@@ -93,11 +93,11 @@ export interface CopyObjectParams {
   metadata: StringRecord<string>;
 }
 
-export interface S3Client {
+export interface StorageClient {
   config: StorageClientConfig;
   putObject(params: PutObjectParams): Promise<{ ETag?: string }>;
-  getObject(key: string): Promise<S3Response>;
-  headObject(key: string): Promise<S3Response>;
+  getObject(key: string): Promise<StorageResponse>;
+  headObject(key: string): Promise<StorageResponse>;
   deleteObject(key: string): Promise<unknown>;
   copyObject(params: CopyObjectParams): Promise<unknown>;
   deleteAll(params: { prefix: string }): Promise<number>;
@@ -146,7 +146,7 @@ export interface Observer {
 }
 
 export interface Resource {
-  client: S3Client;
+  client: StorageClient;
   schema: Schema;
   validator: ResourceValidator;
   config: ResourceConfig;
@@ -230,7 +230,7 @@ export class ResourcePersistence {
     this.resource = resource;
   }
 
-  get client(): S3Client { return this.resource.client; }
+  get client(): StorageClient { return this.resource.client; }
   get schema(): Schema { return this.resource.schema; }
   get validator(): ResourceValidator { return this.resource.validator; }
   get config(): ResourceConfig { return this.resource.config; }
@@ -537,7 +537,7 @@ export class ResourcePersistence {
       if (msg.includes('metadata headers exceed') || msg.includes('Insert failed')) {
         const totalSize = calculateTotalSize(finalMetadata);
         const effectiveLimit = calculateEffectiveLimit({
-          s3Limit: this.resource.metadataLimit ?? 2047,
+          storageLimit: this.resource.metadataLimit ?? 2047,
           systemConfig: {
             version: String(this.version),
             timestamps: this.config.timestamps,
@@ -660,7 +660,7 @@ export class ResourcePersistence {
     await this.resource.executeHooks('beforeGet', { id });
 
     const key = this.resource.getResourceKey(id);
-    const [ok, err, request] = await tryFn<S3Response>(() => this.client.getObject(key));
+    const [ok, err, request] = await tryFn<StorageResponse>(() => this.client.getObject(key));
 
     if (!ok || !request) {
       throw mapStorageError(err as Error, {
@@ -675,7 +675,7 @@ export class ResourcePersistence {
     return this.hydrateObject(id, request, key);
   }
 
-  async hydrateObject(id: string, request: S3Response, key: string = this.resource.getResourceKey(id)): Promise<ResourceData> {
+  async hydrateObject(id: string, request: StorageResponse, key: string = this.resource.getResourceKey(id)): Promise<ResourceData> {
     const objectVersionRaw = request.Metadata?._v || this.version;
     const objectVersion = typeof objectVersionRaw === 'string' && objectVersionRaw.startsWith('v')
       ? objectVersionRaw.slice(1)
@@ -692,7 +692,7 @@ export class ResourcePersistence {
         const bodyBytes = await request.Body.transformToByteArray();
         body = Buffer.from(bodyBytes).toString('utf-8');
       } else {
-        const [okBody, , fullObject] = await tryFn<S3Response>(() => this.client.getObject(key));
+        const [okBody, , fullObject] = await tryFn<StorageResponse>(() => this.client.getObject(key));
         if (okBody && fullObject?.Body) {
           const bodyBytes = await fullObject.Body.transformToByteArray();
           body = Buffer.from(bodyBytes).toString('utf-8');
@@ -1113,7 +1113,7 @@ export class ResourcePersistence {
     let existingContentType: string | undefined = undefined;
     let finalBody: string | Buffer = body;
     if (body === '' && this.behavior !== 'body-overflow') {
-      const [ok, , existingObject] = await tryFn<S3Response>(() => this.client.getObject(key));
+      const [ok, , existingObject] = await tryFn<StorageResponse>(() => this.client.getObject(key));
       if (ok && existingObject && existingObject.ContentLength && existingObject.ContentLength > 0 && existingObject.Body) {
         const existingBodyBuffer = Buffer.from(await existingObject.Body.transformToByteArray());
         const existingBodyString = existingBodyBuffer.toString();
@@ -1158,7 +1158,7 @@ export class ResourcePersistence {
       const totalSize = calculateTotalSize(finalMetadata);
       const metadataLimit = this.resource.metadataLimit ?? 2047;
       const effectiveLimit = calculateEffectiveLimit({
-        s3Limit: metadataLimit,
+        storageLimit: metadataLimit,
         systemConfig: {
           version: String(this.version),
           timestamps: this.config.timestamps,
@@ -1555,7 +1555,7 @@ export class ResourcePersistence {
       if (msg.includes('metadata headers exceed') || msg.includes('Replace failed')) {
         const totalSize = calculateTotalSize(finalMetadata);
         const effectiveLimit = calculateEffectiveLimit({
-          s3Limit: this.resource.metadataLimit ?? 2047,
+          storageLimit: this.resource.metadataLimit ?? 2047,
           systemConfig: {
             version: String(this.version),
             timestamps: this.config.timestamps,
@@ -1695,7 +1695,7 @@ export class ResourcePersistence {
     let finalBody: string | Buffer = body;
 
     if (body === '' && this.behavior !== 'body-overflow') {
-      const [okGet, , existingObject] = await tryFn<S3Response>(() => this.client.getObject(key));
+      const [okGet, , existingObject] = await tryFn<StorageResponse>(() => this.client.getObject(key));
       if (okGet && existingObject && existingObject.ContentLength && existingObject.ContentLength > 0 && existingObject.Body) {
         const existingBodyBuffer = Buffer.from(await existingObject.Body.transformToByteArray());
         const existingBodyString = existingBodyBuffer.toString();

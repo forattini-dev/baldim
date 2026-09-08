@@ -32,3 +32,38 @@ export function parseS3ConnectionString(connectionString: string): S3ConnectionC
     forcePathStyle,
   };
 }
+
+
+export function resolveLegacyS3ConnectionString(
+  options: Readonly<Record<string, unknown>>
+): string | undefined {
+  const bucket = typeof options.bucket === 'string' ? options.bucket : undefined;
+  const region = typeof options.region === 'string' ? options.region : undefined;
+  const accessKeyId = typeof options.accessKeyId === 'string' ? options.accessKeyId : undefined;
+  const secretAccessKey = typeof options.secretAccessKey === 'string' ? options.secretAccessKey : undefined;
+  const sessionToken = typeof options.sessionToken === 'string' ? options.sessionToken : undefined;
+  const endpoint = typeof options.endpoint === 'string' ? options.endpoint : undefined;
+  const forcePathStyle = options.forcePathStyle === true;
+
+  if (!bucket && !accessKeyId && !secretAccessKey) return undefined;
+
+  if (endpoint) {
+    const url = new URL(endpoint);
+    if (accessKeyId) url.username = encodeURIComponent(accessKeyId);
+    if (secretAccessKey) url.password = encodeURIComponent(secretAccessKey);
+    if (sessionToken) url.searchParams.set('sessionToken', sessionToken);
+    url.pathname = `/${bucket || 's3db'}`;
+    if (forcePathStyle) url.searchParams.set('forcePathStyle', 'true');
+    return url.toString();
+  }
+
+  if (accessKeyId && secretAccessKey) {
+    const params = new URLSearchParams();
+    params.set('region', region || 'us-east-1');
+    if (sessionToken) params.set('sessionToken', sessionToken);
+    if (forcePathStyle) params.set('forcePathStyle', 'true');
+    return `s3://${encodeURIComponent(accessKeyId)}:${encodeURIComponent(secretAccessKey)}@${bucket || 's3db'}?${params.toString()}`;
+  }
+
+  return undefined;
+}

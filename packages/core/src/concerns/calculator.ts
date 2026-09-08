@@ -192,12 +192,14 @@ export function calculateSystemOverhead(config: SystemOverheadConfig = {}): numb
 }
 
 export interface EffectiveLimitConfig {
+  storageLimit?: number;
+  /** @deprecated Use storageLimit. */
   s3Limit?: number;
   systemConfig?: SystemOverheadConfig;
 }
 
 export function calculateEffectiveLimit(config: EffectiveLimitConfig = {}): number {
-  const { s3Limit = 2048, systemConfig = {} } = config;
+  const { storageLimit, s3Limit, systemConfig = {} } = config;
   const overhead = calculateSystemOverhead(systemConfig);
-  return s3Limit - overhead;
+  return (storageLimit ?? s3Limit ?? 2048) - overhead;
 }

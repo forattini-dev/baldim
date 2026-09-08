@@ -57,6 +57,7 @@ interface Command {
 
 export class MemoryClient extends EventEmitter {
   id: string;
+  readonly capabilities = { distributedMetadataLock: false } as const;
   logLevel: string;
   private logger: Logger;
   private taskExecutorMonitoring: MonitoringConfig | null;

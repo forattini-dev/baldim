@@ -2,7 +2,7 @@
  * IP Address Encoding/Decoding Utilities
  *
  * Provides compact binary encoding for IPv4 and IPv6 addresses
- * to save space in S3 metadata.
+ * to save space in object metadata.
  */
 
 import { tryFnSync } from './try-fn.js';

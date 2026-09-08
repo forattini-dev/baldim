@@ -44,7 +44,7 @@ const keyCharToValue: Record<string, number> = Object.fromEntries(
 
 /**
  * Case-insensitive key encoder using base36 alphabet (0-9a-z).
- * Safe for S3 metadata keys which are lowercased by AWS.
+ * Safe for metadata keys on providers that normalize names to lowercase.
  */
 export const encodeKey = (n: number): string => {
   if (typeof n !== 'number' || isNaN(n)) return 'undefined';

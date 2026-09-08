@@ -2,7 +2,7 @@
  * Binary/Buffer Encoding Utilities
  *
  * Provides compact Base64 encoding for binary data (Buffer, Uint8Array)
- * to save space in S3 metadata.
+ * to save space in object metadata.
  */
 
 import { ValidationError } from '../errors.js';

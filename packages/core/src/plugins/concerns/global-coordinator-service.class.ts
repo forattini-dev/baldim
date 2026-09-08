@@ -3,7 +3,7 @@ import { PluginStorage } from './plugin-storage.js';
 import { tryFn } from '../../concerns/try-fn.js';
 import { LatencyBuffer, type LatencyStats } from '../../concerns/ring-buffer.js';
 import type { Database } from '../../database.class.js';
-import type { S3DBLogger } from '../../concerns/logger.js';
+import type { BaldinLogger } from '../../concerns/logger.js';
 import type { Client } from '../../clients/types.js';
 
 let serviceCounter = 0;
@@ -229,7 +229,7 @@ export class GlobalCoordinatorService extends EventEmitter {
   storage: CoordinatorPluginStorage | null;
   protected _pluginStorage: CoordinatorPluginStorage | null;
 
-  logger: S3DBLogger;
+  logger: BaldinLogger;
 
   constructor({ namespace, database, config = {} }: GlobalCoordinatorOptions) {
     super();

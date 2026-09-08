@@ -15,7 +15,7 @@ interface StorageClientConfig {
   keyPrefix: string;
 }
 
-interface S3Client {
+interface StorageClient {
   parallelism: number;
   config: StorageClientConfig;
   listObjects(options: { prefix: string; continuationToken: string | null }): Promise<StorageListResponse>;
@@ -23,7 +23,7 @@ interface S3Client {
 
 interface Resource {
   name: string;
-  client: S3Client;
+  client: StorageClient;
 }
 
 interface ResourceIdsReaderOptions {
@@ -32,7 +32,7 @@ interface ResourceIdsReaderOptions {
 
 export class ResourceIdsReader extends EventEmitter {
   resource: Resource;
-  client: S3Client;
+  client: StorageClient;
   stream: ReadableStream<string | string[]>;
   controller!: ReadableStreamDefaultController<string | string[]>;
   continuationToken: string | null = null;

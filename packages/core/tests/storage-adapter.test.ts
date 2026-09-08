@@ -4,6 +4,7 @@ import {
   createStorageClient,
   hasStorageAdapter,
   registerStorageAdapter,
+  resolveLegacyConnectionString,
   type StorageAdapterContext,
 } from '../src/storage-adapter.js';
 
@@ -33,7 +34,21 @@ describe('storage adapter registry', () => {
     expect(hasStorageAdapter('example')).toBe(false);
   });
 
-  it('explains how to enable S3 when no adapter is registered', async () => {
-    await expect(createStorageClient('s3', context)).rejects.toThrow('@baldin/adapter-s3');
+  it('reports an unregistered protocol without knowing its provider', async () => {
+    await expect(createStorageClient('missing', context)).rejects.toThrow(
+      'No storage adapter is registered for missing:'
+    );
+  });
+
+  it('lets an adapter own legacy option resolution', () => {
+    const unregister = registerStorageAdapter('legacy', () => ({ id: 'legacy' }) as never, {
+      legacyConnectionString: (options) => options.legacyBucket === 'docs'
+        ? 'legacy://docs'
+        : undefined,
+    });
+
+    expect(resolveLegacyConnectionString({ legacyBucket: 'docs' })).toBe('legacy://docs');
+    unregister();
+    expect(resolveLegacyConnectionString({ legacyBucket: 'docs' })).toBeUndefined();
   });
 });

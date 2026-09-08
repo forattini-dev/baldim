@@ -50,6 +50,7 @@ interface RemoteSqliteRow {
 
 export class RemoteSqliteClient extends EventEmitter {
   id: string;
+  readonly capabilities = { distributedMetadataLock: true } as const;
   logLevel: string;
   private logger: Logger;
   private taskExecutorMonitoring: MonitoringConfig | null;

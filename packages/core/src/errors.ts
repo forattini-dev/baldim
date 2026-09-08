@@ -1,12 +1,12 @@
 /**
- * S3DB Error Classes
+ * Baldin Error Classes
  *
- * Typed error hierarchy for s3db.js operations.
+ * Typed error hierarchy for Baldin operations.
  */
 
 import type { StringRecord } from './types/common.types.js';
 
-/** Base error context for all S3DB errors */
+/** Base error context for all Baldin errors */
 export interface BaseErrorContext {
   verbose?: boolean;
   bucket?: string;
@@ -15,6 +15,8 @@ export interface BaseErrorContext {
   code?: string;
   statusCode?: number;
   requestId?: string;
+  providerMessage?: string;
+  /** @deprecated Use providerMessage. */
   awsMessage?: string;
   original?: Error | unknown;
   commandName?: string;
@@ -36,6 +38,8 @@ export interface SerializedError {
   code?: string;
   statusCode?: number;
   requestId?: string;
+  providerMessage?: string;
+  /** @deprecated Use providerMessage. */
   awsMessage?: string;
   bucket?: string;
   key?: string;
@@ -61,6 +65,8 @@ export class BaseError extends Error {
   code?: string;
   statusCode: number;
   requestId?: string;
+  providerMessage?: string;
+  /** @deprecated Use providerMessage. */
   awsMessage?: string;
   original?: Error | unknown;
   commandName?: string;
@@ -83,6 +89,7 @@ export class BaseError extends Error {
       code,
       statusCode,
       requestId,
+      providerMessage,
       awsMessage,
       original,
       commandName,
@@ -116,7 +123,8 @@ export class BaseError extends Error {
     this.code = code;
     this.statusCode = statusCode ?? 500;
     this.requestId = requestId;
-    this.awsMessage = awsMessage;
+    this.providerMessage = providerMessage ?? awsMessage;
+    this.awsMessage = awsMessage ?? providerMessage;
     this.original = original;
     this.commandName = commandName;
     this.commandInput = commandInput;
@@ -148,6 +156,7 @@ export class BaseError extends Error {
       code: this.code,
       statusCode: this.statusCode,
       requestId: this.requestId,
+      providerMessage: this.providerMessage,
       awsMessage: this.awsMessage,
       bucket: this.bucket,
       key: this.key,
@@ -172,8 +181,8 @@ export class BaseError extends Error {
   }
 }
 
-/** AWS Error with $metadata */
-interface AwsErrorLike {
+/** Common provider error shape, including SDK metadata when available. */
+interface StorageErrorLike {
   code?: string;
   Code?: string;
   name?: string;
@@ -188,11 +197,11 @@ interface AwsErrorLike {
   };
 }
 
-/** S3DB Error details */
-export interface S3dbErrorDetails {
+/** Storage-aware error details. */
+export interface StorageErrorDetails {
   bucket?: string;
   key?: string;
-  original?: AwsErrorLike | Error | unknown;
+  original?: StorageErrorLike | Error | unknown;
   statusCode?: number;
   retriable?: boolean;
   suggestion?: string;
@@ -200,23 +209,23 @@ export interface S3dbErrorDetails {
   [key: string]: unknown;
 }
 
-export class S3dbError extends BaseError {
-  constructor(message: string, details: S3dbErrorDetails = {}) {
+export class StorageError extends BaseError {
+  constructor(message: string, details: StorageErrorDetails = {}) {
     let code: string | undefined;
     let statusCode: number | undefined;
     let requestId: string | undefined;
-    let awsMessage: string | undefined;
+    let providerMessage: string | undefined;
     let original = details.original;
     let metadata: StringRecord | undefined;
 
     if (details.original && typeof details.original === 'object') {
-      const awsError = details.original as AwsErrorLike;
+      const storageError = details.original as StorageErrorLike;
       original = details.original;
-      code = awsError.code || awsError.Code || awsError.name;
-      statusCode = awsError.statusCode || awsError.$metadata?.httpStatusCode;
-      requestId = awsError.requestId || awsError.$metadata?.requestId;
-      awsMessage = awsError.message;
-      metadata = awsError.$metadata ? { ...awsError.$metadata } : undefined;
+      code = storageError.code || storageError.Code || storageError.name;
+      statusCode = storageError.statusCode || storageError.$metadata?.httpStatusCode;
+      requestId = storageError.requestId || storageError.$metadata?.requestId;
+      providerMessage = storageError.message;
+      metadata = storageError.$metadata ? { ...storageError.$metadata } : undefined;
     }
 
     super({
@@ -225,15 +234,20 @@ export class S3dbError extends BaseError {
       code,
       statusCode,
       requestId,
-      awsMessage,
+      providerMessage,
       original,
       metadata,
     });
   }
 }
 
-export class DatabaseError extends S3dbError {
-  constructor(message: string, details: S3dbErrorDetails = {}) {
+/** @deprecated Use StorageError. */
+export { StorageError as S3dbError };
+/** @deprecated Use StorageErrorDetails. */
+export type S3dbErrorDetails = StorageErrorDetails;
+
+export class DatabaseError extends StorageError {
+  constructor(message: string, details: StorageErrorDetails = {}) {
     const merged = {
       statusCode: details.statusCode ?? 500,
       retriable: details.retriable ?? false,
@@ -247,12 +261,12 @@ export class DatabaseError extends S3dbError {
   }
 }
 
-export class ValidationError extends S3dbError {
+export class ValidationError extends StorageError {
   field?: string;
   value?: unknown;
   constraint?: string;
 
-  constructor(message: string, details: S3dbErrorDetails & { field?: string; value?: unknown; constraint?: string } = {}) {
+  constructor(message: string, details: StorageErrorDetails & { field?: string; value?: unknown; constraint?: string } = {}) {
     const merged = {
       statusCode: details.statusCode ?? 422,
       retriable: details.retriable ?? false,
@@ -269,8 +283,8 @@ export class ValidationError extends S3dbError {
   }
 }
 
-export class AuthenticationError extends S3dbError {
-  constructor(message: string, details: S3dbErrorDetails = {}) {
+export class AuthenticationError extends StorageError {
+  constructor(message: string, details: StorageErrorDetails = {}) {
     const merged = {
       statusCode: details.statusCode ?? 401,
       retriable: details.retriable ?? false,
@@ -284,14 +298,14 @@ export class AuthenticationError extends S3dbError {
   }
 }
 
-export class PermissionError extends S3dbError {
-  constructor(message: string, details: S3dbErrorDetails = {}) {
+export class PermissionError extends StorageError {
+  constructor(message: string, details: StorageErrorDetails = {}) {
     const merged = {
       statusCode: details.statusCode ?? 403,
       retriable: details.retriable ?? false,
       suggestion:
         details.suggestion ??
-        'Verify IAM permissions, bucket policies, and credentials before retrying.',
+        'Verify storage permissions, access policy, and credentials before retrying.',
       ...details,
     };
     super(message, merged);
@@ -299,8 +313,8 @@ export class PermissionError extends S3dbError {
   }
 }
 
-export class EncryptionError extends S3dbError {
-  constructor(message: string, details: S3dbErrorDetails = {}) {
+export class EncryptionError extends StorageError {
+  constructor(message: string, details: StorageErrorDetails = {}) {
     const merged = {
       statusCode: details.statusCode ?? 500,
       retriable: details.retriable ?? false,
@@ -314,13 +328,13 @@ export class EncryptionError extends S3dbError {
   }
 }
 
-export interface ResourceNotFoundDetails extends S3dbErrorDetails {
+export interface ResourceNotFoundDetails extends StorageErrorDetails {
   bucket: string;
   resourceName: string;
   id: string;
 }
 
-export class ResourceNotFound extends S3dbError {
+export class ResourceNotFound extends StorageError {
   resourceName: string;
   id: string;
 
@@ -368,11 +382,11 @@ export class ResourceNotFound extends S3dbError {
   }
 }
 
-export interface NoSuchBucketDetails extends S3dbErrorDetails {
+export interface NoSuchBucketDetails extends StorageErrorDetails {
   bucket: string;
 }
 
-export class NoSuchBucket extends S3dbError {
+export class NoSuchBucket extends StorageError {
   constructor(details: NoSuchBucketDetails) {
     const { bucket, original, ...rest } = details;
 
@@ -390,20 +404,20 @@ export class NoSuchBucket extends S3dbError {
       original,
       statusCode: rest.statusCode ?? 404,
       retriable: rest.retriable ?? false,
-      suggestion: rest.suggestion ?? 'Verify the bucket name and AWS region. Create the bucket if it is missing.',
+      suggestion: rest.suggestion ?? 'Verify the storage container and adapter configuration. Create the container if it is missing.',
       ...rest,
     });
   }
 }
 
-export interface NoSuchKeyDetails extends S3dbErrorDetails {
+export interface NoSuchKeyDetails extends StorageErrorDetails {
   bucket: string;
   key: string;
   resourceName?: string;
   id?: string;
 }
 
-export class NoSuchKey extends S3dbError {
+export class NoSuchKey extends StorageError {
   resourceName?: string;
   id?: string;
 
@@ -452,7 +466,7 @@ export class NoSuchKey extends S3dbError {
   }
 }
 
-export class NotFound extends S3dbError {
+export class NotFound extends StorageError {
   resourceName?: string;
   id?: string;
 
@@ -493,7 +507,7 @@ export class NotFound extends S3dbError {
   }
 }
 
-export class MissingMetadata extends S3dbError {
+export class MissingMetadata extends StorageError {
   constructor(details: NoSuchBucketDetails) {
     const { bucket, original, ...rest } = details;
 
@@ -517,7 +531,7 @@ export class MissingMetadata extends S3dbError {
   }
 }
 
-export interface InvalidResourceItemDetails extends S3dbErrorDetails {
+export interface InvalidResourceItemDetails extends StorageErrorDetails {
   bucket: string;
   resourceName: string;
   attributes?: unknown;
@@ -525,7 +539,7 @@ export interface InvalidResourceItemDetails extends S3dbErrorDetails {
   message?: string;
 }
 
-export class InvalidResourceItem extends S3dbError {
+export class InvalidResourceItem extends StorageError {
   constructor(details: InvalidResourceItemDetails) {
     const { bucket, resourceName, attributes, validation, message, original, ...rest } = details;
 
@@ -564,7 +578,7 @@ export class InvalidResourceItem extends S3dbError {
   }
 }
 
-export class UnknownError extends S3dbError {}
+export class UnknownError extends StorageError {}
 
 export const ErrorMap = {
   NotFound,
@@ -586,11 +600,11 @@ export interface MapStorageErrorContext {
   retriable?: boolean;
 }
 
-export function mapStorageError(err: AwsErrorLike | Error, context: MapStorageErrorContext = {}): S3dbError {
-  const awsErr = err as AwsErrorLike;
-  const code = awsErr.code || awsErr.Code || awsErr.name;
-  const statusCode = awsErr.statusCode || awsErr.$metadata?.httpStatusCode;
-  const metadata = awsErr.$metadata ? { ...awsErr.$metadata } : undefined;
+export function mapStorageError(err: StorageErrorLike | Error, context: MapStorageErrorContext = {}): StorageError {
+  const storageError = err as StorageErrorLike;
+  const code = storageError.code || storageError.Code || storageError.name;
+  const statusCode = storageError.statusCode || storageError.$metadata?.httpStatusCode;
+  const metadata = storageError.$metadata ? { ...storageError.$metadata } : undefined;
   const { commandName, commandInput } = context;
   let description: string;
 
@@ -680,8 +694,8 @@ export function mapStorageError(err: AwsErrorLike | Error, context: MapStorageEr
 
   const errorDetails = [
     `Unknown error: ${err.message || err.toString()}`,
-    awsErr.code && `Code: ${awsErr.code}`,
-    awsErr.statusCode && `Status: ${awsErr.statusCode}`,
+    storageError.code && `Code: ${storageError.code}`,
+    storageError.statusCode && `Status: ${storageError.statusCode}`,
     err.stack && `Stack: ${err.stack.split('\n')[0]}`,
   ]
     .filter(Boolean)
@@ -699,8 +713,8 @@ export function mapStorageError(err: AwsErrorLike | Error, context: MapStorageEr
   });
 }
 
-export class ConnectionStringError extends S3dbError {
-  constructor(message: string, details: S3dbErrorDetails = {}) {
+export class ConnectionStringError extends StorageError {
+  constructor(message: string, details: StorageErrorDetails = {}) {
     const description = details.description || 'Invalid connection string format. Check the connection string syntax and credentials.';
     const merged = {
       statusCode: details.statusCode ?? 400,
@@ -713,8 +727,8 @@ export class ConnectionStringError extends S3dbError {
   }
 }
 
-export class CryptoError extends S3dbError {
-  constructor(message: string, details: S3dbErrorDetails = {}) {
+export class CryptoError extends StorageError {
+  constructor(message: string, details: StorageErrorDetails = {}) {
     const description = details.description || 'Cryptography operation failed. Check if the crypto library is available and input is valid.';
     const merged = {
       statusCode: details.statusCode ?? 500,
@@ -732,8 +746,8 @@ export type MapAwsErrorContext = MapStorageErrorContext;
 /** @deprecated Use mapStorageError. */
 export const mapAwsError = mapStorageError;
 
-export class SchemaError extends S3dbError {
-  constructor(message: string, details: S3dbErrorDetails = {}) {
+export class SchemaError extends StorageError {
+  constructor(message: string, details: StorageErrorDetails = {}) {
     const description = details.description || 'Schema validation failed. Check schema definition and input data format.';
     const merged = {
       statusCode: details.statusCode ?? 400,
@@ -746,8 +760,8 @@ export class SchemaError extends S3dbError {
   }
 }
 
-export class ResourceError extends S3dbError {
-  constructor(message: string, details: S3dbErrorDetails = {}) {
+export class ResourceError extends StorageError {
+  constructor(message: string, details: StorageErrorDetails = {}) {
     const description = details.description || 'Resource operation failed. Check resource configuration, attributes, and operation context.';
     const merged = {
       statusCode: details.statusCode ?? 400,
@@ -761,7 +775,7 @@ export class ResourceError extends S3dbError {
   }
 }
 
-export interface PartitionErrorDetails extends S3dbErrorDetails {
+export interface PartitionErrorDetails extends StorageErrorDetails {
   resourceName?: string;
   partitionName?: string;
   fieldName?: string;
@@ -769,7 +783,7 @@ export interface PartitionErrorDetails extends S3dbErrorDetails {
   strictValidation?: boolean;
 }
 
-export class PartitionError extends S3dbError {
+export class PartitionError extends StorageError {
   constructor(message: string, details: PartitionErrorDetails = {}) {
     let description = details.description;
     if (!description && details.resourceName && details.partitionName && details.fieldName) {
@@ -798,7 +812,7 @@ ${
   • Use strictValidation: false to skip this check during testing`
 }
 
-Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/README.md#partitions
+Docs: https://github.com/forattini-dev/baldin/blob/main/docs/README.md#partitions
 `.trim();
     }
 
@@ -811,12 +825,12 @@ Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/README.md#partitio
   }
 }
 
-export interface PluginErrorDetails extends S3dbErrorDetails {
+export interface PluginErrorDetails extends StorageErrorDetails {
   pluginName?: string;
   operation?: string;
 }
 
-export class PluginError extends S3dbError {
+export class PluginError extends StorageError {
   pluginName: string;
   operation: string;
 
@@ -840,7 +854,7 @@ Possible causes:
 Solution:
 Ensure plugin is added to database and connect() is called before usage.
 
-Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/plugins/README.md
+Docs: https://github.com/forattini-dev/baldin/blob/main/docs/plugins/README.md
 `.trim();
     }
 
@@ -860,13 +874,13 @@ Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/plugins/README.md
   }
 }
 
-export interface PluginStorageErrorDetails extends S3dbErrorDetails {
+export interface PluginStorageErrorDetails extends StorageErrorDetails {
   pluginSlug?: string;
   key?: string;
   operation?: string;
 }
 
-export class PluginStorageError extends S3dbError {
+export class PluginStorageError extends StorageError {
   constructor(message: string, details: PluginStorageErrorDetails = {}) {
     const { pluginSlug = 'unknown', key = '', operation = 'unknown', ...rest } = details;
 
@@ -882,13 +896,13 @@ Operation: ${operation}
 Possible causes:
 1. Storage not initialized (plugin not installed)
 2. Invalid key format
-3. S3 operation failed
+3. Storage operation failed
 4. Permissions issue
 
 Solution:
 Ensure plugin has access to storage and key is valid.
 
-Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/plugins/reference/plugin-storage.md
+Docs: https://github.com/forattini-dev/baldin/blob/main/docs/plugins/reference/plugin-storage.md
 `.trim();
     }
 
@@ -904,14 +918,14 @@ Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/plugins/reference/
   }
 }
 
-export interface PartitionDriverErrorDetails extends S3dbErrorDetails {
+export interface PartitionDriverErrorDetails extends StorageErrorDetails {
   driver?: string;
   operation?: string;
   queueSize?: number;
   maxQueueSize?: number;
 }
 
-export class PartitionDriverError extends S3dbError {
+export class PartitionDriverError extends StorageError {
   constructor(message: string, details: PartitionDriverErrorDetails = {}) {
     const { driver = 'unknown', operation = 'unknown', queueSize, maxQueueSize, ...rest } = details;
 
@@ -956,12 +970,12 @@ Check driver configuration and permissions.
   }
 }
 
-export interface BehaviorErrorDetails extends S3dbErrorDetails {
+export interface BehaviorErrorDetails extends StorageErrorDetails {
   behavior?: string;
   availableBehaviors?: string[];
 }
 
-export class BehaviorError extends S3dbError {
+export class BehaviorError extends StorageError {
   constructor(message: string, details: BehaviorErrorDetails = {}) {
     const { behavior = 'unknown', availableBehaviors = [], ...rest } = details;
 
@@ -980,7 +994,7 @@ Possible causes:
 Solution:
 Use one of the available behaviors or register custom behavior.
 
-Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/README.md#behaviors
+Docs: https://github.com/forattini-dev/baldin/blob/main/docs/README.md#behaviors
 `.trim();
     }
 
@@ -995,12 +1009,12 @@ Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/README.md#behavior
   }
 }
 
-export interface StreamErrorDetails extends S3dbErrorDetails {
+export interface StreamErrorDetails extends StorageErrorDetails {
   operation?: string;
   resource?: string;
 }
 
-export class StreamError extends S3dbError {
+export class StreamError extends StorageError {
   constructor(message: string, details: StreamErrorDetails = {}) {
     const { operation = 'unknown', resource, ...rest } = details;
 
@@ -1020,7 +1034,7 @@ Possible causes:
 Solution:
 Check stream configuration and resource availability.
 
-Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/README.md#streaming
+Docs: https://github.com/forattini-dev/baldin/blob/main/docs/README.md#streaming
 `.trim();
     }
 
@@ -1035,7 +1049,7 @@ Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/README.md#streamin
   }
 }
 
-export interface MetadataLimitErrorDetails extends S3dbErrorDetails {
+export interface MetadataLimitErrorDetails extends StorageErrorDetails {
   totalSize?: number;
   effectiveLimit?: number;
   absoluteLimit?: number;
@@ -1044,7 +1058,7 @@ export interface MetadataLimitErrorDetails extends S3dbErrorDetails {
   operation?: string;
 }
 
-export class MetadataLimitError extends S3dbError {
+export class MetadataLimitError extends StorageError {
   constructor(message: string, details: MetadataLimitErrorDetails = {}) {
     const {
       totalSize,
@@ -1059,7 +1073,7 @@ export class MetadataLimitError extends S3dbError {
     let description = details.description;
     if (!description && totalSize && effectiveLimit) {
       description = `
-S3 Metadata Size Limit Exceeded
+Storage Metadata Size Limit Exceeded
 
 Current Size: ${totalSize} bytes
 Effective Limit: ${effectiveLimit} bytes
@@ -1068,7 +1082,7 @@ ${excess ? `Excess: ${excess} bytes` : ''}
 ${resourceName ? `Resource: ${resourceName}` : ''}
 ${operation ? `Operation: ${operation}` : ''}
 
-S3 has a hard limit of 2KB (2047 bytes) for object metadata.
+The active storage adapter limits the available object metadata size.
 
 Solutions:
 1. Use 'body-overflow' behavior to store excess in body
@@ -1084,7 +1098,7 @@ Example:
     attributes: { ... }
   });
 
-Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/README.md#metadata-size-limits
+Docs: https://github.com/forattini-dev/baldin/blob/main/docs/README.md#metadata-size-limits
 `.trim();
     }
 
@@ -1103,7 +1117,7 @@ Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/README.md#metadata
   }
 }
 
-export interface AnalyticsNotEnabledErrorDetails extends S3dbErrorDetails {
+export interface AnalyticsNotEnabledErrorDetails extends StorageErrorDetails {
   pluginName?: string;
   resourceName?: string;
   field?: string;
@@ -1112,7 +1126,7 @@ export interface AnalyticsNotEnabledErrorDetails extends S3dbErrorDetails {
   pluginInitialized?: boolean;
 }
 
-export class AnalyticsNotEnabledError extends S3dbError {
+export class AnalyticsNotEnabledError extends StorageError {
   constructor(details: AnalyticsNotEnabledErrorDetails = {}) {
     const {
       pluginName = 'EventualConsistency',
@@ -1154,7 +1168,7 @@ Correct initialization order:
   3. Create resources: await db.createResource({ name: '${resourceName}', ... })
   4. Analytics resources are auto-created by plugin
 
-Docs: https://github.com/forattini-dev/s3db.js/blob/main/docs/plugins/eventual-consistency.md
+Docs: https://github.com/forattini-dev/baldin/blob/main/docs/plugins/eventual-consistency.md
 `.trim();
 
     super(message, {

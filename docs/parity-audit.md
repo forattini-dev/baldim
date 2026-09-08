@@ -17,7 +17,7 @@ working core from a completed product migration.
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Not exported or migrated | Missing |
 | Public subpaths | root, lite, concerns, plugins, generator | root, lite, encoding, adapter SDK, plugin SDK | Partial |
-| Test suites | 118 core and 176 plugin test files | 11 focused test files, 62 tests | Partial |
+| Test suites | 118 core and 176 plugin test files | 11 focused test files, 65 tests | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps
@@ -28,6 +28,8 @@ providers resolve through a public protocol registry. Provider configuration typ
 live in their adapter packages; core publishes neutral storage contracts and deprecated
 aliases for the former S3-named types. Connection-string parsing is generic in core;
 each adapter owns the interpretation of its URL, credentials, and provider options.
+Adapters declare capabilities such as distributed metadata locking; core does not
+infer provider behavior from protocols, regions, or endpoints.
 
 The source still carries legacy names such as `s3db.json`, `s3dbVersion`, and
 `S3DB_*`. Persisted manifest names and operational environment variables are
@@ -41,8 +43,8 @@ contract has not yet run against live targets for each provider.
 ## Corrective order
 
 1. Run the storage contract suite against AWS S3, R2, MinIO, and a custom endpoint.
-2. Replace the remaining provider checks and S3-named internal concerns in core with
-   adapter capabilities and provider-neutral errors, keys, and locking.
+2. Run the shared local storage contract against Memory, filesystem, and SQLite,
+   then extend it to configured remote adapters.
 3. Migrate the remaining 22 plugin families to `@baldin/plugin-<name>` with their
    relevant original tests.
 4. Restore public utilities, Factory/Seeder, TypeScript generation, and explicitly

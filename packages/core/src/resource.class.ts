@@ -23,7 +23,7 @@ import tryFn, { tryFnSync } from './concerns/try-fn.js';
 import { ResourceReader, ResourceWriter } from './stream/index.js';
 import { getBehavior, DEFAULT_BEHAVIOR } from './behaviors/index.js';
 import { idGenerator as defaultIdGenerator } from './concerns/id.js';
-import { validateS3KeySegment } from './concerns/s3-key.js';
+import { validateStorageKeySegment } from './concerns/storage-key.js';
 import { ResourceError, PartitionError } from './errors.js';
 import { createLogger, type Logger, type LogLevel as LoggerLogLevel } from './concerns/logger.js';
 import { validateResourceConfig } from './core/resource-config-validator.js';
@@ -921,7 +921,7 @@ export class Resource extends AsyncEventEmitter implements Disposable {
   }
 
   getResourceKey(id: string): string {
-    validateS3KeySegment(id, 'id');
+    validateStorageKeySegment(id, 'id');
     const key = join('resource=' + this.name, 'data', `id=${id}`);
     return key;
   }

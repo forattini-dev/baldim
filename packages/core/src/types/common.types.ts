@@ -1,5 +1,5 @@
 /**
- * Common utility types used throughout s3db.js
+ * Common utility types used throughout Baldin
  */
 
 /** Deep partial utility - makes all nested properties optional */

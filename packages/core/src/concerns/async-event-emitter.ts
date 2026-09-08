@@ -1,15 +1,15 @@
 import EventEmitter from 'events';
-import { createLogger, S3DBLogger, LogLevel } from './logger.js';
+import { createLogger, BaldinLogger, LogLevel } from './logger.js';
 
 export interface AsyncEventEmitterOptions {
   logLevel?: LogLevel;
-  logger?: S3DBLogger;
+  logger?: BaldinLogger;
 }
 
 export class AsyncEventEmitter extends EventEmitter {
   private _asyncMode: boolean;
   logLevel: LogLevel;
-  logger: S3DBLogger;
+  logger: BaldinLogger;
 
   constructor(options: AsyncEventEmitterOptions = {}) {
     super();

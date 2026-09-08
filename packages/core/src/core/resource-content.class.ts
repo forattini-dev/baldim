@@ -1,9 +1,9 @@
 import { tryFn } from '../concerns/try-fn.js';
-import { isNotFoundError } from '../concerns/s3-errors.js';
+import { isNotFoundError } from '../concerns/storage-errors.js';
 import { mapStorageError, ResourceError } from '../errors.js';
 import type { StringRecord } from '../types/common.types.js';
 
-export interface S3Response {
+export interface StorageResponse {
   Body?: {
     transformToByteArray(): Promise<Uint8Array>;
   };
@@ -12,15 +12,15 @@ export interface S3Response {
   Metadata?: StringRecord<string>;
 }
 
-export interface S3Client {
+export interface StorageClient {
   putObject(params: {
     key: string;
     metadata: StringRecord<string>;
     body: Buffer | string;
     contentType?: string;
   }): Promise<void>;
-  getObject(key: string): Promise<S3Response>;
-  headObject(key: string): Promise<S3Response>;
+  getObject(key: string): Promise<StorageResponse>;
+  headObject(key: string): Promise<StorageResponse>;
 }
 
 export interface SchemaMapper {
@@ -29,7 +29,7 @@ export interface SchemaMapper {
 
 export interface Resource {
   name: string;
-  client: S3Client;
+  client: StorageClient;
   schema: SchemaMapper;
   getResourceKey(id: string): string;
   get(id: string): Promise<StringRecord>;
@@ -47,7 +47,7 @@ export interface ContentResult {
   contentType: string | null;
 }
 
-export interface S3Error extends Error {
+export interface StorageOperationError extends Error {
   name: string;
   code?: string;
   Code?: string;
@@ -61,7 +61,7 @@ export class ResourceContent {
     this.resource = resource;
   }
 
-  private get client(): S3Client {
+  private get client(): StorageClient {
     return this.resource.client;
   }
 
@@ -120,7 +120,7 @@ export class ResourceContent {
     const [ok, err, response] = await tryFn(() => this.client.getObject(key));
 
     if (!ok) {
-      const error = err as S3Error;
+      const error = err as StorageOperationError;
       if (error.name === 'NoSuchKey' || error.code === 'NoSuchKey' || error.Code === 'NoSuchKey' || error.statusCode === 404) {
         return {
           buffer: null,
@@ -135,9 +135,9 @@ export class ResourceContent {
       });
     }
 
-    const s3Response = response as S3Response;
-    const buffer = Buffer.from(await s3Response.Body!.transformToByteArray());
-    const contentType = s3Response.ContentType || null;
+    const storageResponse = response as StorageResponse;
+    const buffer = Buffer.from(await storageResponse.Body!.transformToByteArray());
+    const contentType = storageResponse.ContentType || null;
 
     this.resource._emitStandardized('content-fetched', { id, contentLength: buffer.length, contentType }, id);
 
@@ -161,8 +161,8 @@ export class ResourceContent {
         key
       });
     }
-    const s3Response = response as S3Response;
-    return (s3Response.ContentLength || 0) > 0;
+    const storageResponse = response as StorageResponse;
+    return (storageResponse.ContentLength || 0) > 0;
   }
 
   async deleteContent(id: string): Promise<void> {
@@ -177,8 +177,8 @@ export class ResourceContent {
       });
     }
 
-    const s3Response = existingObject as S3Response;
-    const existingMetadata = s3Response.Metadata || {};
+    const storageResponse = existingObject as StorageResponse;
+    const existingMetadata = storageResponse.Metadata || {};
 
     const [ok2, err2] = await tryFn(() => this.client.putObject({
       key,

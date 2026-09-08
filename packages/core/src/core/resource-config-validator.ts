@@ -1,5 +1,5 @@
 import type { StringRecord } from '../types/common.types.js';
-import { isValidS3KeySegment } from '../concerns/s3-key.js';
+import { isValidStorageKeySegment } from '../concerns/storage-key.js';
 
 export interface PartitionFieldsDef {
   [fieldName: string]: string;
@@ -63,12 +63,12 @@ export function validateResourceConfig(config: ResourceConfigInput): ValidationR
     errors.push("Resource 'name' must be a string");
   } else if (config.name.trim() === '') {
     errors.push("Resource 'name' cannot be empty");
-  } else if (!isValidS3KeySegment(config.name)) {
+  } else if (!isValidStorageKeySegment(config.name)) {
     errors.push(`Resource 'name' must be URL-friendly (no /, \\, =, or %). Got: '${config.name}'`);
   }
 
   if (!config.client) {
-    errors.push("S3 'client' is required");
+    errors.push("Storage client is required");
   }
 
   if (!config.attributes) {
@@ -131,7 +131,7 @@ export function validateResourceConfig(config: ResourceConfigInput): ValidationR
       errors.push("Resource 'partitions' must be an object");
     } else {
       for (const [partitionName, partitionDef] of Object.entries(config.partitions)) {
-        if (!isValidS3KeySegment(partitionName)) {
+        if (!isValidStorageKeySegment(partitionName)) {
           errors.push(`Partition name '${partitionName}' must be URL-friendly (no /, \\, =, or %)`);
         } else if (typeof partitionDef !== 'object' || Array.isArray(partitionDef)) {
           errors.push(`Partition '${partitionName}' must be an object`);
@@ -141,7 +141,7 @@ export function validateResourceConfig(config: ResourceConfigInput): ValidationR
           errors.push(`Partition '${partitionName}.fields' must be an object`);
         } else {
           for (const [fieldName, fieldType] of Object.entries(partitionDef.fields)) {
-            if (!isValidS3KeySegment(fieldName)) {
+            if (!isValidStorageKeySegment(fieldName)) {
               errors.push(`Partition field '${fieldName}' must be URL-friendly (no /, \\, =, or %)`);
             } else if (typeof fieldType !== 'string') {
               errors.push(`Partition '${partitionName}.fields.${fieldName}' must be a string`);

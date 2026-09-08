@@ -85,6 +85,7 @@ interface AwsCommand {
 
 export class S3Client extends EventEmitter {
   id: string;
+  readonly capabilities = { distributedMetadataLock: true } as const;
   logLevel: string;
   private logger: Logger;
   config: S3ConnectionConfig;

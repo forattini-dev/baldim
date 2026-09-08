@@ -35,11 +35,11 @@ const DEFLATE_PREFIX = 'z:';
 const BASE85_PREFIX = 'z85:';
 
 /**
- * Encode a Buffer to base85 using a custom S3-safe alphabet.
+ * Encode a Buffer to base85 using a custom metadata-safe alphabet.
  * Every 4 input bytes produce 5 output characters (25% overhead).
  * Padding is encoded in the last group when input length is not a multiple of 4.
  *
- * **Beta**: base85 encoding for S3 metadata is not battle-tested at scale.
+ * **Beta**: base85 encoding for object metadata is not battle-tested at scale.
  */
 export function encodeBase85(buf: Buffer): string {
   const len = buf.length;
@@ -85,7 +85,7 @@ export function encodeBase85(buf: Buffer): string {
 /**
  * Decode a base85-encoded string back to a Buffer.
  *
- * **Beta**: base85 encoding for S3 metadata is not battle-tested at scale.
+ * **Beta**: base85 encoding for object metadata is not battle-tested at scale.
  */
 export function decodeBase85(encoded: string): Buffer {
   const len = encoded.length;

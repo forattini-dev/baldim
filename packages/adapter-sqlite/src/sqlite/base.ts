@@ -28,6 +28,7 @@ import type {
 
 export class SqliteClientBase extends EventEmitter {
   id: string;
+  readonly capabilities = { distributedMetadataLock: false } as const;
   logLevel: string;
   readonly supportsPartitionIndex = true;
   protected logger: Logger;

@@ -43,4 +43,4 @@ export const AVAILABLE_BEHAVIORS: BehaviorName[] = Object.keys(behaviors) as Beh
 
 export const DEFAULT_BEHAVIOR: BehaviorName = 'user-managed';
 
-export { S3_METADATA_LIMIT_BYTES } from './enforce-limits.js';
+export { DEFAULT_METADATA_LIMIT_BYTES, S3_METADATA_LIMIT_BYTES } from './enforce-limits.js';

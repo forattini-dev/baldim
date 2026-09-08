@@ -114,7 +114,7 @@ export class ThreadPool {
           modulePath: handlersPath,
           poolSize,
           scheduler,
-          workerName: 's3db-thread-pool',
+          workerName: 'baldin-thread-pool',
         }) as TaskBridge;
 
         this._logger?.debug({ poolSize, scheduler, mode: 'worker' }, 'thread pool initialized with workers');

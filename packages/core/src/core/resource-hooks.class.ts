@@ -1,6 +1,8 @@
 export type HookFunction<T = unknown> = (data: T) => T | Promise<T>;
 
 export type BoundHookFunction<T = unknown> = HookFunction<T> & {
+  __baldin_original?: HookFunction<T>;
+  /** @deprecated Compatibility marker for hooks bound by s3db.js. */
   __s3db_original?: HookFunction<T>;
 };
 
@@ -139,17 +141,17 @@ export class ResourceHooks {
     }
 
     const hookFn = fn as BoundHookFunction;
-    const original = hookFn.__s3db_original || hookFn;
+    const original = hookFn.__baldin_original || hookFn.__s3db_original || hookFn;
     const bound = original.bind(this.resource) as BoundHookFunction;
 
     try {
-      Object.defineProperty(bound, '__s3db_original', {
+      Object.defineProperty(bound, '__baldin_original', {
         value: original,
         enumerable: false,
         configurable: true,
       });
     } catch (_) {
-      bound.__s3db_original = original;
+      bound.__baldin_original = original;
     }
 
     return bound;

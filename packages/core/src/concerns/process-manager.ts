@@ -1,11 +1,11 @@
-import { createLogger, S3DBLogger, LogLevel } from './logger.js';
+import { createLogger, BaldinLogger, LogLevel } from './logger.js';
 import { bumpProcessMaxListeners } from './process-max-listeners.js';
 
 export interface ProcessManagerOptions {
   logLevel?: LogLevel;
   shutdownTimeout?: number;
   exitOnSignal?: boolean;
-  logger?: S3DBLogger;
+  logger?: BaldinLogger;
 }
 
 export interface IntervalEntry {
@@ -40,8 +40,8 @@ export interface ShutdownOptions {
 }
 
 export class ProcessManager {
-  private options: Required<Omit<ProcessManagerOptions, 'logger'>> & { logger?: S3DBLogger };
-  private logger: S3DBLogger;
+  private options: Required<Omit<ProcessManagerOptions, 'logger'>> & { logger?: BaldinLogger };
+  private logger: BaldinLogger;
   private intervals: Map<string, IntervalEntry>;
   private timeouts: Map<string, TimeoutEntry>;
   private cleanups: Map<string, CleanupFn>;

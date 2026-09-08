@@ -17,14 +17,14 @@ export interface LockData {
 const DEFAULT_TTL_MS = 30000;
 const DEFAULT_NAMESPACE = 'default';
 
-export class S3Mutex {
+export class StorageMutex {
   protected storage: PluginStorage;
   protected namespace: string;
   protected holderId: string;
 
   constructor(storage: PluginStorage, namespace?: string) {
     if (!storage) {
-      throw new Error('S3Mutex: storage is required');
+      throw new Error('StorageMutex: storage is required');
     }
     this.storage = storage;
     this.namespace = namespace || DEFAULT_NAMESPACE;
@@ -39,7 +39,7 @@ export class S3Mutex {
     if (!key) {
       return {
         acquired: false,
-        error: new Error('S3Mutex: key is required')
+        error: new Error('StorageMutex: key is required')
       };
     }
 
@@ -225,4 +225,4 @@ export class S3Mutex {
   }
 }
 
-export default S3Mutex;
+export default StorageMutex;

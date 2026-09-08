@@ -42,8 +42,8 @@ export { Resource } from './resource.class.js';
 export { Schema, type SchemaRegistry } from './schema.class.js';
 export { Validator } from './validator.class.js';
 export { ConnectionString } from './connection-string.class.js';
-export { registerStorageAdapter, hasStorageAdapter } from './storage-adapter.js';
-export type { StorageAdapterContext, StorageAdapterFactory, Client } from './storage-adapter.js';
+export { registerStorageAdapter, hasStorageAdapter, resolveLegacyConnectionString } from './storage-adapter.js';
+export type { StorageAdapterContext, StorageAdapterFactory, StorageAdapterRegistrationOptions, LegacyConnectionStringResolver, Client } from './storage-adapter.js';
 
 // =============================================================================
 // Built-in storage adapter compatibility exports

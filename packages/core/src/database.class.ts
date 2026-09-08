@@ -8,7 +8,7 @@ import { ProcessManager } from './concerns/process-manager.js';
 import { SafeEventEmitter } from './concerns/safe-event-emitter.js';
 import { CronManager } from './concerns/cron-manager.js';
 import { createLogger, getLoggerOptionsFromEnv, type Logger } from './concerns/logger.js';
-import { createStorageClient } from './storage-adapter.js';
+import { createStorageClient, resolveLegacyConnectionString } from './storage-adapter.js';
 
 import { ThreadPool } from './concurrency/thread-pool.js';
 import { DatabaseHooks } from './database/database-hooks.class.js';
@@ -80,13 +80,8 @@ export type { ResourceApiConfig } from './database/database-resources.class.js';
 
 export interface DatabaseOptions {
   connectionString?: string;
-  bucket?: string;
-  region?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
-  sessionToken?: string;
-  endpoint?: string;
-  forcePathStyle?: boolean;
+  /** Adapter packages may define compatibility options consumed by their registry hooks. */
+  [adapterOption: string]: unknown;
   client?: Client;
   clientOptions?: ClientOptions;
   plugins?: PluginConstructor[];
@@ -286,32 +281,8 @@ export class Database extends SafeEventEmitter {
   }
 
   private _initializeClient(options: DatabaseOptions): void {
-    let connectionString = options.connectionString;
-    if (!connectionString && (options.bucket || options.accessKeyId || options.secretAccessKey)) {
-      const { bucket, region, accessKeyId, secretAccessKey, sessionToken, endpoint, forcePathStyle } = options;
-
-      if (endpoint) {
-        const url = new URL(endpoint);
-        if (accessKeyId) url.username = encodeURIComponent(accessKeyId);
-        if (secretAccessKey) url.password = encodeURIComponent(secretAccessKey);
-        if (sessionToken) url.searchParams.set('sessionToken', sessionToken);
-        url.pathname = `/${bucket || 's3db'}`;
-
-        if (forcePathStyle) {
-          url.searchParams.set('forcePathStyle', 'true');
-        }
-
-        connectionString = url.toString();
-      } else if (accessKeyId && secretAccessKey) {
-        const params = new URLSearchParams();
-        params.set('region', region || 'us-east-1');
-        if (sessionToken) params.set('sessionToken', sessionToken);
-        if (forcePathStyle) {
-          params.set('forcePathStyle', 'true');
-        }
-        connectionString = `s3://${encodeURIComponent(accessKeyId)}:${encodeURIComponent(secretAccessKey)}@${bucket || 's3db'}?${params.toString()}`;
-      }
-    }
+    const connectionString = options.connectionString
+      ?? resolveLegacyConnectionString(options as unknown as Record<string, unknown>);
 
     let mergedClientOptions: ClientOptions = { ...(options.clientOptions || {}) };
     let parsedConnection: ConnectionString | null = null;

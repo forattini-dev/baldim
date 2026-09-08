@@ -14,14 +14,14 @@ import type {
 } from './types.js';
 import type { SchemaRegistry, PluginSchemaRegistry } from '../schema.class.js';
 import type { PluginStorage } from '../plugins/concerns/plugin-storage.js';
-import type { S3Mutex, LockResult } from '../plugins/concerns/s3-mutex.class.js';
+import type { StorageMutex, LockResult } from '../plugins/concerns/storage-mutex.class.js';
 import tryFn from '../concerns/try-fn.js';
 
 export class DatabaseMetadata {
   private _metadataUploadPending: boolean;
   private _metadataUploadDebounce: ReturnType<typeof setTimeout> | null;
   private _pluginStorage: PluginStorage | null;
-  private _mutex: S3Mutex | null;
+  private _mutex: StorageMutex | null;
 
   constructor(private database: DatabaseRef) {
     this._metadataUploadPending = false;
@@ -44,38 +44,20 @@ export class DatabaseMetadata {
   private _requiresDistributedLock(): boolean {
     const client = this.database.client;
     if (!client) return false;
-
-    const connStr = client.connectionString || '';
-    if (
-      connStr.startsWith('file://') ||
-      connStr.startsWith('memory://') ||
-      connStr.startsWith('sqlite://')
-    ) {
-      return false;
-    }
-
-    if (client.config?.region === 'sqlite') {
-      return false;
-    }
-
-    const endpoint = client.config?.endpoint || '';
-    if (endpoint.startsWith('mock://')) {
-      return false;
-    }
-
-    return connStr.length > 0;
+    return client.capabilities?.distributedMetadataLock
+      ?? Boolean(client.connectionString);
   }
 
-  private async _getMutex(): Promise<S3Mutex | null> {
+  private async _getMutex(): Promise<StorageMutex | null> {
     if (!this._requiresDistributedLock()) {
       return null;
     }
     if (!this._mutex) {
-      const [{ S3Mutex }, storage] = await Promise.all([
-        import('../plugins/concerns/s3-mutex.class.js'),
+      const [{ StorageMutex }, storage] = await Promise.all([
+        import('../plugins/concerns/storage-mutex.class.js'),
         this._getPluginStorage()
       ]);
-      this._mutex = new S3Mutex(storage, 'metadata');
+      this._mutex = new StorageMutex(storage, 'metadata');
     }
     return this._mutex;
   }
@@ -466,7 +448,7 @@ export class DatabaseMetadata {
     this.database.emit('db:metadata-uploaded', localMetadata);
   }
 
-  private async _uploadMetadataWithLock(mutex: S3Mutex): Promise<void> {
+  private async _uploadMetadataWithLock(mutex: StorageMutex): Promise<void> {
     const maxRetries = 3;
     const lockTtl = 30000;
     let attempt = 0;

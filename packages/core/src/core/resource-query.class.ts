@@ -1,5 +1,5 @@
 import { tryFn } from '../concerns/try-fn.js';
-import { isNotFoundError } from '../concerns/s3-errors.js';
+import { isNotFoundError } from '../concerns/storage-errors.js';
 import { metadataEncode } from '../concerns/metadata-encoding.js';
 import { PartitionError, mapStorageError } from '../errors.js';
 import type { StringRecord } from '../types/common.types.js';
@@ -21,7 +21,7 @@ export interface ResourceConfig {
   partitions?: PartitionsConfig;
 }
 
-export interface S3Client {
+export interface StorageClient {
   count(params: { prefix: string }): Promise<number>;
   getKeysPage(params: { prefix: string; offset: number; amount: number }): Promise<string[]>;
   getContinuationTokenAfterOffset?(params: { prefix?: string; offset?: number }): Promise<string | null>;
@@ -104,7 +104,7 @@ export interface ResourceData extends StringRecord {
 
 export interface Resource {
   name: string;
-  client: S3Client;
+  client: StorageClient;
   config: ResourceConfig;
   observers: Observer[];
   schema: {
@@ -359,7 +359,7 @@ export class ResourceQuery {
     return enrichedValues;
   }
 
-  get client(): S3Client {
+  get client(): StorageClient {
     return this.resource.client;
   }
 

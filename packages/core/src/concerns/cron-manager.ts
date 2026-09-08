@@ -1,4 +1,4 @@
-import { createLogger, S3DBLogger, LogLevel } from './logger.js';
+import { createLogger, BaldinLogger, LogLevel } from './logger.js';
 import { bumpProcessMaxListeners } from './process-max-listeners.js';
 
 export interface CronManagerOptions {
@@ -6,7 +6,7 @@ export interface CronManagerOptions {
   shutdownTimeout?: number;
   exitOnSignal?: boolean;
   disabled?: boolean;
-  logger?: S3DBLogger;
+  logger?: BaldinLogger;
 }
 
 export interface CronJobEntry {
@@ -122,8 +122,8 @@ export const CRON_PRESETS = {
 } as const;
 
 export class CronManager {
-  private options: Required<Omit<CronManagerOptions, 'logger'>> & { logger?: S3DBLogger };
-  private logger: S3DBLogger;
+  private options: Required<Omit<CronManagerOptions, 'logger'>> & { logger?: BaldinLogger };
+  private logger: BaldinLogger;
   private jobs: Map<string, CronJobEntry>;
   private _cron: NodeCronModule | null;
   private _destroyed: boolean;
@@ -413,7 +413,7 @@ export class CronManager {
     const jobName = typeof name === 'string' ? name : String(name);
 
     if (!this.jobs.has(name)) {
-      (this.logger as { trace?: S3DBLogger['debug'] }).trace?.({ name: jobName }, `Job '${jobName}' not found`);
+      (this.logger as { trace?: BaldinLogger['debug'] }).trace?.({ name: jobName }, `Job '${jobName}' not found`);
       return false;
     }
 

@@ -13,14 +13,16 @@ export interface LoggerOptions {
   redactPatterns?: RegExp[];
 }
 
-export interface S3DBLogger extends PinoLogger {}
+export interface BaldinLogger extends PinoLogger {}
+/** @deprecated Use BaldinLogger. */
+export type S3DBLogger = BaldinLogger;
 
-export type Logger = S3DBLogger;
+export type Logger = BaldinLogger;
 
-let globalLogger: S3DBLogger | null = null;
+let globalLogger: BaldinLogger | null = null;
 let sharedPrettyTransport: ReturnType<typeof pino.transport> | null = null;
 let sharedDestination: DestinationStream | null = null;
-const namedLoggers: Map<string, S3DBLogger> = new Map();
+const namedLoggers: Map<string, BaldinLogger> = new Map();
 
 function serializeError(err: unknown): Record<string, unknown> | unknown {
   if (!err || typeof err !== 'object') {
@@ -83,7 +85,7 @@ function createDefaultTransport(): TransportSingleOptions | undefined {
   return createPrettyTransport();
 }
 
-export function createLogger(options: LoggerOptions = {}): S3DBLogger {
+export function createLogger(options: LoggerOptions = {}): BaldinLogger {
   const {
     level = 'info',
     name,
@@ -116,22 +118,22 @@ export function createLogger(options: LoggerOptions = {}): S3DBLogger {
     config.transport = createDefaultTransport();
   }
 
-  let logger: S3DBLogger;
+  let logger: BaldinLogger;
   if (destination) {
-    logger = pino({ ...config, name }, destination) as S3DBLogger;
+    logger = pino({ ...config, name }, destination) as BaldinLogger;
   } else {
-    logger = pino({ ...config, name }) as S3DBLogger;
+    logger = pino({ ...config, name }) as BaldinLogger;
   }
 
   const baseBindings = name ? { ...normalizedBindings, name } : normalizedBindings;
   if (baseBindings && Object.keys(baseBindings).length > 0) {
-    logger = logger.child(baseBindings) as S3DBLogger;
+    logger = logger.child(baseBindings) as BaldinLogger;
   }
 
   return logger;
 }
 
-export function getLogger(name: string, options: Omit<LoggerOptions, 'name'> = {}): S3DBLogger {
+export function getLogger(name: string, options: Omit<LoggerOptions, 'name'> = {}): BaldinLogger {
   const cached = namedLoggers.get(name);
   if (cached) {
     return cached;
@@ -142,7 +144,7 @@ export function getLogger(name: string, options: Omit<LoggerOptions, 'name'> = {
   return logger;
 }
 
-export function getGlobalLogger(options: LoggerOptions = {}): S3DBLogger {
+export function getGlobalLogger(options: LoggerOptions = {}): BaldinLogger {
   if (!globalLogger) {
     globalLogger = createLogger(options);
   }

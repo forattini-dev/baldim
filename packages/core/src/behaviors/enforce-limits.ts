@@ -10,13 +10,15 @@ import type {
   BehaviorGetResult
 } from './types.js';
 
-export const S3_METADATA_LIMIT_BYTES = 2047;
+export const DEFAULT_METADATA_LIMIT_BYTES = 2047;
+/** @deprecated Use DEFAULT_METADATA_LIMIT_BYTES. */
+export const S3_METADATA_LIMIT_BYTES = DEFAULT_METADATA_LIMIT_BYTES;
 
 export async function handleInsert({ resource, data, mappedData }: BehaviorHandleInsertParams): Promise<BehaviorResult> {
   const totalSize = calculateTotalSize(mappedData);
 
   const effectiveLimit = calculateEffectiveLimit({
-    s3Limit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+    storageLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
     systemConfig: {
       version: resource.version,
       timestamps: resource.config.timestamps,
@@ -28,7 +30,7 @@ export async function handleInsert({ resource, data, mappedData }: BehaviorHandl
     throw new MetadataLimitError('Metadata size exceeds 2KB limit on insert', {
       totalSize,
       effectiveLimit,
-      absoluteLimit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+      absoluteLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
       excess: totalSize - effectiveLimit,
       resourceName: resource.name,
       operation: 'insert'
@@ -42,7 +44,7 @@ export async function handleUpdate({ resource, id, mappedData }: BehaviorHandleU
   const totalSize = calculateTotalSize(mappedData);
 
   const effectiveLimit = calculateEffectiveLimit({
-    s3Limit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+    storageLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
     systemConfig: {
       version: resource.version,
       timestamps: resource.config.timestamps,
@@ -54,7 +56,7 @@ export async function handleUpdate({ resource, id, mappedData }: BehaviorHandleU
     throw new MetadataLimitError('Metadata size exceeds 2KB limit on update', {
       totalSize,
       effectiveLimit,
-      absoluteLimit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+      absoluteLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
       excess: totalSize - effectiveLimit,
       resourceName: resource.name,
       operation: 'update',
@@ -68,7 +70,7 @@ export async function handleUpsert({ resource, id, mappedData }: BehaviorHandleU
   const totalSize = calculateTotalSize(mappedData);
 
   const effectiveLimit = calculateEffectiveLimit({
-    s3Limit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+    storageLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
     systemConfig: {
       version: resource.version,
       timestamps: resource.config.timestamps,
@@ -80,7 +82,7 @@ export async function handleUpsert({ resource, id, mappedData }: BehaviorHandleU
     throw new MetadataLimitError('Metadata size exceeds 2KB limit on upsert', {
       totalSize,
       effectiveLimit,
-      absoluteLimit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+      absoluteLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
       excess: totalSize - effectiveLimit,
       resourceName: resource.name,
       operation: 'upsert',

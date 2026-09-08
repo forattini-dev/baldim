@@ -146,6 +146,7 @@ function decodeBody(encoded: string | undefined, encoding: string | undefined): 
  */
 export class RedDbClient extends EventEmitter {
   id: string;
+  readonly capabilities = { distributedMetadataLock: true } as const;
   logLevel: string;
   private logger: Logger;
   private taskExecutorMonitoring: MonitoringConfig | null;

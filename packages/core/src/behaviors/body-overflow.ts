@@ -1,6 +1,6 @@
 import { calculateTotalSize, calculateAttributeSizes, calculateUTF8Bytes } from '../concerns/calculator.js';
 import { calculateEffectiveLimit } from '../concerns/calculator.js';
-import { S3_METADATA_LIMIT_BYTES } from './enforce-limits.js';
+import { DEFAULT_METADATA_LIMIT_BYTES } from './enforce-limits.js';
 import { tryFnSync } from '../concerns/try-fn.js';
 import type { StringRecord } from '../types/common.types.js';
 import type {
@@ -18,7 +18,7 @@ const OVERFLOW_FLAG_BYTES = calculateUTF8Bytes(OVERFLOW_FLAG) + calculateUTF8Byt
 
 export async function handleInsert({ resource, data, mappedData }: BehaviorHandleInsertParams): Promise<BehaviorResult> {
   const effectiveLimit = calculateEffectiveLimit({
-    s3Limit: resource.metadataLimit ?? S3_METADATA_LIMIT_BYTES,
+    storageLimit: resource.metadataLimit ?? DEFAULT_METADATA_LIMIT_BYTES,
     systemConfig: {
       version: resource.version,
       timestamps: resource.config.timestamps,

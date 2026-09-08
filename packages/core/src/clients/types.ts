@@ -248,11 +248,16 @@ export interface StorageListParams {
   startAfter?: string | null;
 }
 
+export interface ClientCapabilities {
+  distributedMetadataLock?: boolean;
+}
+
 export interface Client extends EventEmitter {
   id: string;
   config: ClientConfig;
   connectionString: string;
   supportsPartitionIndex?: boolean;
+  capabilities?: ClientCapabilities;
   runInTransaction?<T>(fn: () => Promise<T> | T): Promise<T>;
   isInTransaction?(): boolean;
 

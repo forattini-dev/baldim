@@ -205,3 +205,15 @@ export interface HandleOptions {
   requestTimeout?: number;
 }
 
+
+
+/** Compatibility options accepted by Baldin when this adapter is imported. */
+export interface LegacyS3DatabaseOptions {
+  bucket?: string;
+  region?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  sessionToken?: string;
+  endpoint?: string;
+  forcePathStyle?: boolean;
+}

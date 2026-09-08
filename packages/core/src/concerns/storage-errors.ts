@@ -1,11 +1,11 @@
 /**
- * S3 Error Classification Utilities
+ * Storage Error Classification Utilities
  *
- * Provides consistent error classification across all S3 operations.
- * Handles differences between AWS SDK v3, MinIO, and other S3-compatible clients.
+ * Provides consistent error classification across storage operations.
+ * Handles common HTTP, SDK, filesystem, and database error shapes.
  */
 
-interface S3ErrorLike {
+interface StorageErrorLike {
   name?: string;
   code?: string;
   Code?: string;
@@ -18,12 +18,12 @@ interface S3ErrorLike {
 
 /**
  * Checks if an error indicates the object/resource was not found.
- * Handles various S3 client error formats (AWS SDK v3, MinIO, etc.)
+ * Handles common provider and transport error formats
  */
 export function isNotFoundError(error: unknown): boolean {
   if (!error) return false;
 
-  const err = error as S3ErrorLike;
+  const err = error as StorageErrorLike;
 
   return (
     err.name === 'NoSuchKey' ||
@@ -44,7 +44,7 @@ export function isNotFoundError(error: unknown): boolean {
 export function isAccessDeniedError(error: unknown): boolean {
   if (!error) return false;
 
-  const err = error as S3ErrorLike;
+  const err = error as StorageErrorLike;
 
   return (
     err.name === 'AccessDenied' ||
@@ -61,7 +61,7 @@ export function isAccessDeniedError(error: unknown): boolean {
 export function isTransientError(error: unknown): boolean {
   if (!error) return false;
 
-  const err = error as S3ErrorLike;
+  const err = error as StorageErrorLike;
   const statusCode = err.statusCode || err.$metadata?.httpStatusCode;
 
   if (statusCode && statusCode >= 500 && statusCode < 600) {

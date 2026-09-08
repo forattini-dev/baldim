@@ -1,8 +1,8 @@
 import { join } from 'path';
 import { tryFn } from '../concerns/try-fn.js';
 import { mapWithConcurrency } from '../concerns/map-with-concurrency.js';
-import { isNotFoundError } from '../concerns/s3-errors.js';
-import { validateS3KeySegment } from '../concerns/s3-key.js';
+import { isNotFoundError } from '../concerns/storage-errors.js';
+import { validateStorageKeySegment } from '../concerns/storage-key.js';
 import { mapStorageError, PartitionError, ResourceError } from '../errors.js';
 import type { StringRecord } from '../types/common.types.js';
 
@@ -22,7 +22,7 @@ export interface ResourceConfig {
   partitions?: PartitionsConfig;
 }
 
-export interface S3Client {
+export interface StorageClient {
   supportsPartitionIndex?: boolean;
   putObject(params: {
     key: string;
@@ -55,7 +55,7 @@ export interface ResourceData extends StringRecord {
 export interface Resource {
   name: string;
   version: number;
-  client: S3Client;
+  client: StorageClient;
   config: ResourceConfig;
   attributes: StringRecord;
 
@@ -671,11 +671,11 @@ export class ResourcePartitions {
   }
 
   async getFromPartition({ id, partitionName, partitionValues = {} }: GetFromPartitionParams): Promise<ResourceData> {
-    validateS3KeySegment(id, 'id');
+    validateStorageKeySegment(id, 'id');
 
     for (const [fieldName, value] of Object.entries(partitionValues)) {
       if (value !== undefined && value !== null) {
-        validateS3KeySegment(value, `partitionValues.${fieldName}`);
+        validateStorageKeySegment(value, `partitionValues.${fieldName}`);
       }
     }
 

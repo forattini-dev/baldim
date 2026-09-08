@@ -4,6 +4,8 @@ import BaldinDefault, {
   BuckieDB,
   Database,
   S3db,
+  StorageError,
+  S3dbError,
   decode,
   encode,
 } from '@baldin/core';
@@ -27,6 +29,16 @@ describe('@baldin/core public API', () => {
   it('keeps the old public names as migration aliases', () => {
     expect(new BuckieDB({ connectionString: 'memory://name-compat', logLevel: 'silent' })).toBeInstanceOf(Baldin);
     expect(new S3db({ connectionString: 'memory://compat-test', logLevel: 'silent' })).toBeInstanceOf(Baldin);
+  });
+
+  it('keeps the canonical storage error compatible with the old class name', () => {
+    const error = new StorageError('provider failed', {
+      original: { name: 'ProviderFailure', message: 'low-level failure' },
+    });
+
+    expect(error).toBeInstanceOf(S3dbError);
+    expect(error.providerMessage).toBe('low-level failure');
+    expect(error.awsMessage).toBe('low-level failure');
   });
 
   it('performs a document lifecycle through the memory client', async () => {
