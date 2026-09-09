@@ -50,12 +50,10 @@ Original project and data remain unchanged. Source license: Unlicense.
 
 1. Run the storage contract against configured AWS S3/R2 targets outside pull requests.
 2. Extend the contract to RedDB and remote SQLite test services.
-3. Migrate the remaining plugin families one package at a time with their
-   relevant original tests.
-4. Add baseline compatibility fixtures for S3-compatible and SQLite storage; the
+3. Add baseline compatibility fixtures for S3-compatible and SQLite storage; the
    filesystem fixture already covers schema metadata, bodies, partitions, and manifest.
-5. Continue migrating shared utilities; testing and TypeScript generation are already public packages.
-6. Migrate the CLI and MCP server after their plugin dependencies have package homes.
+4. Continue migrating shared utilities; testing and TypeScript generation are already public packages.
+5. Migrate the CLI and MCP server now that every plugin dependency has a package home.
 
 ## Dependency rules
 
@@ -77,7 +75,7 @@ dependencies and release independently.
 
 ## Status and limits
 
-The core, manager, storage adapters, 31 standalone plugins, testing utilities, and type generation are working package slices. The
+The core, manager, storage adapters, all 32 standalone plugins, testing utilities, and type generation are working package slices. The
 full plugin, adapter, CLI, MCP, utilities, and compatibility-suite migration is
 incomplete. No npm package has been published and the `@baldin` scope has not
 been registered.

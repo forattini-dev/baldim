@@ -5,8 +5,8 @@ A small document database for object storage — being rebuilt from s3db.js as a
 **Status: core migration.** The database engine behind the former `s3db.js/lite`
 entrypoint now runs as `@baldin/core`. Database CRUD, schemas, resources,
 multidatabase management, behaviors, streams, and concurrency are present. The S3
-adapters and the first standalone plugins have been extracted; the remaining plugin catalog,
-provider contract cleanup, CLI, and MCP still need migration.
+adapters and all 32 standalone plugin families have been extracted; provider contract
+coverage, CLI, MCP, and remaining public utilities still need migration.
 
 This is not yet a feature-complete replacement for `s3db.js`. The tracked gaps
 and completion criteria live in the [parity audit](docs/parity-audit.md).
@@ -86,6 +86,7 @@ and dependency rules.
 | plugins/replicator | @baldin/plugin-replicator | Database, queue, and webhook replication with target clients owned by the plugin |
 | plugins/cloud-inventory | @baldin/plugin-cloud-inventory | AWS, Azure, GCP, and eight additional provider inventories with snapshots, diffs, scheduling, and Terraform export |
 | plugins/spider | @baldin/plugin-spider | Recker crawling, discovery, browser analysis, and memory, database, SQS, RabbitMQ, Redis, BullMQ, filesystem, and proxy backends |
+| plugins/recon | @baldin/plugin-recon | Passive, stealth, and active reconnaissance with RedBlue/Recker stages, reporting, scheduling, and uptime monitoring |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |

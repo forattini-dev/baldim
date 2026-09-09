@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "verbatimModuleSyntax": false,
+    "types": ["node"],
+    "paths": {
+      "@baldin/plugin-recon": ["./src/index.ts"],
+      "@baldin/plugin-recon/stages": ["./src/recon/stages/index.ts"],
+      "@baldin/plugin-recon/concerns": ["./src/recon/concerns/index.ts"],
+      "@baldin/plugin-recon/behaviors": ["./src/recon/behaviors/index.ts"],
+      "@baldin/plugin-recon/managers": ["./src/recon/managers/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "tests/type-contract.ts"]
+}

@@ -82,6 +82,7 @@ jobs:
           pnpm --filter @baldin/plugin-replicator pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-cloud-inventory pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-spider pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-recon pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify S3 and Tfstate package isolation
@@ -404,6 +405,35 @@ jobs:
           assert.equal(typeof createCrawlQueue, 'function');
           await database.disconnect();
           JS
+      - name: Verify Recon package isolation
+        shell: bash
+        run: |
+          consumer="$(mktemp -d)"
+          cd "$consumer"
+          npm init -y
+          npm install --ignore-scripts --no-audit --no-fund \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-recon-*.tgz
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { Baldin } from '@baldin/core';
+          import { ReconPlugin } from '@baldin/plugin-recon';
+          import { DnsStage } from '@baldin/plugin-recon/stages';
+          import { TargetNormalizer } from '@baldin/plugin-recon/concerns';
+
+          const database = new Baldin({ connectionString: 'memory://recon-package', logLevel: 'silent' });
+          const recon = new ReconPlugin({ behavior: 'passive', logLevel: 'silent' });
+          recon.commandRunner.isRedBlueAvailable = async () => false;
+          await database.connect();
+          await database.usePlugin(recon, 'recon');
+          const target = await recon.addTarget('example.com');
+          assert.equal(recon.initialized, true);
+          assert.equal(target.host, 'example.com');
+          assert.equal(typeof DnsStage, 'function');
+          assert.equal(typeof TargetNormalizer, 'function');
+          await database.disconnect();
+          JS
       - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
@@ -444,6 +474,7 @@ jobs:
           replicator_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-replicator-*.tgz)
           cloud_inventory_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cloud-inventory-*.tgz)
           spider_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-spider-*.tgz)
+          recon_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-recon-*.tgz)
           testing_package=("$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz)
           typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz)
           test "${#core[@]}" -eq 1
@@ -483,6 +514,7 @@ jobs:
           test "${#replicator_plugin[@]}" -eq 1
           test "${#cloud_inventory_plugin[@]}" -eq 1
           test "${#spider_plugin[@]}" -eq 1
+          test "${#recon_plugin[@]}" -eq 1
           test "${#testing_package[@]}" -eq 1
           test "${#typegen_package[@]}" -eq 1
           if tar -tzf "${core[0]}" | grep -Eq 'package/dist/clients/(filesystem|memory|reddb|sqlite|remote-sqlite|d1|libsql)'; then
@@ -492,7 +524,7 @@ jobs:
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${api_plugin[0]}" "${identity_plugin[0]}" "${websocket_plugin[0]}" "${puppeteer_plugin[0]}" "${cookie_farm_plugin[0]}" "${cookie_farm_suite_plugin[0]}" "${kubernetes_inventory_plugin[0]}" "${ml_plugin[0]}" "${replicator_plugin[0]}" "${cloud_inventory_plugin[0]}" "${spider_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${api_plugin[0]}" "${identity_plugin[0]}" "${websocket_plugin[0]}" "${puppeteer_plugin[0]}" "${cookie_farm_plugin[0]}" "${cookie_farm_suite_plugin[0]}" "${kubernetes_inventory_plugin[0]}" "${ml_plugin[0]}" "${replicator_plugin[0]}" "${cloud_inventory_plugin[0]}" "${spider_plugin[0]}" "${recon_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -531,6 +563,7 @@ jobs:
           import { ReplicatorPlugin } from '@baldin/plugin-replicator';
           import { CloudInventoryPlugin } from '@baldin/plugin-cloud-inventory';
           import { SpiderPlugin } from '@baldin/plugin-spider';
+          import { ReconPlugin } from '@baldin/plugin-recon';
           import { Factory, Seeder } from '@baldin/testing';
           import { printTypes } from '@baldin/typegen';
           import { MemoryClient } from '@baldin/adapter-memory';
@@ -576,6 +609,7 @@ jobs:
           assert.equal(typeof new ReplicatorPlugin({ replicators: [{ driver: 'baldin', client: {}, resources: ['users'] }] }).start, 'function');
           assert.equal(typeof new CloudInventoryPlugin({ clouds: [{ id: 'packed', driver: 'aws', credentials: {} }] }).syncCloud, 'function');
           assert.equal(typeof new SpiderPlugin({ puppeteer: { enabled: false }, queue: { autoStart: false } }).crawl, 'function');
+          assert.equal(typeof new ReconPlugin({ behavior: 'passive' }).scan, 'function');
 
           const database = new Baldin({ connectionString: 'memory://pack-smoke', logLevel: 'silent' });
           await database.connect();

@@ -1,0 +1,220 @@
+
+import { ReconPlugin } from '../src/index.js';
+
+describe('ReconPlugin - Behavior Modes', () => {
+  let emitSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    if (emitSpy) {
+      emitSpy.mockRestore();
+    }
+  });
+
+  describe('Passive Mode', () => {
+    test('applies passive preset with correct features', () => {
+      const plugin = new ReconPlugin({
+      logLevel: 'silent',behavior: 'passive',
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.behavior).toBe('passive');
+      expect(plugin.config.concurrency).toBe(2);
+      expect(plugin.config.features.dns).toBe(true);
+      expect(plugin.config.features.certificate).toBe(false);
+      expect(plugin.config.features.http).toBe(false);
+      expect(plugin.config.features.latency.ping).toBe(false);
+      expect(plugin.config.features.latency.traceroute).toBe(false);
+      expect(plugin.config.features.subdomains.enabled).toBe(true);
+      expect(plugin.config.features.subdomains.checkTakeover).toBe(false);
+      expect(plugin.config.features.subdomains.maxSubdomains).toBe(20);
+      expect(plugin.config.features.ports.enabled).toBe(false);
+      expect(plugin.config.features.osint.emails).toBe(true);
+      expect(plugin.config.rateLimit.enabled).toBe(false);
+    });
+
+    test('emits behavior-applied event', async () => {
+      emitSpy = vi.spyOn(ReconPlugin.prototype, 'emit');
+
+      new ReconPlugin({
+      logLevel: 'silent',behavior: 'passive',
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      // Wait for setTimeout to complete
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(emitSpy).toHaveBeenCalledWith('recon:behavior-applied', expect.objectContaining({
+        mode: 'passive',
+        preset: expect.any(Object),
+        overrides: expect.any(Object),
+        final: expect.any(Object)
+      }));
+    });
+
+    test('allows behaviorOverrides to enable specific features', () => {
+      const plugin = new ReconPlugin({
+      logLevel: 'silent',behavior: 'passive',
+        behaviorOverrides: {
+          features: {
+            certificate: true // override passive default
+          }
+        },
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.features.certificate).toBe(true);
+      expect(plugin.config.features.http).toBe(false); // still passive
+    });
+  });
+
+  describe('Stealth Mode', () => {
+    test('applies stealth preset with rate limiting', () => {
+      const plugin = new ReconPlugin({
+      logLevel: 'silent',behavior: 'stealth',
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.behavior).toBe('stealth');
+      expect(plugin.config.concurrency).toBe(1);
+      expect(plugin.config.features.dns).toBe(true);
+      expect(plugin.config.features.certificate).toBe(true);
+      expect(plugin.config.features.http).toBe(true);
+      expect(plugin.config.features.latency.ping).toBe(true);
+      expect(plugin.config.features.latency.traceroute).toBe(false); // noisy
+      expect(plugin.config.features.subdomains.enabled).toBe(true);
+      expect(plugin.config.features.subdomains.checkTakeover).toBe(true);
+      expect(plugin.config.features.subdomains.maxSubdomains).toBe(30);
+      expect(plugin.config.features.ports.enabled).toBe(true);
+      expect(plugin.config.features.ports.topPorts).toBe(20);
+      expect(plugin.config.features.vulnerability.enabled).toBe(false);
+      expect(plugin.config.rateLimit.enabled).toBe(true);
+      expect(plugin.config.rateLimit.requestsPerMinute).toBe(10);
+      expect(plugin.config.rateLimit.delayBetweenStages).toBe(5000);
+    });
+
+    test('has rate limiting configuration enabled', () => {
+      const plugin = new ReconPlugin({
+        logLevel: 'silent',
+        behavior: 'stealth',
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.rateLimit).toBeDefined();
+      expect(plugin.config.rateLimit.enabled).toBe(true);
+      expect(plugin.config.rateLimit.delayBetweenStages).toBe(5000);
+    });
+  });
+
+  describe('Aggressive Mode', () => {
+    test('applies aggressive preset with all tools enabled', () => {
+      const plugin = new ReconPlugin({
+      logLevel: 'silent',behavior: 'aggressive',
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.behavior).toBe('aggressive');
+      expect(plugin.config.concurrency).toBe(8);
+      expect(plugin.config.features.dns).toBe(true);
+      expect(plugin.config.features.certificate).toBe(true);
+      expect(plugin.config.features.http).toBe(true);
+      expect(plugin.config.features.latency.ping).toBe(true);
+      expect(plugin.config.features.latency.traceroute).toBe(true);
+      expect(plugin.config.features.subdomains.enabled).toBe(true);
+      expect(plugin.config.features.subdomains.checkTakeover).toBe(true);
+      expect(plugin.config.features.subdomains.maxSubdomains).toBe(100);
+      expect(plugin.config.features.ports.enabled).toBe(true);
+      expect(plugin.config.features.ports.topPorts).toBe(1000);
+      expect(plugin.config.features.web.enabled).toBe(true);
+      expect(plugin.config.features.web.threads).toBe(100);
+      expect(plugin.config.features.vulnerability.enabled).toBe(true);
+      expect(plugin.config.features.vulnerability.aggressive).toBe(true);
+      expect(plugin.config.features.tlsAudit.enabled).toBe(true);
+      expect(plugin.config.features.fingerprint.enabled).toBe(true);
+      expect(plugin.config.features.fingerprint.intel).toBe(true);
+      expect(plugin.config.features.screenshots.enabled).toBe(false);
+      expect(plugin.config.features.googleDorks.enabled).toBe(true);
+      expect(plugin.config.features.googleDorks.maxResults).toBe(20);
+      expect(plugin.config.rateLimit.enabled).toBe(false);
+    });
+
+    test('has rate limiting disabled', () => {
+      const plugin = new ReconPlugin({
+        logLevel: 'silent',
+        behavior: 'aggressive',
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.rateLimit).toBeDefined();
+      expect(plugin.config.rateLimit.enabled).toBe(false);
+    });
+  });
+
+  describe('Default Mode (no behavior)', () => {
+    test('uses default features when no behavior is set', () => {
+      const plugin = new ReconPlugin({
+      logLevel: 'silent',storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.behavior).toBe('default');
+      expect(plugin.config.concurrency).toBe(4);
+      expect(plugin.config.features.dns).toBe(true);
+      expect(plugin.config.features.subdomains.enabled).toBe(true);
+      expect(plugin.config.features.ports.enabled).toBe(true);
+    });
+  });
+
+  describe('Manual Overrides', () => {
+    test('manual config overrides behavior preset', () => {
+      const plugin = new ReconPlugin({
+      logLevel: 'silent',behavior: 'passive',
+        concurrency: 10, // override passive default (2)
+        ping: { count: 10, timeout: 20000 },
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.concurrency).toBe(10);
+      expect(plugin.config.ping.count).toBe(10);
+      expect(plugin.config.ping.timeout).toBe(20000);
+    });
+
+    test('features param overrides behavior features', () => {
+      const plugin = new ReconPlugin({
+      logLevel: 'silent',behavior: 'stealth',
+        features: {
+          latency: { traceroute: true } // enable traceroute in stealth mode
+        },
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.features.latency.traceroute).toBe(true);
+      expect(plugin.config.features.latency.ping).toBe(true); // still stealth default
+    });
+  });
+
+  describe('Invalid Behavior', () => {
+    test('ignores invalid behavior mode', () => {
+      const plugin = new ReconPlugin({
+      logLevel: 'silent',behavior: 'invalid-mode',
+        storage: { persist: false },
+        resources: { persist: false }
+      });
+
+      expect(plugin.config.behavior).toBe('invalid-mode');
+      expect(plugin.config.concurrency).toBe(4); // falls back to default
+    });
+  });
+});
