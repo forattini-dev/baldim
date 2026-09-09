@@ -1,0 +1,56 @@
+name: Provider contracts
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BALDIN_AWS_S3_CONTRACT_URL: ${{ secrets.BALDIN_AWS_S3_CONTRACT_URL }}
+      BALDIN_R2_CONTRACT_URL: ${{ secrets.BALDIN_R2_CONTRACT_URL }}
+      BALDIN_REDDB_CONTRACT_URL: ${{ secrets.BALDIN_REDDB_CONTRACT_URL }}
+      BALDIN_REDDB_COLLECTION: ${{ secrets.BALDIN_REDDB_COLLECTION }}
+      BALDIN_REDDB_AUTH_TOKEN: ${{ secrets.BALDIN_REDDB_AUTH_TOKEN }}
+      BALDIN_REDDB_WRITE_TOKEN: ${{ secrets.BALDIN_REDDB_WRITE_TOKEN }}
+      BALDIN_LIBSQL_TEST_URL: ${{ secrets.BALDIN_LIBSQL_TEST_URL }}
+      BALDIN_LIBSQL_AUTH_TOKEN: ${{ secrets.BALDIN_LIBSQL_AUTH_TOKEN }}
+      BALDIN_D1_ACCOUNT_ID: ${{ secrets.BALDIN_D1_ACCOUNT_ID }}
+      BALDIN_D1_DATABASE_ID: ${{ secrets.BALDIN_D1_DATABASE_ID }}
+      BALDIN_D1_API_TOKEN: ${{ secrets.BALDIN_D1_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: AWS S3 contract and persisted fixture
+        if: ${{ env.BALDIN_AWS_S3_CONTRACT_URL != '' }}
+        env:
+          BALDIN_S3_CONTRACT_URL: ${{ env.BALDIN_AWS_S3_CONTRACT_URL }}
+        run: pnpm --filter @baldin/adapter-s3 exec vitest run tests/storage-contract.test.ts tests/compatibility.test.ts
+      - name: Cloudflare R2 contract and persisted fixture
+        if: ${{ env.BALDIN_R2_CONTRACT_URL != '' }}
+        env:
+          BALDIN_S3_CONTRACT_URL: ${{ env.BALDIN_R2_CONTRACT_URL }}
+        run: pnpm --filter @baldin/adapter-s3 exec vitest run tests/storage-contract.test.ts tests/compatibility.test.ts
+      - name: RedDB contract
+        if: ${{ env.BALDIN_REDDB_CONTRACT_URL != '' }}
+        run: pnpm --filter @baldin/adapter-reddb exec vitest run tests/reddb-http-contract.test.ts
+      - name: libSQL contract
+        if: ${{ env.BALDIN_LIBSQL_TEST_URL != '' }}
+        run: pnpm --filter @baldin/adapter-sqlite exec vitest run tests/remote-sqlite.test.ts
+      - name: Cloudflare D1 contract
+        if: ${{ env.BALDIN_D1_ACCOUNT_ID != '' && env.BALDIN_D1_DATABASE_ID != '' && env.BALDIN_D1_API_TOKEN != '' }}
+        run: pnpm --filter @baldin/adapter-sqlite exec vitest run tests/remote-sqlite.test.ts
+      - name: Require at least one configured provider
+        if: ${{ env.BALDIN_AWS_S3_CONTRACT_URL == '' && env.BALDIN_R2_CONTRACT_URL == '' && env.BALDIN_REDDB_CONTRACT_URL == '' && env.BALDIN_LIBSQL_TEST_URL == '' && (env.BALDIN_D1_ACCOUNT_ID == '' || env.BALDIN_D1_DATABASE_ID == '' || env.BALDIN_D1_API_TOKEN == '') }}
+        run: |
+          echo 'Configure at least one provider-contract secret before dispatching this workflow.'
+          exit 1

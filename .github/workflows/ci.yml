@@ -41,7 +41,7 @@ jobs:
             fi
             sleep 1
           done
-          pnpm --filter @baldin/adapter-s3 exec vitest run tests/storage-contract.test.ts
+          pnpm --filter @baldin/adapter-s3 exec vitest run tests/storage-contract.test.ts tests/compatibility.test.ts
       - name: Pack public packages
         run: |
           mkdir -p "$GITHUB_WORKSPACE/artifacts"
@@ -108,6 +108,29 @@ jobs:
           assert.equal(typeof FilesystemTfStateDriver, 'function');
           assert.equal(typeof S3TfStateDriver, 'function');
           assert.equal(typeof TfStatePlugin, 'function');
+          JS
+      - name: Verify RedDB package isolation
+        shell: bash
+        run: |
+          consumer="$(mktemp -d)"
+          cd "$consumer"
+          npm init -y
+          npm install --ignore-scripts --no-audit --no-fund \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-utils-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-reddb-*.tgz
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { RedDbClient } from '@baldin/adapter-reddb';
+
+          const client = new RedDbClient({
+            baseUrl: 'http://127.0.0.1:8080',
+            collection: 'packed',
+            logLevel: 'silent',
+          });
+          assert.equal(client.config.region, 'reddb');
+          await client.destroy();
           JS
       - name: Verify API package isolation
         shell: bash

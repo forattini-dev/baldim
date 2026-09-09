@@ -21,6 +21,17 @@ contracts or belong to the S3 adapter.
 - Identity accepts the historical `s3db$` client-secret hash prefix so persisted
   OAuth clients remain usable. New Identity defaults and public endpoints use Baldin names.
 
+Compatibility is checked from provider-native fixtures produced by the unmodified
+`s3db.js` 21.6.2 baseline:
+
+- a filesystem directory containing the manifest, records, and partition keys;
+- an actual SQLite database file, opened and hashed before and after the Baldin read;
+- an exact S3 object capture, seeded directly into MinIO and compared by key, ETag,
+  and size before and after the Baldin read.
+
+These fixtures are immutable test inputs. Their historical names are persisted data,
+so they are not renamed as part of the package migration.
+
 ## Operational configuration
 
 New deployments should use `BALDIN_*`. Every former `S3DB_*` environment variable
@@ -35,3 +46,8 @@ uses `Baldin`, `StorageError`, `mapStorageError`, `StorageObject`,
 
 Provider names in `@baldin/adapter-s3` are current domain names for that package and
 do not leak storage selection or provider behavior into `@baldin/core`.
+
+Raffel is a direct runtime dependency only in the API, Identity, WebSocket, and SMTP
+plugins because each imports its HTTP or WebSocket primitives. It is absent from
+core and every storage adapter. RedDB uses its public HTTP API through the neutral
+HTTP utility in `@baldin/utils`.

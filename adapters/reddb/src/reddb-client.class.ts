@@ -3,24 +3,15 @@ import EventEmitter from 'events';
 import { createHash } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { chunk } from 'lodash-es';
-import {
-  createRedDbClient,
-  type RedDbClient as ReckerRedDbNativeClient,
-  type RedDbEntityData as ReckerRedDbEntityData,
-  type RedDbOperationEnvelope,
-  type RedDbQueryData,
-  type RedDbTransportMode,
-} from 'recker';
 
 import { tryFn } from '@baldin/core/adapter';
 import { idGenerator } from '@baldin/core/adapter';
 import { metadataEncode, metadataDecode } from '@baldin/core/adapter';
-import { createHttpClient } from './http-client.js';
+import { createHttpClient, type HttpClient } from '@baldin/utils/http-client';
 import { DatabaseError, NoSuchKey, ResourceError } from '@baldin/core/adapter';
 import { TasksRunner } from '@baldin/core/adapter';
 import { createLogger } from '@baldin/core/adapter';
 import type { LogLevel } from '@baldin/core/adapter';
-import type { HttpClient } from './http-client.js';
 import type { RedDbClientConfig } from './reddb-types.js';
 import type {
   Logger,
@@ -68,31 +59,6 @@ interface RedDbMutationResponse {
   deleted?: boolean;
 }
 
-interface RedDbRecord {
-  _entity_id?: number;
-  _collection?: string;
-  _kind?: string;
-  [key: string]: unknown;
-}
-
-interface RedDbPrefixPage {
-  items: RedDbEntity[];
-  hasMore: boolean;
-}
-
-interface NativeDeleteBatchResult {
-  Deleted: StorageDeleteObjectsResponse['Deleted'];
-  Errors: StorageDeleteObjectsResponse['Errors'];
-}
-
-function escapeSqlIdentifier(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
-}
-
-function escapeSqlLiteral(value: string): string {
-  return `'${value.replace(/'/g, "''")}'`;
-}
-
 function toSafeNumber(value: unknown): number | undefined {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string' && value.trim()) {
@@ -100,10 +66,6 @@ function toSafeNumber(value: unknown): number | undefined {
     if (Number.isFinite(parsed)) return parsed;
   }
   return undefined;
-}
-
-function isNotFoundLike(error: unknown): boolean {
-  return error instanceof Error && (error.name === 'NotFoundError' || /not found/i.test(error.message));
 }
 
 function generateETag(body: unknown): string {
@@ -137,8 +99,7 @@ function decodeBody(encoded: string | undefined, encoding: string | undefined): 
 /**
  * RedDB client for Baldin
  *
- * Maps the Baldin storage interface to RedDB using Recker's V2
- * transport-aware client, with HTTP fallback retained for compatibility.
+ * Maps the Baldin storage interface to RedDB's public HTTP API.
  * Each object is stored as a RedDB row with _key, _body, _content_type,
  * _content_encoding, _etag fields. Object metadata maps to RedDB metadata.
  *
@@ -152,12 +113,6 @@ export class RedDbClient extends EventEmitter {
   private taskExecutorMonitoring: MonitoringConfig | null;
   private taskManager: TaskManager;
   private _httpClient: HttpClient | null;
-  private _nativeClient: ReckerRedDbNativeClient | null;
-  private _ensureIndexesEnabled: boolean;
-  private _warmupIndexes: boolean;
-  private _indexTransport?: RedDbTransportMode;
-  private _indexPrimePromise: Promise<void> | null;
-  private _indexesPrimed: boolean;
   private timeout: number;
   private baseUrl: string;
   private authToken: string | undefined;
@@ -207,33 +162,6 @@ export class RedDbClient extends EventEmitter {
     this.keyPrefix = config.keyPrefix || '';
     this._keyPrefixForStrip = this.keyPrefix ? pathPosix.join(this.keyPrefix, '') : '';
     this._httpClient = null;
-    this._nativeClient = createRedDbClient({
-      baseUrl: this.baseUrl,
-      authToken: this.authToken,
-      writeToken: this.writeToken,
-      transport: config.transport,
-      allowTransportFallback: config.allowTransportFallback,
-      headers: config.headers,
-      timeout: this.timeout,
-      http2: config.http2,
-      wireAddress: config.wireAddress,
-      wireTls: config.wireTls,
-      wirePoolSize: config.wirePoolSize,
-      wireKeepAlive: config.wireKeepAlive,
-      wireKeepAliveInitialDelayMs: config.wireKeepAliveInitialDelayMs,
-      wireConnectTimeout: config.wireConnectTimeout,
-      grpcAddress: config.grpcAddress,
-      grpcTls: config.grpcTls,
-      grpcOptions: config.grpcOptions,
-      grpcKeepalive: config.grpcKeepalive,
-      operationTimeouts: config.operationTimeouts,
-      batchConcurrency: config.batchConcurrency,
-    });
-    this._ensureIndexesEnabled = config.ensureIndexes ?? true;
-    this._warmupIndexes = config.warmupIndexes ?? this._ensureIndexesEnabled;
-    this._indexTransport = config.indexTransport;
-    this._indexPrimePromise = null;
-    this._indexesPrimed = false;
 
     const urlObj = new URL(this.baseUrl);
     if (this.authToken) urlObj.username = this.authToken;
@@ -252,9 +180,6 @@ export class RedDbClient extends EventEmitter {
       id: this.id,
       baseUrl: this.baseUrl,
       collection: this.collection,
-      transport: config.transport ?? 'auto',
-      wireAddress: config.wireAddress,
-      grpcAddress: config.grpcAddress,
     }, `Initialized (id: ${this.id})`);
   }
 
@@ -263,125 +188,12 @@ export class RedDbClient extends EventEmitter {
       this._httpClient = await createHttpClient({
         baseUrl: this.baseUrl,
         timeout: this.timeout,
+        headers: this.writeToken ? { 'X-Write-Token': this.writeToken } : undefined,
         auth: this.authToken ? { type: 'bearer', token: this.authToken } : undefined,
         retry: { maxAttempts: 3, backoff: 'exponential' },
       });
     }
     return this._httpClient;
-  }
-
-  private _primeIndexes(): void {
-    if (!this._nativeClient || !this._ensureIndexesEnabled || this._indexesPrimed || this._indexPrimePromise) {
-      return;
-    }
-
-    this._indexPrimePromise = this._ensureIndexes()
-      .then(() => {
-        this._indexesPrimed = true;
-      })
-      .catch((error) => {
-        this.logger.debug({
-          collection: this.collection,
-          error: error instanceof Error ? error.message : String(error),
-        }, 'RedDB index priming skipped');
-      })
-      .finally(() => {
-        this._indexPrimePromise = null;
-      });
-  }
-
-  private async _ensureIndexes(): Promise<void> {
-    if (!this._nativeClient) return;
-
-    const commonOptions = this._indexTransport
-      ? { transport: this._indexTransport }
-      : {};
-
-    const hashIndexName = this._hashIndexName();
-    const btreeIndexName = this._btreeIndexName();
-
-    await this._nativeClient.indexes.create({
-      ...commonOptions,
-      name: hashIndexName,
-      collection: this.collection,
-      columns: ['_key'],
-      method: 'HASH',
-    });
-
-    await this._nativeClient.indexes.create({
-      ...commonOptions,
-      name: btreeIndexName,
-      collection: this.collection,
-      columns: ['_key'],
-      method: 'BTREE',
-    });
-
-    if (!this._warmupIndexes) {
-      return;
-    }
-
-    await this._nativeClient.indexes.warmup({
-      ...commonOptions,
-      name: hashIndexName,
-    });
-
-    await this._nativeClient.indexes.warmup({
-      ...commonOptions,
-      name: btreeIndexName,
-    });
-  }
-
-  private _hashIndexName(): string {
-    return `${this._safeIndexPrefix()}__s3db_key_hash`;
-  }
-
-  private _btreeIndexName(): string {
-    return `${this._safeIndexPrefix()}__s3db_key_btree`;
-  }
-
-  private _safeIndexPrefix(): string {
-    const normalized = this.collection.replace(/[^a-zA-Z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
-    return normalized || 's3db';
-  }
-
-  private _recordToEntity(record: RedDbRecord | null | undefined): RedDbEntity | null {
-    if (!record || typeof record !== 'object') {
-      return null;
-    }
-
-    const named: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(record)) {
-      if (key === '_entity_id' || key === '_collection' || key === '_kind') {
-        continue;
-      }
-      named[key] = value;
-    }
-
-    return {
-      id: toSafeNumber(record._entity_id) ?? 0,
-      kind: typeof record._kind === 'string' ? record._kind : 'row',
-      collection: typeof record._collection === 'string' ? record._collection : this.collection,
-      data: {
-        named,
-      },
-    };
-  }
-
-  private _extractNativeRecords(
-    envelope: RedDbOperationEnvelope<RedDbQueryData>
-  ): RedDbRecord[] {
-    const records = envelope.data.result?.records;
-    return Array.isArray(records) ? records as RedDbRecord[] : [];
-  }
-
-  private _extractNativeId(data: ReckerRedDbEntityData | undefined, fallback?: number): number | undefined {
-    return toSafeNumber(data?.id) ?? fallback;
-  }
-
-  private _extractAffectedRows(
-    envelope: RedDbOperationEnvelope<RedDbQueryData>
-  ): number {
-    return toSafeNumber(envelope.data.affected_rows) ?? toSafeNumber(envelope.metrics.affectedRows) ?? 0;
   }
 
   private async _readBody(body: unknown): Promise<Buffer | string | undefined> {
@@ -417,21 +229,6 @@ export class RedDbClient extends EventEmitter {
   }
 
   private async _queryByKey(fullKey: string): Promise<RedDbEntity | null> {
-    if (this._nativeClient) {
-      try {
-        const envelope = await this._nativeClient.sql.query(
-          `SELECT _entity_id, _collection, _kind, _key, _body, _body_encoding, _etag, _content_type, _content_encoding, _content_length, _last_modified, _metadata FROM ${escapeSqlIdentifier(this.collection)} WHERE _key = ${escapeSqlLiteral(fullKey)} LIMIT 1`
-        );
-        this._primeIndexes();
-        return this._recordToEntity(this._extractNativeRecords(envelope)[0]);
-      } catch (error) {
-        if (isNotFoundLike(error)) {
-          return null;
-        }
-        throw error;
-      }
-    }
-
     return await this._queryByKeyHttp(fullKey);
   }
 
@@ -459,54 +256,24 @@ export class RedDbClient extends EventEmitter {
   private async _queryByPrefix(
     fullPrefix: string,
     limit: number,
-    offset: number
+    offset: number,
+    fullStartAfter?: string | null
   ): Promise<{ items: RedDbEntity[]; total: number }> {
-    return await this._queryByPrefixHttp(fullPrefix, limit, offset);
-  }
-
-  private async _queryByPrefixPageNative(
-    fullPrefix: string,
-    limit: number,
-    offset: number
-  ): Promise<RedDbPrefixPage> {
-    if (!this._nativeClient) {
-      return { items: [], hasMore: false };
-    }
-
-    const safeLimit = Math.max(0, limit);
-    const fetchLimit = safeLimit + 1;
-    const escapedPrefix = fullPrefix.replace(/'/g, "''").replace(/%/g, '\\%').replace(/_/g, '\\_');
-    const whereClause = fullPrefix
-      ? ` WHERE _key LIKE '${escapedPrefix}%'`
-      : '';
-    const sql = `SELECT _entity_id, _collection, _kind, _key, _etag, _content_length, _last_modified FROM ${escapeSqlIdentifier(this.collection)}${whereClause} ORDER BY _key LIMIT ${fetchLimit} OFFSET ${offset}`;
-    let records: RedDbRecord[] = [];
-    try {
-      const envelope = await this._nativeClient.sql.query(sql);
-      records = this._extractNativeRecords(envelope);
-      this._primeIndexes();
-    } catch (error) {
-      if (!isNotFoundLike(error)) {
-        throw error;
-      }
-    }
-
-    return {
-      items: records.slice(0, safeLimit).map((record) => this._recordToEntity(record)).filter(Boolean) as RedDbEntity[],
-      hasMore: records.length > safeLimit,
-    };
+    return await this._queryByPrefixHttp(fullPrefix, limit, offset, fullStartAfter);
   }
 
   private async _queryByPrefixHttp(
     fullPrefix: string,
     limit: number,
-    offset: number
+    offset: number,
+    fullStartAfter?: string | null
   ): Promise<{ items: RedDbEntity[]; total: number }> {
     const client = await this._getHttpClient();
     const escaped = fullPrefix.replace(/'/g, "''").replace(/%/g, '\\%').replace(/_/g, '\\_');
-    const whereClause = fullPrefix
-      ? `WHERE _key LIKE '${escaped}%'`
-      : '';
+    const conditions: string[] = [];
+    if (fullPrefix) conditions.push(`_key LIKE '${escaped}%'`);
+    if (fullStartAfter) conditions.push(`_key > '${fullStartAfter.replace(/'/g, "''")}'`);
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
     const query = `FROM ${this.collection} ${whereClause} ORDER BY _key LIMIT ${limit} OFFSET ${offset}`;
 
     const res = await client.post('/query', { body: { query } });
@@ -523,85 +290,6 @@ export class RedDbClient extends EventEmitter {
 
     const data: RedDbQueryResponse = await res.json();
     return { items: data.items || [], total: data.total || 0 };
-  }
-
-  private async _countByPrefixNative(fullPrefix: string): Promise<number> {
-    if (!this._nativeClient) {
-      const { total } = await this._queryByPrefixHttp(fullPrefix, 0, 0);
-      return total;
-    }
-
-    const escapedPrefix = fullPrefix.replace(/'/g, "''").replace(/%/g, '\\%').replace(/_/g, '\\_');
-    const whereClause = fullPrefix
-      ? ` WHERE _key LIKE '${escapedPrefix}%'`
-      : '';
-    try {
-      const envelope = await this._nativeClient.sql.query(
-        `SELECT COUNT(*) AS total FROM ${escapeSqlIdentifier(this.collection)}${whereClause}`
-      );
-      const total = this._extractNativeRecords(envelope)[0]?.total;
-      this._primeIndexes();
-      return toSafeNumber(total) ?? 0;
-    } catch (error) {
-      if (isNotFoundLike(error)) {
-        return 0;
-      }
-      throw error;
-    }
-  }
-
-  private async _deleteKeysNative(keys: string[]): Promise<NativeDeleteBatchResult> {
-    if (!this._nativeClient) {
-      throw new DatabaseError('RedDB native client is not available for bulk delete', {
-        operation: 'deleteObjects',
-        retriable: false,
-      });
-    }
-
-    if (keys.length === 0) {
-      return { Deleted: [], Errors: [] };
-    }
-
-    const fullKeys = keys.map((key) => this._applyKeyPrefix(key));
-    const conditions = fullKeys.map((key) => `_key = ${escapeSqlLiteral(key)}`).join(' OR ');
-    try {
-      await this._nativeClient.sql.query(
-        `DELETE FROM ${escapeSqlIdentifier(this.collection)} WHERE ${conditions}`
-      );
-    } catch (error) {
-      if (!isNotFoundLike(error)) {
-        throw error;
-      }
-    }
-    this._primeIndexes();
-
-    return {
-      Deleted: keys.map((key) => ({ Key: key })),
-      Errors: [],
-    };
-  }
-
-  private async _deletePrefixNative(fullPrefix: string): Promise<number> {
-    if (!this._nativeClient) {
-      return 0;
-    }
-
-    const escapedPrefix = fullPrefix.replace(/'/g, "''").replace(/%/g, '\\%').replace(/_/g, '\\_');
-    const whereClause = fullPrefix
-      ? ` WHERE _key LIKE '${escapedPrefix}%'`
-      : '';
-    try {
-      const envelope = await this._nativeClient.sql.query(
-        `DELETE FROM ${escapeSqlIdentifier(this.collection)}${whereClause}`
-      );
-      this._primeIndexes();
-      return this._extractAffectedRows(envelope);
-    } catch (error) {
-      if (isNotFoundLike(error)) {
-        return 0;
-      }
-      throw error;
-    }
   }
 
   private _entityToS3Object(entity: RedDbEntity, includeBody = true): StorageObject {
@@ -637,7 +325,11 @@ export class RedDbClient extends EventEmitter {
 
     if (includeBody && decodedBody !== undefined) {
       const bodyBuf = Buffer.isBuffer(decodedBody) ? decodedBody : Buffer.from(decodedBody);
-      obj.Body = Readable.from(bodyBuf) as StorageObject['Body'];
+      const bodyStream = Readable.from(bodyBuf) as StorageObject['Body'];
+      bodyStream!.transformToString = async (encoding: string = 'utf-8') => bodyBuf.toString(encoding as BufferEncoding);
+      bodyStream!.transformToByteArray = async () => new Uint8Array(bodyBuf);
+      bodyStream!.transformToWebStream = () => Readable.toWeb(Readable.from(bodyBuf)) as ReadableStream;
+      obj.Body = bodyStream;
     }
 
     if (contentEncoding) obj.ContentEncoding = contentEncoding;
@@ -672,6 +364,15 @@ export class RedDbClient extends EventEmitter {
       _key: key,
       _etag: etag,
       _content_type: params.contentType || 'application/octet-stream',
+      _content_length: params.contentLength ?? (
+        Buffer.isBuffer(params.body)
+          ? params.body.length
+          : typeof params.body === 'string'
+            ? Buffer.byteLength(params.body)
+            : params.body === undefined || params.body === null
+              ? 0
+              : Buffer.byteLength(JSON.stringify(params.body))
+      ),
       _last_modified: new Date().toISOString(),
       _metadata: encodedMetadata,
     };
@@ -679,8 +380,6 @@ export class RedDbClient extends EventEmitter {
     if (_body !== undefined) fields._body = _body;
     if (_body_encoding !== undefined) fields._body_encoding = _body_encoding;
     if (params.contentEncoding) fields._content_encoding = params.contentEncoding;
-    if (params.contentLength !== undefined) fields._content_length = params.contentLength;
-
     return fields;
   }
 
@@ -739,49 +438,31 @@ export class RedDbClient extends EventEmitter {
 
     let resultId: number | undefined;
 
-    if (this._nativeClient) {
-      if (existing) {
-        const result = await this._nativeClient.rows.patch({
-          collection: this.collection,
-          id: existing.id,
-          payload: { fields },
-        });
-        resultId = this._extractNativeId(result.data, existing.id);
-      } else {
-        const result = await this._nativeClient.rows.create({
-          collection: this.collection,
-          payload: { fields },
-        });
-        resultId = this._extractNativeId(result.data);
-      }
-      this._primeIndexes();
+    const client = await this._getHttpClient();
+    let res: Response;
+    if (existing) {
+      res = await client.patch(`/collections/${encodeURIComponent(this.collection)}/entities/${existing.id}`, {
+        body: { fields },
+      });
     } else {
-      const client = await this._getHttpClient();
-      let res: Response;
-      if (existing) {
-        res = await client.patch(`/collections/${encodeURIComponent(this.collection)}/entities/${existing.id}`, {
-          body: { fields },
-        });
-      } else {
-        res = await client.post(`/collections/${encodeURIComponent(this.collection)}/rows`, {
-          body: { fields },
-        });
-      }
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new DatabaseError(`RedDB put failed: ${text}`, {
-          operation: existing ? 'PatchEntity' : 'CreateRow',
-          key,
-          bucket: this.bucket,
-          statusCode: res.status,
-          retriable: res.status >= 500,
-        });
-      }
-
-      const result: RedDbMutationResponse = await res.json();
-      resultId = result.id;
+      res = await client.post(`/collections/${encodeURIComponent(this.collection)}/rows`, {
+        body: { fields },
+      });
     }
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new DatabaseError(`RedDB put failed: ${text}`, {
+        operation: existing ? 'PatchEntity' : 'CreateRow',
+        key,
+        bucket: this.bucket,
+        statusCode: res.status,
+        retriable: res.status >= 500,
+      });
+    }
+
+    const result: RedDbMutationResponse = await res.json();
+    resultId = result.id;
 
     const etag = fields._etag as string;
 
@@ -870,43 +551,27 @@ export class RedDbClient extends EventEmitter {
 
     const existing = await this._queryByKey(fullTo);
 
-    if (this._nativeClient) {
-      if (existing) {
-        await this._nativeClient.rows.patch({
-          collection: this.collection,
-          id: existing.id,
-          payload: { fields },
-        });
-      } else {
-        await this._nativeClient.rows.create({
-          collection: this.collection,
-          payload: { fields },
-        });
-      }
-      this._primeIndexes();
+    const client = await this._getHttpClient();
+    let res: Response;
+    if (existing) {
+      res = await client.patch(`/collections/${encodeURIComponent(this.collection)}/entities/${existing.id}`, {
+        body: { fields },
+      });
     } else {
-      const client = await this._getHttpClient();
-      let res: Response;
-      if (existing) {
-        res = await client.patch(`/collections/${encodeURIComponent(this.collection)}/entities/${existing.id}`, {
-          body: { fields },
-        });
-      } else {
-        res = await client.post(`/collections/${encodeURIComponent(this.collection)}/rows`, {
-          body: { fields },
-        });
-      }
+      res = await client.post(`/collections/${encodeURIComponent(this.collection)}/rows`, {
+        body: { fields },
+      });
+    }
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new DatabaseError(`RedDB copy failed: ${text}`, {
-          operation: 'CopyObject',
-          key: to,
-          bucket: this.bucket,
-          statusCode: res.status,
-          retriable: res.status >= 500,
-        });
-      }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new DatabaseError(`RedDB copy failed: ${text}`, {
+        operation: 'CopyObject',
+        key: to,
+        bucket: this.bucket,
+        statusCode: res.status,
+        retriable: res.status >= 500,
+      });
     }
 
     const response: StorageCopyObjectResponse = {
@@ -930,32 +595,24 @@ export class RedDbClient extends EventEmitter {
   }
 
   async deleteObject(key: string): Promise<StorageDeleteObjectResponse> {
-    if (this._nativeClient) {
-      const fullKey = this._applyKeyPrefix(key);
-      await this._nativeClient.sql.query(
-        `DELETE FROM ${escapeSqlIdentifier(this.collection)} WHERE _key = ${escapeSqlLiteral(fullKey)}`
+    const fullKey = this._applyKeyPrefix(key);
+    const entity = await this._queryByKey(fullKey);
+
+    if (entity) {
+      const client = await this._getHttpClient();
+      const res = await client.delete(
+        `/collections/${encodeURIComponent(this.collection)}/entities/${entity.id}`
       );
-      this._primeIndexes();
-    } else {
-      const fullKey = this._applyKeyPrefix(key);
-      const entity = await this._queryByKey(fullKey);
 
-      if (entity) {
-        const client = await this._getHttpClient();
-        const res = await client.delete(
-          `/collections/${encodeURIComponent(this.collection)}/entities/${entity.id}`
-        );
-
-        if (!res.ok && res.status !== 404) {
-          const text = await res.text();
-          throw new DatabaseError(`RedDB delete failed: ${text}`, {
-            operation: 'DeleteObject',
-            key,
-            bucket: this.bucket,
-            statusCode: res.status,
-            retriable: res.status >= 500,
-          });
-        }
+      if (!res.ok && res.status !== 404) {
+        const text = await res.text();
+        throw new DatabaseError(`RedDB delete failed: ${text}`, {
+          operation: 'DeleteObject',
+          key,
+          bucket: this.bucket,
+          statusCode: res.status,
+          retriable: res.status >= 500,
+        });
       }
     }
 
@@ -965,17 +622,12 @@ export class RedDbClient extends EventEmitter {
   }
 
   async deleteObjects(keys: string[]): Promise<StorageDeleteObjectsResponse> {
-    const nativeBatchSize = 200;
-    const batches = chunk(keys, this._nativeClient ? nativeBatchSize : (this.taskManager.concurrency || 5));
+    const batches = chunk(keys, this.taskManager.concurrency || 5);
     const allResults: StorageDeleteObjectsResponse = { Deleted: [], Errors: [] };
 
     const { results } = await this.taskManager.process(
       batches,
       async (batch: string[]) => {
-        if (this._nativeClient) {
-          return await this._deleteKeysNative(batch);
-        }
-
         const batchResults: StorageDeleteObjectsResponse = { Deleted: [], Errors: [] };
         for (const key of batch) {
           try {
@@ -1018,22 +670,14 @@ export class RedDbClient extends EventEmitter {
       }
     }
 
-    let items: RedDbEntity[] = [];
-    let isTruncated = false;
-
-    if (this._nativeClient) {
-      if (maxKeys > 0) {
-        const page = await this._queryByPrefixPageNative(fullPrefix, maxKeys, offset);
-        items = page.items;
-        isTruncated = page.hasMore;
-      } else {
-        isTruncated = (await this._countByPrefixNative(fullPrefix)) > offset;
-      }
-    } else {
-      const page = await this._queryByPrefix(fullPrefix, maxKeys, offset);
-      items = page.items;
-      isTruncated = offset + items.length < page.total;
-    }
+    const page = await this._queryByPrefix(
+      fullPrefix,
+      maxKeys,
+      offset,
+      startAfter ? this._applyKeyPrefix(startAfter) : null
+    );
+    const items = page.items;
+    const isTruncated = offset + items.length < page.total;
 
     const contents: Array<{ Key: string; Size: number; LastModified: Date; ETag: string }> = [];
     const commonPrefixSet = new Set<string>();
@@ -1085,9 +729,7 @@ export class RedDbClient extends EventEmitter {
   async getKeysPage(params: GetKeysPageParams = {}): Promise<string[]> {
     const { prefix = '', offset = 0, amount = 100 } = params;
     const fullPrefix = this._applyKeyPrefix(prefix || '');
-    const items = this._nativeClient
-      ? (await this._queryByPrefixPageNative(fullPrefix, amount, offset)).items
-      : (await this._queryByPrefix(fullPrefix, amount, offset)).items;
+    const items = (await this._queryByPrefix(fullPrefix, amount, offset)).items;
     const keys = items.map((e) => this._stripKeyPrefix((e.data?.named?._key as string) || ''));
 
     this.emit('cl:GetKeysPage', keys, params);
@@ -1102,18 +744,9 @@ export class RedDbClient extends EventEmitter {
     const pageSize = 1000;
 
     while (true) {
-      let items: RedDbEntity[] = [];
-      let hasMore = false;
-
-      if (this._nativeClient) {
-        const page = await this._queryByPrefixPageNative(fullPrefix, pageSize, offset);
-        items = page.items;
-        hasMore = page.hasMore;
-      } else {
-        const page = await this._queryByPrefix(fullPrefix, pageSize, offset);
-        items = page.items;
-        hasMore = offset + items.length < page.total;
-      }
+      const page = await this._queryByPrefix(fullPrefix, pageSize, offset);
+      const items = page.items;
+      const hasMore = offset + items.length < page.total;
 
       for (const entity of items) {
         allKeys.push(this._stripKeyPrefix((entity.data?.named?._key as string) || ''));
@@ -1129,9 +762,7 @@ export class RedDbClient extends EventEmitter {
   async count(params: { prefix?: string } = {}): Promise<number> {
     const { prefix = '' } = params;
     const fullPrefix = this._applyKeyPrefix(prefix || '');
-    const total = this._nativeClient
-      ? await this._countByPrefixNative(fullPrefix)
-      : (await this._queryByPrefix(fullPrefix, 0, 0)).total;
+    const total = (await this._queryByPrefix(fullPrefix, 0, 0)).total;
     this.emit('cl:Count', total, { prefix });
     return total;
   }
@@ -1140,18 +771,11 @@ export class RedDbClient extends EventEmitter {
     const { prefix = '' } = params;
     let totalDeleted = 0;
 
-    if (this._nativeClient) {
-      totalDeleted = await this._deletePrefixNative(this._applyKeyPrefix(prefix || ''));
-      if (totalDeleted > 0) {
-        this.emit('deleteAll', { prefix, batch: totalDeleted, total: totalDeleted });
-      }
-    } else {
-      const keys = await this.getAllKeys({ prefix });
-      if (keys.length > 0) {
-        const result = await this.deleteObjects(keys);
-        totalDeleted = result.Deleted.length;
-        this.emit('deleteAll', { prefix, batch: totalDeleted, total: totalDeleted });
-      }
+    const keys = await this.getAllKeys({ prefix });
+    if (keys.length > 0) {
+      const result = await this.deleteObjects(keys);
+      totalDeleted = result.Deleted.length;
+      this.emit('deleteAll', { prefix, batch: totalDeleted, total: totalDeleted });
     }
 
     this.emit('deleteAllComplete', { prefix, totalDeleted });
@@ -1228,10 +852,6 @@ export class RedDbClient extends EventEmitter {
     const taskManager = this.taskManager as { destroy?: () => Promise<void> | void };
     if (typeof taskManager.destroy === 'function') {
       await taskManager.destroy();
-    }
-    if (this._nativeClient) {
-      await this._nativeClient.close();
-      this._nativeClient = null;
     }
     this._httpClient = null;
     this.removeAllListeners();

@@ -8,16 +8,16 @@ working core from a completed product migration.
 
 | Surface | s3db.js baseline | Baldin status | Result |
 | --- | ---: | --- | --- |
-| Source | 558 files, 555 TypeScript | 98 core source files plus 505 adapter, plugin, shared-package, and application source files | Partial |
+| Source | 558 files, 555 TypeScript | 98 core source files plus 504 adapter, plugin, shared-package, and application source files; every baseline public surface is accounted for | Working |
 | Core engine | Database, Resource, Schema, Validator, manager | Migrated from the `lite` dependency closure | Working |
 | Plugin catalog | 32 plugin families, 411 TypeScript files | Public plugin SDK plus all 32 standalone plugin packages | Working |
 | Installable packages | One all-in-one package | `core`, five storage adapters, 32 standalone plugins, three shared packages, CLI, and MCP | Working |
-| Storage adapters | Built into the package | Memory, S3, filesystem, SQLite/libSQL/D1, and RedDB are separate packages | Working |
+| Storage adapters | Built into the package | Memory, S3, filesystem, SQLite/libSQL/D1, and HTTP-based RedDB are separate packages | Working |
 | CLI | 6 TypeScript modules plus 2 bin files | `@baldin/cli` with the `baldin` executable and public-package-only imports | Working |
 | MCP | 3 source modules plus 27 server/tool files | `@baldin/mcp` with stdio/HTTP transports, bundled docs, and neutral storage calls | Working |
 | Testing utilities | Factory and Seeder | Migrated to `@baldin/testing` | Working |
 | Public subpaths | root, lite, concerns, plugins, generator | Every former subpath is mapped to core, a standalone plugin, typegen, or utils; Recker-specific HTTP helpers are explicitly retired | Working |
-| Test suites | 118 core and 176 plugin test files | 189 focused test files, 2,095 passing tests, 46 intentionally skipped optional-integration cases, plus 4 MinIO contract cases in CI | Partial |
+| Test suites | 118 core and 176 plugin test files | 193 focused test files, 2,110 passing tests, 48 intentionally skipped optional-integration cases, plus 5 MinIO contract/fixture cases in CI | Working locally |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps
@@ -37,8 +37,9 @@ intentional compatibility boundaries. All remaining legacy names are classified 
 new APIs and operational names use Baldin while persisted and deprecated contracts remain stable.
 
 The S3 adapter accepts AWS S3, Cloudflare R2, MinIO, and custom compatible endpoints.
-CI runs the shared storage contract against MinIO; configured AWS S3 and R2 target
-runs are still needed before release.
+CI runs the shared storage contract and the persisted v21 object fixture against
+MinIO. Local tests run the same contract through RedDB HTTP, libSQL, and D1 binding
+interfaces; configured deployed-service runs are still needed before release.
 
 ## Plugin migration inventory
 
@@ -83,10 +84,8 @@ Baldin packages:
 ## Corrective order
 
 1. Run the storage contract suite against configured AWS S3 and R2 targets.
-2. Extend the shared contract to RedDB and remote SQLite test services.
-3. Extend baseline persisted-data fixtures beyond the current filesystem coverage
-   to S3-compatible and SQLite representations.
-4. Publish prereleases and validate an application migration before declaring
+2. Run the passing RedDB HTTP, libSQL, and D1 contracts against deployed services.
+3. Publish prereleases and validate an application migration before declaring
    Baldin a replacement for `s3db.js`.
 
 ## Definition of converted

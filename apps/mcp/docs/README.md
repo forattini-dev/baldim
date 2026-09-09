@@ -6,8 +6,8 @@ A small document database for object storage — being rebuilt from s3db.js as a
 entrypoint now runs as `@baldin/core`. Database CRUD, schemas, resources,
 multidatabase management, behaviors, streams, and concurrency are present. The S3
 adapters, all 32 standalone plugin families, the shared public utilities, the CLI,
-and the MCP server have been extracted. External provider contract coverage and
-persisted compatibility fixtures still need expansion.
+and the MCP server have been extracted. Persisted filesystem, SQLite, and S3-object
+fixtures are covered; credentialed contract runs against deployed providers remain.
 
 This is not yet a feature-complete replacement for `s3db.js`. The tracked gaps
 and completion criteria live in the [parity audit](docs/parity-audit.md).
@@ -113,6 +113,8 @@ package releases; no automatic npm publishing is configured.
 Filesystem, SQLite, RedDB, and S3 load through the public adapter registry, and plugins use
 the public plugin SDK. See [the migration plan](docs/migration.md) for source
 provenance, compatibility guarantees and extraction order.
+Raffel is owned only by the API, Identity, WebSocket, and SMTP plugins that import it
+directly. Core and all storage adapters remain free of Raffel.
 Every former public subpath has a destination or explicit disposition in the
 [public API mapping](docs/public-api-mapping.md).
 
