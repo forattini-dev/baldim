@@ -1,6 +1,6 @@
 {
   "name": "@baldin/adapter-s3",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "S3-compatible storage adapter for Baldin, including AWS S3, Cloudflare R2, and MinIO.",
   "license": "Unlicense",

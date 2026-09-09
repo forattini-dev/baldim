@@ -17,6 +17,7 @@ jobs:
         with:
           node-version: '24'
       - run: pnpm install --frozen-lockfile
+      - run: pnpm check:deps
       - run: pnpm typecheck
       - run: pnpm build
       - run: pnpm test

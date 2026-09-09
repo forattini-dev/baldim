@@ -1,6 +1,6 @@
 {
   "name": "@baldin/typegen",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Generate strongly typed Baldin resource maps from a connected database.",
   "license": "Unlicense",

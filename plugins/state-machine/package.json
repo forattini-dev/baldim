@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-state-machine",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Persistent state machines with guards, hooks, triggers, TTL, and transition history for Baldin.",
   "license": "Unlicense",
@@ -41,8 +41,8 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.0.0",
-    "@baldin/plugin-scheduler": "^0.0.0"
+    "@baldin/core": "^0.1.0",
+    "@baldin/plugin-scheduler": "^0.1.0"
   },
   "peerDependenciesMeta": {
     "@baldin/plugin-scheduler": {

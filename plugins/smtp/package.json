@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-smtp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "SMTP relay, receiving, templates, retries, and webhooks for Baldin.",
   "license": "Unlicense",
@@ -45,7 +45,7 @@
     "smtp-server": "^3.19.8"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.0.0"
+    "@baldin/core": "^0.1.0"
   },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-backup",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Filesystem, object-storage, and multi-destination backups for Baldin.",
   "license": "Unlicense",
@@ -41,7 +41,7 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.0.0"
+    "@baldin/core": "^0.1.0"
   },
   "devDependencies": {
     "@baldin/core": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-tree",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Adjacency-list and nested-set tree models for Baldin resources.",
   "license": "Unlicense",
@@ -37,7 +37,7 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.0.0"
+    "@baldin/core": "^0.1.0"
   },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@baldin/adapter-sqlite",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "SQLite, libSQL, and Cloudflare D1 storage adapters for Baldin.",
   "license": "Unlicense",
