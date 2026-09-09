@@ -1,0 +1,72 @@
+{
+  "name": "@baldin/plugin-spider",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Web crawling, discovery, browser analysis, and pluggable crawl backends for Baldin.",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">=24"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "directory": "plugins/spider"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./spider": {
+      "types": "./dist/spider/index.d.ts",
+      "import": "./dist/spider/index.js"
+    },
+    "./adapters": {
+      "types": "./dist/spider/adapters/index.d.ts",
+      "import": "./dist/spider/adapters/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "UNLICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.contract.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "dependencies": {
+    "@baldin/plugin-puppeteer": "workspace:*",
+    "@baldin/plugin-queue-consumer": "workspace:*",
+    "@baldin/plugin-s3-queue": "workspace:*",
+    "@baldin/plugin-ttl": "workspace:*",
+    "recker": "1.0.103"
+  },
+  "optionalDependencies": {
+    "@aws-sdk/client-sqs": "^3.0.0",
+    "amqplib": "^0.10.8",
+    "bullmq": ">=5.0.0",
+    "ioredis": "^5.4.1",
+    "puppeteer": "^24.29.1",
+    "puppeteer-core": "^24.29.1"
+  },
+  "peerDependencies": {
+    "@baldin/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "@baldin/adapter-memory": "workspace:*",
+    "@baldin/core": "workspace:*",
+    "@types/node": "25.5.2",
+    "typescript": "6.0.2",
+    "vitest": "4.1.3"
+  }
+}

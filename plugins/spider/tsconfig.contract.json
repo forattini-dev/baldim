@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "verbatimModuleSyntax": false,
+    "types": ["node"],
+    "paths": {
+      "@baldin/plugin-spider": ["./src/index.ts"],
+      "@baldin/plugin-spider/spider": ["./src/spider/index.ts"],
+      "@baldin/plugin-spider/adapters": ["./src/spider/adapters/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "tests/type-contract.ts"]
+}

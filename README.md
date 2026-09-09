@@ -85,6 +85,7 @@ and dependency rules.
 | plugins/ml | @baldin/plugin-ml | TensorFlow.js regression, classification, time-series, and neural-network models |
 | plugins/replicator | @baldin/plugin-replicator | Database, queue, and webhook replication with target clients owned by the plugin |
 | plugins/cloud-inventory | @baldin/plugin-cloud-inventory | AWS, Azure, GCP, and eight additional provider inventories with snapshots, diffs, scheduling, and Terraform export |
+| plugins/spider | @baldin/plugin-spider | Recker crawling, discovery, browser analysis, and memory, database, SQS, RabbitMQ, Redis, BullMQ, filesystem, and proxy backends |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |

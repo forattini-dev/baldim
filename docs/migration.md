@@ -77,7 +77,7 @@ dependencies and release independently.
 
 ## Status and limits
 
-The core, manager, storage adapters, 30 standalone plugins, testing utilities, and type generation are working package slices. The
+The core, manager, storage adapters, 31 standalone plugins, testing utilities, and type generation are working package slices. The
 full plugin, adapter, CLI, MCP, utilities, and compatibility-suite migration is
 incomplete. No npm package has been published and the `@baldin` scope has not
 been registered.
