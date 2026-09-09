@@ -55,7 +55,7 @@
   "devDependencies": {
     "@baldim/adapter-memory": "workspace:*",
     "@baldim/core": "workspace:*",
-    "@types/node": "25.5.2",
+    "@types/node": "26.4.1",
     "ioredis": "^5.10.1",
     "typescript": "6.0.2"
   }
