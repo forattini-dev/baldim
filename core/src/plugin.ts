@@ -396,6 +396,7 @@ export type { Logger, LogLevel } from './concerns/logger.js';
 export type { CronManager } from './concerns/cron-manager.js';
 export { tryFn } from './concerns/try-fn.js';
 export { mapWithConcurrency, forEachWithConcurrency } from './concerns/map-with-concurrency.js';
+export { idGenerator } from './concerns/id.js';
 export { PluginError };
 export { PluginStorage };
 export type { PluginClient, PluginStorageOptions, PluginStorageSetOptions } from './plugins/concerns/plugin-storage.js';

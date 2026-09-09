@@ -71,6 +71,7 @@ and dependency rules.
 | plugins/importer | @baldin/plugin-importer | Streaming JSON, JSONL, CSV, TSV, and gzip imports |
 | plugins/vector | @baldin/plugin-vector | Vector search, clustering, metrics, and optional sqlite-vec acceleration |
 | plugins/smtp | @baldin/plugin-smtp | SMTP relay and server modes, templates, retries, and delivery webhooks |
+| plugins/tournament | @baldin/plugin-tournament | Tournament registration, formats, brackets, matches, and standings |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |
