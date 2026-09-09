@@ -1,25 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ApiPlugin } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './config.js';
-
-async function waitForServer(port: number, maxAttempts = 100): Promise<void> {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      const response = await fetch(`http://127.0.0.1:${port}/health`);
-      if (response.ok || response.status === 503) return;
-    } catch { /* wait */ }
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-  throw new Error(`API server on port ${port} did not become ready in time`);
-}
+import { startApiPlugin } from './helpers/server.js';
 
 describe('HEAD /resource - enriched stats headers', () => {
   let db: any;
   let apiPlugin: ApiPlugin | null = null;
   let port: number;
 
+  async function startApi(resources: string[]): Promise<void> {
+    const started = await startApiPlugin(db, {
+      host: '127.0.0.1',
+      port: 0,
+      logLevel: 'silent',
+      docs: { enabled: false },
+      logging: { enabled: false },
+      resources
+    }, 'head-resource-stats-api');
+
+    apiPlugin = started.plugin;
+    port = started.port;
+  }
+
   beforeEach(async () => {
-    port = 6400 + Math.floor(Math.random() * 1000);
     db = createMemoryDatabaseForTest(`api-head-stats-${Date.now()}-${Math.random().toString(16).slice(2)}`, {
       logLevel: 'silent'
     });
@@ -51,17 +54,7 @@ describe('HEAD /resource - enriched stats headers', () => {
       await resource.insert({ name: `Product ${i}`, price: i * 10, category: i % 2 === 0 ? 'A' : 'B' });
     }
 
-    apiPlugin = new ApiPlugin({
-      port,
-      host: '127.0.0.1',
-      logLevel: 'silent',
-      docs: { enabled: false },
-      logging: { enabled: false },
-      resources: ['products']
-    });
-
-    await db.usePlugin(apiPlugin);
-    await waitForServer(port);
+    await startApi(['products']);
 
     const res = await fetch(`http://127.0.0.1:${port}/products`, { method: 'HEAD' });
     expect(res.status).toBe(200);
@@ -85,17 +78,7 @@ describe('HEAD /resource - enriched stats headers', () => {
       await resource.insert({ name: `Item ${i}` });
     }
 
-    apiPlugin = new ApiPlugin({
-      port,
-      host: '127.0.0.1',
-      logLevel: 'silent',
-      docs: { enabled: false },
-      logging: { enabled: false },
-      resources: ['items']
-    });
-
-    await db.usePlugin(apiPlugin);
-    await waitForServer(port);
+    await startApi(['items']);
 
     const res = await fetch(`http://127.0.0.1:${port}/items?limit=10`, { method: 'HEAD' });
     expect(res.status).toBe(200);
@@ -119,17 +102,7 @@ describe('HEAD /resource - enriched stats headers', () => {
 
     await resource.insert({ status: 'pending', amount: 100 });
 
-    apiPlugin = new ApiPlugin({
-      port,
-      host: '127.0.0.1',
-      logLevel: 'silent',
-      docs: { enabled: false },
-      logging: { enabled: false },
-      resources: ['orders']
-    });
-
-    await db.usePlugin(apiPlugin);
-    await waitForServer(port);
+    await startApi(['orders']);
 
     const res = await fetch(`http://127.0.0.1:${port}/orders`, { method: 'HEAD' });
     expect(res.status).toBe(200);
@@ -143,17 +116,7 @@ describe('HEAD /resource - enriched stats headers', () => {
       attributes: { message: 'string' }
     });
 
-    apiPlugin = new ApiPlugin({
-      port,
-      host: '127.0.0.1',
-      logLevel: 'silent',
-      docs: { enabled: false },
-      logging: { enabled: false },
-      resources: ['logs']
-    });
-
-    await db.usePlugin(apiPlugin);
-    await waitForServer(port);
+    await startApi(['logs']);
 
     const res = await fetch(`http://127.0.0.1:${port}/logs`, { method: 'HEAD' });
     expect(res.status).toBe(200);
@@ -167,17 +130,7 @@ describe('HEAD /resource - enriched stats headers', () => {
       attributes: { value: 'string' }
     });
 
-    apiPlugin = new ApiPlugin({
-      port,
-      host: '127.0.0.1',
-      logLevel: 'silent',
-      docs: { enabled: false },
-      logging: { enabled: false },
-      resources: ['empty']
-    });
-
-    await db.usePlugin(apiPlugin);
-    await waitForServer(port);
+    await startApi(['empty']);
 
     const res = await fetch(`http://127.0.0.1:${port}/empty`, { method: 'HEAD' });
     expect(res.status).toBe(200);
