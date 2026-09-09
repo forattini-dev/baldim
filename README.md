@@ -77,6 +77,7 @@ and dependency rules.
 | plugins/tfstate | @baldin/plugin-tfstate | Terraform/OpenTofu state ingestion, history, diffs, monitoring, and export |
 | plugins/api | @baldin/plugin-api | Raffel-based HTTP/WebSocket API, auth, OpenAPI/USD docs, static files, and runtime inspection |
 | plugins/identity | @baldin/plugin-identity | OAuth2/OIDC identity provider, sessions, onboarding, MFA, email, and administrative UI |
+| plugins/websocket | @baldin/plugin-websocket | Dedicated real-time CRUD, subscriptions, channels, tickets, and connection recovery |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |

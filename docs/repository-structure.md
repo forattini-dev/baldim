@@ -59,3 +59,9 @@ The memory adapter is designed without a runtime dependency on core, so installi
 it from core does not create a package cycle. Other provider implementations must
 not be imported by core. Cross-package imports use public package exports instead
 of reaching into another package's `src/` tree.
+
+Protocol runtimes follow the same ownership rule. API owns Raffel for its HTTP and
+WebSocket listeners, Identity owns Raffel for its standalone OAuth/OIDC server,
+WebSocket owns Raffel for its dedicated real-time server, and SMTP owns Raffel for
+its SMTP adapter. None of those plugins obtains Raffel transitively from another
+plugin, and core and storage adapters do not depend on it.

@@ -1,0 +1,452 @@
+/**
+ * WebSocket Plugin - Real-time communication for Baldin resources
+ *
+ * Provides WebSocket server with real-time subscriptions, broadcasts, and CRUD operations.
+ * Uses raffel's WebSocket adapter for connection management, heartbeat, channels,
+ * backpressure, and compression.
+ *
+ * Features:
+ * - Real-time subscriptions to resource changes (insert/update/delete)
+ * - Multiple authentication methods (JWT, API Key)
+ * - Guards for row-level security
+ * - Protected fields filtering
+ * - Rate limiting
+ * - Heartbeat/ping-pong for connection health
+ * - Pusher-like channels (public, private, presence)
+ * - Backpressure handling
+ * - Per-message compression
+ * - Connection recovery
+ *
+ * @example
+ * const wsPlugin = new WebSocketPlugin({
+ *   port: 3001,
+ *   auth: {
+ *     drivers: [{ driver: 'jwt', config: { secret: 'my-secret' } }]
+ *   },
+ *   resources: {
+ *     users: {
+ *       auth: ['admin', 'user'],
+ *       protected: ['password', 'apiToken'],
+ *       guard: {
+ *         list: async (user) => user?.role === 'admin' ? true : { userId: user.id }
+ *       }
+ *     }
+ *   }
+ * });
+ *
+ * await database.usePlugin(wsPlugin);
+ */
+
+import { Plugin } from '@baldin/core/plugin';
+import {
+  WebSocketServer,
+  WebSocketOptions,
+  WebSocketAuth,
+  WebSocketResourceConfig,
+  type WebSocketClientInfo,
+  type WebSocketChannelInfo,
+  type WebSocketPresenceMember,
+  type WebSocketChannelStats,
+  type WebSocketChannelSummary,
+  type WebSocketServerInfo,
+  type WebSocketMetrics,
+  type WebSocketTicket
+} from './server.js';
+import { normalizeAuthConfig } from './config/normalize-auth.js';
+import { normalizeResourcesConfig } from './config/normalize-resources.js';
+
+export class WebSocketPlugin extends Plugin {
+  config: WebSocketOptions;
+  server: WebSocketServer | null;
+
+  constructor(options: Partial<WebSocketOptions> = {}) {
+    super(options);
+
+    // Normalize configurations
+    const normalizedAuth = normalizeAuthConfig(options.auth, (this as any).logger);
+
+    this.config = {
+      // Server configuration
+      port: options.port ?? 3001,
+      host: options.host || '0.0.0.0',
+      logLevel: (this as any).logLevel,
+      startupBanner: options.startupBanner !== false,
+
+      // Authentication
+      auth: normalizedAuth as WebSocketAuth,
+
+      // Resources configuration
+      resources: normalizeResourcesConfig(options.resources, (this as any).logger),
+
+      // Connection settings
+      heartbeatInterval: options.heartbeatInterval || 30000,
+      heartbeatTimeout: options.heartbeatTimeout || 10000,
+      maxPayloadSize: options.maxPayloadSize || 1024 * 1024, // 1MB
+
+      // Rate limiting
+      rateLimit: {
+        enabled: options.rateLimit?.enabled || false,
+        windowMs: options.rateLimit?.windowMs || 60000,
+        maxRequests: options.rateLimit?.maxRequests || 100
+      },
+
+      // CORS for HTTP upgrade
+      cors: {
+        enabled: options.cors?.enabled !== false,
+        origin: options.cors?.origin || '*'
+      },
+
+      // Health checks (Kubernetes-compatible)
+      health: typeof options.health === 'object'
+        ? options.health
+        : { enabled: options.health !== false },
+
+      // Channels (presence, rooms, queue, history, transformers, etc.)
+      channels: typeof options.channels === 'object'
+        ? options.channels
+        : { enabled: options.channels !== false },
+
+      // Compression
+      compression: options.compression ?? true,
+
+      // Ticket-based auth
+      ticketAuth: options.ticketAuth,
+
+      // Token refresh
+      tokenRefresh: options.tokenRefresh,
+
+      // Connection state recovery
+      recovery: options.recovery,
+
+      // Custom message handlers and hooks
+      messageHandlers: options.messageHandlers || {},
+      onMessage: options.onMessage,
+      onConnection: options.onConnection,
+      onClose: options.onClose,
+
+      // Database property is required by WebSocketOptions but it's passed down from Plugin.
+      // Assuming it's available via `this.database`
+      database: (this as any).database,
+      logger: (this as any).logger
+    };
+
+    this.server = null;
+  }
+
+  /**
+   * Validate plugin dependencies
+   * @private
+   */
+  private async _validateDependencies(): Promise<void> {
+    await Promise.all([import('raffel'), import('jose')]);
+  }
+
+  /**
+   * Install plugin
+   */
+  override async onInstall(): Promise<void> {
+    if ((this as any).logLevel) {
+      (this as any).logger.info('Installing WebSocket plugin...');
+    }
+
+    // Validate dependencies
+    try {
+      await this._validateDependencies();
+    } catch (err) {
+      if ((this as any).logLevel) {
+        (this as any).logger.error({ error: (err as Error).message }, 'Dependency validation failed');
+      }
+      throw err;
+    }
+
+    if ((this as any).logLevel) {
+      (this as any).logger.info('WebSocket plugin installed successfully');
+    }
+  }
+
+  /**
+   * Start plugin
+   */
+  override async onStart(): Promise<void> {
+    if ((this as any).logLevel) {
+      (this as any).logger.info('Starting WebSocket server...');
+    }
+
+    // Create server instance
+    this.server = new WebSocketServer({
+      port: this.config.port,
+      host: this.config.host,
+      database: (this as any).database || this.config.database,
+      namespace: this.config.namespace,
+      auth: this.config.auth,
+      resources: this.config.resources,
+      heartbeatInterval: this.config.heartbeatInterval,
+      heartbeatTimeout: this.config.heartbeatTimeout,
+      maxPayloadSize: this.config.maxPayloadSize,
+      rateLimit: this.config.rateLimit,
+      cors: this.config.cors,
+      health: this.config.health,
+      channels: this.config.channels,
+      compression: this.config.compression,
+      ticketAuth: this.config.ticketAuth,
+      tokenRefresh: this.config.tokenRefresh,
+      recovery: this.config.recovery,
+      messageHandlers: this.config.messageHandlers,
+      onMessage: this.config.onMessage,
+      onConnection: this.config.onConnection,
+      onClose: this.config.onClose,
+      startupBanner: this.config.startupBanner,
+      logLevel: this.config.logLevel,
+      logger: this.config.logger
+    });
+
+    // Forward server events
+    this.server.on('server.started', (data: any) => this.emit('server.started', data));
+    this.server.on('server.stopped', () => this.emit('server.stopped'));
+    this.server.on('client.connected', (data: any) => this.emit('client.connected', data));
+    this.server.on('client.disconnected', (data: any) => this.emit('client.disconnected', data));
+
+    // Check port availability
+    if (this.config.port! > 0) {
+      await this._checkPortAvailability(this.config.port!, this.config.host!);
+    }
+
+    // Start server
+    await this.server.start();
+
+    this.config.port = this.server.getInfo().port;
+
+    this.emit('plugin.started', {
+      port: this.config.port,
+      host: this.config.host
+    });
+  }
+
+  /**
+   * Check if port is available
+   * @private
+   */
+  private async _checkPortAvailability(port: number, host: string): Promise<void> {
+    const { createServer } = await import('net');
+    return new Promise((resolve, reject) => {
+      const server = createServer();
+
+      server.once('error', (err: any) => {
+        if (err.code === 'EADDRINUSE') {
+          reject(new Error(`Port ${port} is already in use. Please choose a different port.`));
+        } else {
+          reject(err);
+        }
+      });
+
+      server.once('listening', () => {
+        server.close(() => resolve());
+      });
+
+      server.listen(port, host);
+    });
+  }
+
+  /**
+   * Stop plugin
+   */
+  override async onStop(): Promise<void> {
+    if ((this as any).logLevel) {
+      (this as any).logger.info('Stopping WebSocket server...');
+    }
+
+    if (this.server) {
+      await this.server.stop();
+      this.server = null;
+    }
+  }
+
+  /**
+   * Uninstall plugin
+   */
+  override async onUninstall(options: any = {}): Promise<void> {
+    await this.onStop();
+
+    if ((this as any).logLevel) {
+      (this as any).logger.info('WebSocket plugin uninstalled');
+    }
+  }
+
+  /**
+   * Get server information
+   */
+  getServerInfo(): WebSocketServerInfo | { isRunning: false } {
+    return this.server ? this.server.getInfo() : { isRunning: false };
+  }
+
+  /**
+   * Get connected clients
+   */
+  getClients(): WebSocketClientInfo[] {
+    return this.server ? this.server.getClients() : [];
+  }
+
+  /**
+   * Broadcast message to all connected clients
+   * @param message - Message to broadcast
+   * @param filter - Optional filter function (client) => boolean
+   */
+  broadcast(message: any, filter: ((client: any) => boolean) | null = null): void {
+    if (this.server) {
+      this.server.broadcast(message, filter);
+    }
+  }
+
+  /**
+   * Send message to specific client
+   * @param clientId - Client ID
+   * @param message - Message to send
+   */
+  sendToClient(clientId: string, message: any): boolean {
+    if (this.server) {
+      return this.server.sendToClient(clientId, message);
+    }
+    return false;
+  }
+
+  /**
+   * Broadcast to clients subscribed to a specific resource
+   * @param resource - Resource name
+   * @param message - Message to send
+   */
+  broadcastToResource(resource: string, message: any): void {
+    if (!this.server) return;
+
+    const subscriberIds = this.server.subscriptions.get(resource);
+    if (!subscriberIds) return;
+
+    for (const socketId of subscriberIds) {
+      this.server.sendToClient(socketId, message);
+    }
+  }
+
+  /**
+   * Get metrics
+   */
+  getMetrics(): WebSocketMetrics {
+    return this.server?.getInfo()?.metrics || {
+      connections: 0,
+      disconnections: 0,
+      messagesReceived: 0,
+      messagesSent: 0,
+      broadcasts: 0,
+      errors: 0
+    };
+  }
+
+  // ============================================
+  // Channel Methods
+  // ============================================
+
+  /**
+   * Get channel info
+   */
+  getChannel(channelName: string): WebSocketChannelInfo | null {
+    return this.server?.getChannelInfo(channelName) || null;
+  }
+
+  /**
+   * List all channels
+   */
+  listChannels(options: { type?: 'public' | 'private' | 'presence' | 'queue'; prefix?: string } = {}): WebSocketChannelSummary[] {
+    return this.server?.listChannels(options) || [];
+  }
+
+  /**
+   * Get members in a presence channel
+   */
+  getChannelMembers(channelName: string): WebSocketPresenceMember[] {
+    return this.server?.getChannelMembers(channelName) || [];
+  }
+
+  /**
+   * Broadcast message to all members in a channel
+   */
+  broadcastToChannel(channelName: string, message: any, excludeClientId: string | null = null): number {
+    if (!this.server) return 0;
+    return this.server._broadcastToChannel(channelName, message, excludeClientId);
+  }
+
+  /**
+   * Get channel statistics
+   */
+  getChannelStats(): WebSocketChannelStats {
+    return this.server?.getChannelStats() || {
+      channels: 0,
+      totalMembers: 0,
+      byType: { public: 0, private: 0, presence: 0, queue: 0 },
+      clients: 0
+    };
+  }
+
+  // ============================================
+  // Ticket Auth Methods
+  // ============================================
+
+  /**
+   * Generate a single-use connection ticket for a user.
+   * Requires ticketAuth: { enabled: true } in plugin options.
+   *
+   * @example
+   * // In your HTTP route handler:
+   * app.post('/ws/ticket', async (req, res) => {
+   *   const ticket = await wsPlugin.generateTicket(req.user.id, {
+   *     permissions: ['private-user-' + req.user.id, 'presence-*'],
+   *     metadata: { role: req.user.role }
+   *   });
+   *   res.json({ ticket: ticket.id, expiresAt: ticket.expiresAt });
+   * });
+   *
+   * // Client connects with:
+   * // new WebSocket('ws://localhost:3001?ticket=<ticketId>')
+   */
+  async generateTicket(userId: string, options?: { ttl?: number; permissions?: string[]; metadata?: Record<string, unknown> }): Promise<WebSocketTicket> {
+    if (!this.server) {
+      throw new Error('WebSocket server is not running');
+    }
+    return this.server.generateTicket(userId, options);
+  }
+
+  /**
+   * Get the ticket store instance (for advanced usage like custom revocation).
+   * Only available when ticketAuth is enabled.
+   */
+  get ticketStore(): any {
+    return this.server?.ticketStore || null;
+  }
+}
+
+// Export server class for advanced usage
+export { WebSocketServer };
+export type {
+  WebSocketAuthDriver,
+  WebSocketAuth,
+  WebSocketResourceConfig,
+  WebSocketOptions,
+  WebSocketMetrics,
+  WebSocketSendFn,
+  WebSocketMessageHandler,
+  WebSocketHookContext,
+  WebSocketTicketAuthConfig,
+  WebSocketTokenRefreshConfig,
+  WebSocketRecoveryConfig,
+  WebSocketChannelRateLimits,
+  WebSocketChannelHistoryConfig,
+  WebSocketChannelTransformFn,
+  WebSocketChannelTypingConfig,
+  WebSocketChannelRestApiConfig,
+  WebSocketCompressionConfig,
+  WebSocketChannelsConfig,
+  WebSocketClientInfo,
+  WebSocketChannelInfo,
+  WebSocketPresenceMember,
+  WebSocketChannelStats,
+  WebSocketChannelSummary,
+  WebSocketServerInfo,
+  WebSocketTicket,
+} from './server.js';
