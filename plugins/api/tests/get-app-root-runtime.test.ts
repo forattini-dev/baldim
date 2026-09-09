@@ -22,7 +22,6 @@ async function waitForServer(port: number, maxAttempts = 100): Promise<void> {
 
 describe('ApiPlugin getApp runtime contract', () => {
   it('returns the mounted root HttpApp instance after startup', async () => {
-    const port = 4700 + Math.floor(Math.random() * 1000);
     const testName = `api-plugin-root-runtime-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const db = createMemoryDatabaseForTest(testName, { logLevel: 'silent' });
     let apiPlugin: ApiPlugin | null = null;
@@ -31,7 +30,7 @@ describe('ApiPlugin getApp runtime contract', () => {
       await db.connect();
 
       apiPlugin = new ApiPlugin({
-        port,
+        port: 0,
         host: '127.0.0.1',
         logLevel: 'silent',
         docs: { enabled: false },
@@ -40,6 +39,10 @@ describe('ApiPlugin getApp runtime contract', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      const port = apiPlugin.getServerInfo().port;
+      if (typeof port !== 'number' || port <= 0) {
+        throw new Error('API server did not expose its bound port');
+      }
       await waitForServer(port);
 
       const app = apiPlugin.getApp();
