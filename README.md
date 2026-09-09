@@ -73,7 +73,7 @@ Resources also support direct reads, deletes, pagination, indexed partitions, sc
 
 ## Choose storage at runtime
 
-Import an adapter once, then select it with the connection string. Each adapter owns its provider client and configuration code.
+Import an adapter once, then select it with the connection string. Loading the module registers its protocols in core; this explicit boundary keeps core from installing every provider SDK. Executable bundles such as the CLI load the official adapters for you.
 
 | Adapter | Protocols | Designed for |
 | --- | --- | --- |
@@ -89,7 +89,7 @@ pnpm add @baldin/core @baldin/adapter-sqlite
 
 ```ts
 import { Baldin } from '@baldin/core';
-import '@baldin/adapter-sqlite';
+import '@baldin/adapter-sqlite'; // registers sqlite:, sqlite+libsql:, sqlite+d1:
 
 const database = new Baldin({
   connectionString: 'sqlite:./data/app.sqlite',
@@ -108,7 +108,7 @@ Changing the connection string changes storage; the resource code above remains 
 
 ```ts
 import { DatabaseManager } from '@baldin/core';
-import '@baldin/adapter-s3';
+import '@baldin/adapter-s3'; // registers s3:, http:, https:
 
 const databases = new DatabaseManager({
   default: 'primary',

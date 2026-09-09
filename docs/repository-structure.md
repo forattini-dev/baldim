@@ -3,7 +3,8 @@
 Baldin is organized around packages that can be built, tested, versioned, and
 published independently. The package boundary comes before the source-code
 boundary, so every package owns its own `src/`, `package.json`, tests, and
-dependencies.
+runtime dependencies. Uniform repository tooling such as Vitest is pinned once
+at the workspace root and is available to every package test script.
 
 ```text
 baldin/

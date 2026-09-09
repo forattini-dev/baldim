@@ -5,6 +5,7 @@ import ts from 'typescript';
 
 const root = process.cwd();
 const packageRoots = ['core', 'adapters', 'plugins', 'packages', 'apps'];
+const sharedDevelopmentDependencies = new Set(['vitest']);
 const sourceExtensions = new Set(['.js', '.cjs', '.mjs', '.ts', '.tsx']);
 const builtins = new Set([
   ...builtinModules,
@@ -86,6 +87,14 @@ function collectSpecifiers(source, file) {
 const packageDirectories = (await Promise.all(packageRoots.map(directoriesUnder))).flat();
 const failures = [];
 let checkedPackages = 0;
+const workspaceManifest = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+const workspaceDevelopment = new Set(Object.keys(workspaceManifest.devDependencies || {}));
+
+for (const dependency of sharedDevelopmentDependencies) {
+  if (!workspaceDevelopment.has(dependency)) {
+    failures.push(`workspace: shared development dependency ${dependency} is not declared at the root`);
+  }
+}
 
 for (const directory of packageDirectories) {
   const manifestPath = path.join(directory, 'package.json');
@@ -106,7 +115,14 @@ for (const directory of packageDirectories) {
   const declaredDevelopment = new Set([
     ...declaredRuntime,
     ...Object.keys(manifest.devDependencies || {}),
+    ...sharedDevelopmentDependencies,
   ]);
+
+  for (const dependency of sharedDevelopmentDependencies) {
+    if (manifest.devDependencies?.[dependency]) {
+      failures.push(`${manifest.name}: shared development dependency ${dependency} must be declared only at the workspace root`);
+    }
+  }
   const importedRuntime = new Set();
   const importSources = new Map();
   const srcDirectory = path.join(directory, 'src');
