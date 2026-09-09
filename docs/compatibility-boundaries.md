@@ -18,6 +18,8 @@ contracts or belong to the S3 adapter.
   across the package rename.
 - The historical default container name, local directory, and SQLite filename keep
   `s3db` in their values to avoid silently selecting an empty database after upgrade.
+- Identity accepts the historical `s3db$` client-secret hash prefix so persisted
+  OAuth clients remain usable. New Identity defaults and public endpoints use Baldin names.
 
 ## Operational configuration
 

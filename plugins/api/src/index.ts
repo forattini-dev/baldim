@@ -260,7 +260,7 @@ export class ApiPlugin extends Plugin {
     super(options as ConstructorParameters<typeof Plugin>[0]);
 
     const resourceNamesOption = options.resourceNames || {};
-    const defaultPort = options.port || 3000;
+    const defaultPort = options.port ?? 3000;
     const defaultHost = options.host || '0.0.0.0';
     const normalizedListeners = normalizeApiListeners(options.listeners, {
       host: defaultHost,

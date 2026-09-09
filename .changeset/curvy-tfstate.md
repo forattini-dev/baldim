@@ -5,4 +5,5 @@
 
 Add the standalone Terraform and OpenTofu state plugin with filesystem and S3 drivers, history, diffs, monitoring, and exports.
 
-Declare the S3 adapter's transitive Raffel runtime requirement so the adapter can load in an otherwise empty consumer project.
+Use Recker's narrow public subpaths in the S3 adapter so it does not inherit
+unrelated Raffel transports in an otherwise empty consumer project.

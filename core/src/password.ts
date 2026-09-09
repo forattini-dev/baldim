@@ -7,6 +7,8 @@ export {
   verifyPassword,
 } from './concerns/password-hashing.js';
 export type {
+  Argon2Config,
+  BcryptConfig,
   HashPasswordOptions,
   PasswordAlgorithm,
   SecurityConfig,

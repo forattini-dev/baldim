@@ -324,7 +324,7 @@ export class ApiServer {
 
   constructor(options: ApiServerOptions = {}) {
     this.options = {
-      port: options.port || 3000,
+      port: options.port ?? 3000,
       host: options.host || '0.0.0.0',
       httpEnabled: options.httpEnabled !== false,
       database: options.database,
@@ -590,20 +590,27 @@ export class ApiServer {
       ? await this._startTlsServer(fetchHandler, port!, host!, resolvedTls)
       : await new Promise<ServerInfo>((resolve, reject) => {
           try {
-            this.server = serve({
+            const listeningServer = serve({
               fetch: fetchHandler,
               port,
               hostname: host,
               keepAliveTimeout: 65000,
               headersTimeout: 66000,
               onListen: ({ port, hostname }) => {
-                resolve({ port, hostname });
+                const address = listeningServer.address();
+                resolve({
+                  port: typeof address === 'object' && address ? address.port : port,
+                  hostname
+                });
               }
             });
+            this.server = listeningServer;
           } catch (err) {
             reject(err);
           }
         });
+
+    this.options.port = serverInfo.port;
 
     try {
       await this._setupProtocolBindings();

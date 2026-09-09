@@ -1,11 +1,5 @@
 import { ApiPlugin } from '../../src/index.js';
 
-const BASE_PORT = 3300;
-
-export function randomPort() {
-  return BASE_PORT + Math.floor(Math.random() * 4000);
-}
-
 export async function waitForServer(port, options = {}) {
   const {
     path = '/health',
@@ -29,12 +23,11 @@ export async function waitForServer(port, options = {}) {
 }
 
 export async function startApiPlugin(db, pluginOptions = {}, instanceName) {
-  const port = pluginOptions.port ?? randomPort();
   const mergedOptions = {
     host: '127.0.0.1',
     logLevel: 'debug', // Changed to debug for more verbose logging
     ...pluginOptions,
-    port
+    port: pluginOptions.port ?? 0
   };
 
   if (!mergedOptions.docs) {
@@ -45,8 +38,12 @@ export async function startApiPlugin(db, pluginOptions = {}, instanceName) {
   }
 
   const plugin = new ApiPlugin(mergedOptions);
-  const name = instanceName || `api-test-${port}`;
+  const name = instanceName || 'api-test';
   await db.usePlugin(plugin, name);
+  const port = plugin.getServerInfo().port;
+  if (typeof port !== 'number' || port <= 0) {
+    throw new Error('API server did not expose its bound port');
+  }
   await waitForServer(port);
   return { plugin, port };
 }
