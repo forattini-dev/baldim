@@ -100,6 +100,18 @@ export interface FieldHandler {
   reducer: ReducerFunction;
 }
 
+let lastTransactionIdTimestamp = -1;
+let transactionIdSequence = 0;
+
+export function compareTransactionsByTimestamp(a: Transaction, b: Transaction): number {
+  const timestampDifference = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+  if (timestampDifference !== 0) {
+    return timestampDifference;
+  }
+
+  return a.id.localeCompare(b.id);
+}
+
 /**
  * Detect user's timezone from environment
  *
@@ -446,8 +458,15 @@ export function getCohortHoursWindow(
  *
  * @returns Transaction ID string
  */
-export function generateTransactionId(): string {
-  const timestamp = Date.now();
+export function generateTransactionId(timestamp: number = Date.now()): string {
+  if (timestamp === lastTransactionIdTimestamp) {
+    transactionIdSequence += 1;
+  } else {
+    lastTransactionIdTimestamp = timestamp;
+    transactionIdSequence = 0;
+  }
+
+  const sequence = transactionIdSequence.toString(36).padStart(6, '0');
   const random = Math.random().toString(36).substring(2, 11);
-  return `tx-${timestamp}-${random}`;
+  return `tx-${timestamp}-${sequence}-${random}`;
 }

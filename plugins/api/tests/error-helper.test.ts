@@ -20,6 +20,7 @@ import {
   createHttpError
 } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './config.js';
+import { getApiPort } from './helpers/server.js';
 
 async function makeRequest(port, path) {
   const response = await fetch(`http://127.0.0.1:${port}${path}`);
@@ -47,7 +48,7 @@ describe('API Plugin - Error Helper Middleware', () => {
   let app;
 
   beforeEach(async () => {
-    port = 3800 + Math.floor(Math.random() * 1000);
+    port = 0;
     const testName = `error-helper-test-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
     db = createMemoryDatabaseForTest(testName, { logLevel: 'silent' });
@@ -64,6 +65,7 @@ describe('API Plugin - Error Helper Middleware', () => {
     });
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
 
     // Get app instance to add test routes
     app = apiPlugin.getApp();

@@ -8,6 +8,7 @@ import { getCronManager, PluginError, tryFn } from '@baldin/core/plugin';
 import {
   type Transaction,
   type FieldHandler,
+  compareTransactionsByTimestamp,
   getCohortHoursWindow,
   getNestedValue,
   setNestedValue
@@ -396,9 +397,7 @@ export async function consolidateRecord(
   const reducer = handler.reducer;
   const initialValue = handler.initialValue;
 
-  const sortedTransactions = [...transactions].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
+  const sortedTransactions = [...transactions].sort(compareTransactionsByTimestamp);
 
   const setOperations = sortedTransactions.filter(t => t.operation === 'set');
   const lastSet = setOperations.length > 0 ? setOperations[setOperations.length - 1] : null;
@@ -409,7 +408,7 @@ export async function consolidateRecord(
   if (lastSet) {
     baseValue = lastSet.value;
     relevantTransactions = sortedTransactions.filter(
-      t => new Date(t.timestamp).getTime() > new Date(lastSet.timestamp).getTime()
+      transaction => compareTransactionsByTimestamp(transaction, lastSet) > 0
     );
   } else {
     const [recordOk, , record] = await tryFn(() =>
@@ -541,9 +540,7 @@ export async function getConsolidatedValue(
     return baseValue;
   }
 
-  const sorted = [...pendingTransactions].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
+  const sorted = [...pendingTransactions].sort(compareTransactionsByTimestamp);
 
   const setOps = sorted.filter(t => t.operation === 'set');
   const lastSet = setOps.length > 0 ? setOps[setOps.length - 1] : null;
@@ -554,7 +551,7 @@ export async function getConsolidatedValue(
   if (lastSet) {
     value = lastSet.value;
     relevantTxns = sorted.filter(
-      t => new Date(t.timestamp).getTime() > new Date(lastSet.timestamp).getTime()
+      transaction => compareTransactionsByTimestamp(transaction, lastSet) > 0
     );
   } else {
     value = baseValue;
@@ -662,9 +659,7 @@ export async function recalculateRecord(
     return initialValue;
   }
 
-  const sorted = [...allTransactions].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
+  const sorted = [...allTransactions].sort(compareTransactionsByTimestamp);
 
   const setOps = sorted.filter(t => t.operation === 'set');
   const lastSet = setOps.length > 0 ? setOps[setOps.length - 1] : null;
@@ -675,7 +670,7 @@ export async function recalculateRecord(
   if (lastSet) {
     value = lastSet.value;
     relevantTxns = sorted.filter(
-      t => new Date(t.timestamp).getTime() > new Date(lastSet.timestamp).getTime()
+      transaction => compareTransactionsByTimestamp(transaction, lastSet) > 0
     );
   } else {
     value = initialValue;

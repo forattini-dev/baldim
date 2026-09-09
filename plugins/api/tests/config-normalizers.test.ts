@@ -3,6 +3,21 @@ import { normalizeAuthConfig } from '../src/config/normalize-auth.js';
 import { normalizeResourcesConfig } from '../src/config/normalize-resources.js';
 import { normalizeRateLimitRules } from '../src/config/normalize-ratelimit.js';
 import { normalizeLoggingConfig } from '../src/config/normalize-logging.js';
+import { normalizeApiListeners } from '../src/config/normalize-listeners.js';
+
+describe('normalizeApiListeners', () => {
+  test('accepts port zero so the operating system can assign an available port', () => {
+    const [listener] = normalizeApiListeners(
+      {
+        bind: { host: '127.0.0.1', port: 0 },
+        protocols: { http: true }
+      },
+      { host: '127.0.0.1', port: 3000 }
+    );
+
+    expect(listener.bind.port).toBe(0);
+  });
+});
 
 describe('normalizeAuthConfig', () => {
   describe('empty/null input', () => {

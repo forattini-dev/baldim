@@ -22,6 +22,14 @@ export async function waitForServer(port, options = {}) {
   throw new Error(`API server on port ${port} did not become ready in time`);
 }
 
+export function getApiPort(plugin) {
+  const port = plugin.getServerInfo().port;
+  if (typeof port !== 'number' || port <= 0) {
+    throw new Error('API server did not expose its bound port');
+  }
+  return port;
+}
+
 export async function startApiPlugin(db, pluginOptions = {}, instanceName) {
   const mergedOptions = {
     host: '127.0.0.1',
@@ -40,10 +48,7 @@ export async function startApiPlugin(db, pluginOptions = {}, instanceName) {
   const plugin = new ApiPlugin(mergedOptions);
   const name = instanceName || 'api-test';
   await db.usePlugin(plugin, name);
-  const port = plugin.getServerInfo().port;
-  if (typeof port !== 'number' || port <= 0) {
-    throw new Error('API server did not expose its bound port');
-  }
+  const port = getApiPort(plugin);
   await waitForServer(port);
   return { plugin, port };
 }

@@ -1,5 +1,6 @@
 import { ApiPlugin } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './config.js';
+import { getApiPort } from './helpers/server.js';
 
 async function waitForServer(port: number, maxAttempts = 100): Promise<void> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -22,7 +23,7 @@ describe('API Plugin - USD documentation endpoints', () => {
   let port: number;
 
   beforeEach(async () => {
-    port = 3600 + Math.floor(Math.random() * 1000);
+    port = 0;
     const testName = `api-plugin-usd-docs-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     db = createMemoryDatabaseForTest(testName, { logLevel: 'silent' });
     await db.connect();
@@ -62,6 +63,7 @@ describe('API Plugin - USD documentation endpoints', () => {
     });
 
     await db!.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const legacyUsdResponse = await fetch(`http://127.0.0.1:${port}/api.usd.json`);
@@ -111,6 +113,7 @@ describe('API Plugin - USD documentation endpoints', () => {
     });
 
     await db!.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const legacyUsdResponse = await fetch(`http://127.0.0.1:${port}/api/api.usd.json`);

@@ -15,6 +15,7 @@ import { createDatabaseForTest, sleep } from './config.js';
 import { jwtLogin } from '../src/auth/jwt-auth.js';
 import { generateApiKey } from '../src/auth/api-key-auth.js';
 import { encrypt } from '@baldin/core';
+import { getApiPort } from './helpers/server.js';
 
 // Helper to create Basic Auth header
 function createBasicAuthHeader(username, password) {
@@ -46,13 +47,6 @@ async function waitForResource(db, resourceName, maxAttempts = 30) {
   throw new Error(`Resource '${resourceName}' was not created in time`);
 }
 
-  // Helper to generate a random port within a safe range for ephemeral ports
-  function getRandomPort() {
-    // Ports 49152-65535 are dynamic/private, avoiding conflicts with well-known ports.
-    // We add an offset to avoid using very low ephemeral ports that might be used by other services
-    return Math.floor(Math.random() * (65535 - 49152 + 1)) + 49152;
-  }
-
 describe('API Plugin - Auth Drivers (New API)', () => {
   describe('JWT Driver - Resource Management', () => {
     let db;
@@ -60,7 +54,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
     let port;
 
     beforeAll(async () => {
-      port = getRandomPort();
+      port = 0;
       db = createDatabaseForTest(`api-auth-jwt-${Date.now()}`, {
         logLevel: 'silent',
         security: { passphrase: 'test-passphrase' } // Required for secret type encryption
@@ -98,6 +92,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
       });
 
       await db.usePlugin(apiPlugin, 'api');
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
     });
 
@@ -177,7 +172,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
     let port;
 
     beforeAll(async () => {
-      port = getRandomPort();
+      port = 0;
       db = createDatabaseForTest(`api-auth-apikey-${Date.now()}`, {
         logLevel: 'silent',
         security: { passphrase: 'api-key-passphrase' } // Required for secret type encryption
@@ -204,6 +199,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
       });
 
       await db.usePlugin(apiPlugin, 'api');
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
     });
 
@@ -276,7 +272,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
     let port;
 
     beforeAll(async () => {
-      port = getRandomPort();
+      port = 0;
       db = createDatabaseForTest(`api-auth-basic-${Date.now()}`, {
         logLevel: 'silent',
         security: { passphrase: 'basic-pass' } // Required for secret type encryption
@@ -306,6 +302,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
       });
 
       await db.usePlugin(apiPlugin, 'api');
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
     });
 
@@ -367,7 +364,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
     let port;
 
     beforeAll(async () => {
-      port = getRandomPort();
+      port = 0;
       db = createDatabaseForTest(`api-auth-multi-${Date.now()}`, {
         logLevel: 'silent',
         security: { passphrase: 'secret' } // Required for secret type encryption
@@ -412,6 +409,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
       });
 
       await db.usePlugin(apiPlugin, 'api');
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
     });
 
@@ -491,7 +489,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
     let port;
 
     beforeAll(async () => {
-      port = getRandomPort();
+      port = 0;
       db = createDatabaseForTest(`api-auth-openapi-${Date.now()}`, { logLevel: 'silent' });
       await db.connect();
 
@@ -531,6 +529,7 @@ describe('API Plugin - Auth Drivers (New API)', () => {
       });
 
       await db.usePlugin(apiPlugin, 'api');
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
     });
 
