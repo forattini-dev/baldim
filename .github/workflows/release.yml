@@ -23,6 +23,12 @@ jobs:
         with:
           node-version: '24'
           registry-url: https://registry.npmjs.org/
+      - name: Verify npm publisher access
+        run: |
+          echo "Authenticated to npm as $(npm whoami)"
+          npm access list packages @baldin --json
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:deps
       - run: pnpm typecheck
