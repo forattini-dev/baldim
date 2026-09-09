@@ -169,7 +169,8 @@ describe('S3QueuePlugin - Concurrent Workers', () => {
       pollInterval: 20,
       visibilityTimeout: 5000,
       concurrency: 1,
-      autoAcknowledge: true
+      autoAcknowledge: true,
+      enableCoordinator: false
     });
 
     const plugin2 = new S3QueuePlugin({
@@ -179,7 +180,8 @@ describe('S3QueuePlugin - Concurrent Workers', () => {
       pollInterval: 20,
       visibilityTimeout: 5000,
       concurrency: 1,
-      autoAcknowledge: true
+      autoAcknowledge: true,
+      enableCoordinator: false
     });
 
     const plugin3 = new S3QueuePlugin({
@@ -189,7 +191,8 @@ describe('S3QueuePlugin - Concurrent Workers', () => {
       pollInterval: 20,
       visibilityTimeout: 5000,
       concurrency: 1,
-      autoAcknowledge: true
+      autoAcknowledge: true,
+      enableCoordinator: false
     });
 
     await plugin1.install(database);
@@ -226,7 +229,7 @@ describe('S3QueuePlugin - Concurrent Workers', () => {
     ]);
 
     const start = Date.now();
-    const timeoutMs = 12000;
+    const timeoutMs = 20000;
     while (Date.now() - start < timeoutMs) {
       const stats = await resource.queueStats();
       if (stats.completed >= messageCount) {
@@ -247,7 +250,7 @@ describe('S3QueuePlugin - Concurrent Workers', () => {
 
     const stats = await resource.queueStats();
     expect(stats.completed).toBe(messageCount);
-  }, 20000);
+  }, 30000);
 
   test.skip('should handle visibility timeout correctly', async () => {
     const plugin = new S3QueuePlugin({

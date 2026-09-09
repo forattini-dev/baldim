@@ -165,6 +165,7 @@ describe('S3QueuePlugin - Metadata & Custom Partitions', () => {
 
       const pendingCount = await resource.countQueue('pending');
       expect(pendingCount).toBe(1);
+      expect(await resource.countQueue('completed')).toBe(0);
 
       const byClientCount = await resource.countQueueBy({ clientId: 'acme' });
       expect(byClientCount).toBe(1);
@@ -196,6 +197,7 @@ describe('S3QueuePlugin - Metadata & Custom Partitions', () => {
 
       const count = await resource.countQueue('pending');
       expect(count).toBe(1);
+      expect(await resource.countQueue('failed')).toBe(0);
     });
   });
 });

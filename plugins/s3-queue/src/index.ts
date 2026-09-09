@@ -2008,7 +2008,10 @@ export class S3QueuePlugin extends CoordinatorPlugin<S3QueuePluginOptions> {
     };
 
     const counts = await Promise.all(
-      statusKeys.map(status => tryFn(() => this.queueResource!.count({ status })))
+      statusKeys.map(status => tryFn(() => this.queueResource!.count({
+        partition: 'byStatus',
+        partitionValues: { status },
+      })))
     );
 
     let derivedTotal = 0;
@@ -2045,9 +2048,11 @@ export class S3QueuePlugin extends CoordinatorPlugin<S3QueuePluginOptions> {
       return 0;
     }
 
-    const filter = status === 'all' ? undefined : { status };
+    const countOptions = status === 'all'
+      ? {}
+      : { partition: 'byStatus', partitionValues: { status } };
     const [ok, err, count] = await tryFn(() =>
-      this.queueResource!.count(filter || {})
+      this.queueResource!.count(countOptions)
     );
 
     if (!ok) {
