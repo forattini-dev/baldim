@@ -239,7 +239,12 @@ export class ResourceValidator {
               // required is default, no action needed
             } else if (part.includes(':')) {
               const [modifier, val] = part.split(':');
-              if (val === 'true') {
+              if (modifier === 'enum') {
+                (config as StringRecord)[modifier] = (val ?? '')
+                  .split(',')
+                  .map((entry) => entry.trim())
+                  .filter(Boolean);
+              } else if (val === 'true') {
                 (config as StringRecord)[modifier!] = true;
               } else if (val === 'false') {
                 (config as StringRecord)[modifier!] = false;

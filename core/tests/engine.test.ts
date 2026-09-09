@@ -24,6 +24,18 @@ afterEach(async () => {
 });
 
 describe('Baldin core engine', () => {
+  it('accepts comma-separated enum values in compact attribute schemas', async () => {
+    const database = await createDatabase('compact-enum');
+    const jobs = await database.createResource({
+      name: 'compact_enum_jobs',
+      timestamps: false,
+      attributes: { status: 'string|required|enum:idle,running,error' },
+    });
+
+    await expect(jobs.insert({ id: 'valid', status: 'running' })).resolves.toMatchObject({ status: 'running' });
+    await expect(jobs.insert({ id: 'invalid', status: 'paused' })).rejects.toMatchObject({ statusCode: 422 });
+  });
+
   it('validates writes without leaving a rejected document behind', async () => {
     const database = await createDatabase('validation');
     const people = await database.createResource({

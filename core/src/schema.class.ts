@@ -2072,7 +2072,12 @@ export class Schema {
               // required is default
             } else if (part.includes(':')) {
               const [modifier, val] = part.split(':');
-              if (val === 'true') {
+              if (modifier === 'enum') {
+                config[modifier] = (val ?? '')
+                  .split(',')
+                  .map((entry) => entry.trim())
+                  .filter(Boolean);
+              } else if (val === 'true') {
                 config[modifier!] = true;
               } else if (val === 'false') {
                 config[modifier!] = false;
