@@ -5,7 +5,7 @@
 ### Minor Changes
 
 - 43ffc77: Add the standalone Terraform and OpenTofu state plugin with filesystem and S3 drivers, history, diffs, monitoring, and exports.
-  
+
   Use Recker's narrow public subpaths in the S3 adapter so it does not inherit
   unrelated Raffel transports in an otherwise empty consumer project.
 
