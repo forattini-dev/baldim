@@ -70,8 +70,30 @@ jobs:
           pnpm --filter @baldin/plugin-tournament pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-s3-queue pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-eventual-consistency pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-tfstate pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+      - name: Verify S3 and Tfstate package isolation
+        shell: bash
+        run: |
+          consumer="$(mktemp -d)"
+          cd "$consumer"
+          npm init -y
+          npm install --ignore-scripts --no-audit --no-fund \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-s3-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-tfstate-*.tgz
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { S3Client } from '@baldin/adapter-s3';
+          import { FilesystemTfStateDriver, S3TfStateDriver, TfStatePlugin } from '@baldin/plugin-tfstate';
+
+          assert.equal(typeof S3Client, 'function');
+          assert.equal(typeof FilesystemTfStateDriver, 'function');
+          assert.equal(typeof S3TfStateDriver, 'function');
+          assert.equal(typeof TfStatePlugin, 'function');
+          JS
       - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
@@ -100,6 +122,7 @@ jobs:
           tournament_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-tournament-*.tgz)
           s3_queue_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-s3-queue-*.tgz)
           eventual_consistency_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-eventual-consistency-*.tgz)
+          tfstate_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-tfstate-*.tgz)
           testing_package=("$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz)
           typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz)
           test "${#core[@]}" -eq 1
@@ -127,6 +150,7 @@ jobs:
           test "${#tournament_plugin[@]}" -eq 1
           test "${#s3_queue_plugin[@]}" -eq 1
           test "${#eventual_consistency_plugin[@]}" -eq 1
+          test "${#tfstate_plugin[@]}" -eq 1
           test "${#testing_package[@]}" -eq 1
           test "${#typegen_package[@]}" -eq 1
           if tar -tzf "${core[0]}" | grep -Eq 'package/dist/clients/(filesystem|memory|reddb|sqlite|remote-sqlite|d1|libsql)'; then
@@ -136,7 +160,7 @@ jobs:
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -163,6 +187,7 @@ jobs:
           import { getAvailableFormats } from '@baldin/plugin-tournament/toolkit';
           import { S3QueuePlugin } from '@baldin/plugin-s3-queue';
           import { EventualConsistencyPlugin } from '@baldin/plugin-eventual-consistency';
+          import { TfStatePlugin } from '@baldin/plugin-tfstate';
           import { Factory, Seeder } from '@baldin/testing';
           import { printTypes } from '@baldin/typegen';
           import { MemoryClient } from '@baldin/adapter-memory';
@@ -381,9 +406,30 @@ jobs:
             { success: true, recordsProcessed: 1, transactionsApplied: 1, errors: [] },
           );
           assert.equal((await counters.get('pack-counter')).value, 2);
+          const tfstateDir = await mkdtemp(path.join(tmpdir(), 'baldin-pack-tfstate-'));
+          const tfstateFile = path.join(tfstateDir, 'terraform.tfstate');
+          await writeFile(tfstateFile, JSON.stringify({
+            version: 4,
+            terraform_version: '1.9.0',
+            serial: 1,
+            lineage: 'pack-lineage',
+            outputs: {},
+            resources: [{
+              mode: 'managed',
+              type: 'aws_s3_bucket',
+              name: 'pack',
+              provider: 'provider["registry.terraform.io/hashicorp/aws"]',
+              instances: [{ attributes: { id: 'pack-bucket' } }],
+            }],
+          }));
+          const tfstate = new TfStatePlugin({ logLevel: 'silent', trackDiffs: false, asyncPartitions: false });
+          await database.usePlugin(tfstate);
+          assert.equal((await tfstate.importState(tfstateFile)).resourcesInserted, 1);
+          assert.equal((await tfstate.getResourcesByType('aws_s3_bucket'))[0]?.resourceName, 'pack');
           await database.disconnect();
           await rm(backupDir, { recursive: true, force: true });
           await rm(importDir, { recursive: true, force: true });
+          await rm(tfstateDir, { recursive: true, force: true });
           assert.equal(queueStopped, true);
           assert.equal(queuedJobs.enqueue, undefined);
           assert.equal(counters.add, undefined);

@@ -74,6 +74,7 @@ and dependency rules.
 | plugins/tournament | @baldin/plugin-tournament | Tournament registration, formats, brackets, matches, and standings |
 | plugins/s3-queue | @baldin/plugin-s3-queue | Durable database-backed queues with coordinated workers and retries |
 | plugins/eventual-consistency | @baldin/plugin-eventual-consistency | Eventually consistent counters, consolidation, coordinated workers, and analytics |
+| plugins/tfstate | @baldin/plugin-tfstate | Terraform/OpenTofu state ingestion, history, diffs, monitoring, and export |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |

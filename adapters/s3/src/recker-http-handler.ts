@@ -1,13 +1,15 @@
 import {
   createClient,
+  type Client,
+} from 'recker/client';
+import {
   expandHTTP2Options,
-  Http2Error,
-  parseHttp2Error,
+  type HTTP2Preset,
+} from 'recker/utils/concurrency';
+import {
   createHttp2MetricsHooks,
   getGlobalHttp2Metrics,
-  type HTTP2Preset,
-  type Client,
-} from 'recker';
+} from 'recker/utils/http2-metrics';
 import type {
   ReckerHttpHandlerOptions,
   CircuitStats,
@@ -150,17 +152,82 @@ function calculateRetryDelay(
   return Math.max(0, Math.floor(delay));
 }
 
+interface Http2ErrorDetails {
+  errorCode: string;
+  retriable: boolean;
+}
+
+const RETRIABLE_HTTP2_ERROR_CODES = new Set([
+  'NO_ERROR',
+  'INTERNAL_ERROR',
+  'REFUSED_STREAM',
+  'ENHANCE_YOUR_CALM',
+  'CANCEL',
+]);
+
+function parseHttp2ErrorDetails(error: Error): Http2ErrorDetails | null {
+  const candidate = error as Error & {
+    code?: string;
+    errorCode?: string;
+    retriable?: boolean;
+  };
+
+  if (candidate.name === 'Http2Error' && candidate.errorCode) {
+    return {
+      errorCode: candidate.errorCode,
+      retriable: candidate.retriable ?? RETRIABLE_HTTP2_ERROR_CODES.has(candidate.errorCode),
+    };
+  }
+
+  const message = candidate.message || '';
+  const code = candidate.code || '';
+  if (message.includes('GOAWAY') || code.includes('GOAWAY')) {
+    return { errorCode: 'NO_ERROR', retriable: true };
+  }
+
+  if (message.includes('RST_STREAM') || code.includes('RST_STREAM')) {
+    const errorCode = message.match(/RST_STREAM.*code[:\s]+(\w+)/i)?.[1] || 'CANCEL';
+    return { errorCode, retriable: RETRIABLE_HTTP2_ERROR_CODES.has(errorCode) };
+  }
+
+  const knownErrorCodes = [
+    'PROTOCOL_ERROR',
+    'INTERNAL_ERROR',
+    'FLOW_CONTROL_ERROR',
+    'SETTINGS_TIMEOUT',
+    'STREAM_CLOSED',
+    'FRAME_SIZE_ERROR',
+    'REFUSED_STREAM',
+    'CANCEL',
+    'COMPRESSION_ERROR',
+    'CONNECT_ERROR',
+    'ENHANCE_YOUR_CALM',
+    'INADEQUATE_SECURITY',
+    'HTTP_1_1_REQUIRED',
+  ];
+  const errorCode = knownErrorCodes.find((knownCode) => (
+    message.includes(knownCode) || code.includes(knownCode)
+  ));
+  if (errorCode) {
+    return { errorCode, retriable: RETRIABLE_HTTP2_ERROR_CODES.has(errorCode) };
+  }
+
+  if (code.startsWith('ERR_HTTP2_')) {
+    const nativeErrorCode = code.replace('ERR_HTTP2_', '');
+    return {
+      errorCode: nativeErrorCode,
+      retriable: RETRIABLE_HTTP2_ERROR_CODES.has(nativeErrorCode),
+    };
+  }
+
+  return null;
+}
+
 function isRetryableError(error: Error | null, statusCode?: number): boolean {
   if (error) {
-    // Check for HTTP/2 specific errors first
-    const h2Error = parseHttp2Error(error);
+    const h2Error = parseHttp2ErrorDetails(error);
     if (h2Error) {
       return h2Error.retriable;
-    }
-
-    // Check for native HTTP/2 errors
-    if (error instanceof Http2Error) {
-      return error.retriable;
     }
 
     const code = (error as NodeJS.ErrnoException).code;
@@ -186,7 +253,7 @@ function isRetryableError(error: Error | null, statusCode?: number): boolean {
  * Get additional retry delay for HTTP/2 errors like ENHANCE_YOUR_CALM
  */
 function getHttp2RetryDelay(error: Error): number | undefined {
-  const h2Error = parseHttp2Error(error);
+  const h2Error = parseHttp2ErrorDetails(error);
   if (h2Error && h2Error.errorCode === 'ENHANCE_YOUR_CALM') {
     // Server is rate limiting, wait longer (5-10 seconds)
     return 5000 + Math.random() * 5000;
