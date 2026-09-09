@@ -81,7 +81,7 @@ importers:
   adapters/s3:
     dependencies:
       '@aws-sdk/client-s3':
-        specifier: ^3.1026.0
+        specifier: 3.1127.0
         version: 3.1127.0
       '@baldin/core':
         specifier: workspace:*
