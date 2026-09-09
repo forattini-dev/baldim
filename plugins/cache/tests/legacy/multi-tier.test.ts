@@ -1,8 +1,5 @@
 import { MemoryCache, MultiTierCache } from '../../src/index.js';
 
-// Mock timer functions
-const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 // Simple mock cache for testing with TTL
 class MockCache {
   constructor({ ttl = 0, name = 'MockCache' } = {}) {
@@ -148,10 +145,13 @@ describe('MultiTierCache', () => {
     });
   });
 
-  describe('TTL Expiration - Real Timing', () => {
+  describe('TTL Expiration', () => {
     let cache, l1, l2, l3;
 
     beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+
       l1 = new MockCache({ ttl: 100, name: 'L1' }); // 100ms
       l2 = new MockCache({ ttl: 200, name: 'L2' }); // 200ms
       l3 = new MockCache({ ttl: 500, name: 'L3' }); // 500ms
@@ -167,6 +167,10 @@ describe('MultiTierCache', () => {
       });
     });
 
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     test('L1 expires after 100ms, should hit L2', async () => {
       await cache.set('key1', { value: 'data1' });
 
@@ -175,8 +179,8 @@ describe('MultiTierCache', () => {
       expect(result).toEqual({ value: 'data1' });
       expect(cache.stats.tiers[0].hits).toBe(1);
 
-      // Wait for L1 to expire
-      await wait(150);
+      // Advance past the L1 expiry while keeping L2 alive
+      vi.advanceTimersByTime(150);
 
       // Should now hit L2
       result = await cache.get('key1');
@@ -188,8 +192,8 @@ describe('MultiTierCache', () => {
     test('L1 and L2 expire after 200ms, should hit L3', async () => {
       await cache.set('key1', { value: 'data1' });
 
-      // Wait for L1 and L2 to expire
-      await wait(250);
+      // Advance past the L1 and L2 expiries
+      vi.advanceTimersByTime(250);
 
       const result = await cache.get('key1');
       expect(result).toEqual({ value: 'data1' });
@@ -201,8 +205,8 @@ describe('MultiTierCache', () => {
     test('All tiers expire after 500ms, should return null', async () => {
       await cache.set('key1', { value: 'data1' });
 
-      // Wait for all tiers to expire
-      await wait(600);
+      // Advance past every tier's expiry
+      vi.advanceTimersByTime(600);
 
       const result = await cache.get('key1');
       expect(result).toBeNull();
