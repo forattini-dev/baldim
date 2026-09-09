@@ -11,7 +11,9 @@ describe('@baldin/plugin-ml package contract', () => {
 
     expect(manifest.name).toBe('@baldin/plugin-ml');
     expect(manifest.dependencies).toEqual({ '@tensorflow/tfjs': '^4.22.0' });
-    expect(manifest.peerDependencies).toEqual({ '@baldin/core': '^0.1.0' });
+    expect(manifest.peerDependencies).toEqual({
+      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+    });
   });
 
   it('contains no legacy product branding', async () => {

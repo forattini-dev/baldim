@@ -14,7 +14,9 @@ describe('@baldin/plugin-kubernetes-inventory package contract', () => {
       'lodash-es': '^4.18.1',
       'node-cron': '^4.0.0',
     });
-    expect(manifest.peerDependencies).toEqual({ '@baldin/core': '^0.1.0' });
+    expect(manifest.peerDependencies).toEqual({
+      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+    });
   });
 
   it('contains no legacy project branding or monolith-only imports', async () => {

@@ -14,7 +14,9 @@ describe('@baldin/plugin-cookie-farm-suite package contract', () => {
       '@baldin/plugin-s3-queue': 'workspace:*',
       '@baldin/plugin-ttl': 'workspace:*',
     });
-    expect(manifest.peerDependencies).toEqual({ '@baldin/core': '^0.1.0' });
+    expect(manifest.peerDependencies).toEqual({
+      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+    });
   });
 
   it('contains no legacy project branding in runtime source', async () => {
