@@ -8,16 +8,16 @@ working core from a completed product migration.
 
 | Surface | s3db.js baseline | Baldin status | Result |
 | --- | ---: | --- | --- |
-| Source | 558 files, 555 TypeScript | 94 core source files plus 163 adapter, plugin, and shared-package source files | Partial |
+| Source | 558 files, 555 TypeScript | 95 core source files plus 260 adapter, plugin, and shared-package source files | Partial |
 | Core engine | Database, Resource, Schema, Validator, manager | Migrated from the `lite` dependency closure | Working |
-| Plugin catalog | 32 plugin families, 411 TypeScript files | Public plugin SDK plus 20 standalone plugin packages; 12 families remain | Partial |
-| Installable packages | One all-in-one package | `core`, five storage adapters, 20 standalone plugins, and two shared packages | Partial |
+| Plugin catalog | 32 plugin families, 411 TypeScript files | Public plugin SDK plus 21 standalone plugin packages; 11 families remain | Partial |
+| Installable packages | One all-in-one package | `core`, five storage adapters, 21 standalone plugins, and two shared packages | Partial |
 | Storage adapters | Built into the package | Memory, S3, filesystem, SQLite/libSQL/D1, and RedDB are separate packages | Working |
 | CLI | 6 TypeScript modules plus 2 bin files | No CLI application/package | Missing |
 | MCP | 3 source modules plus 27 server/tool files | No MCP application/package | Missing |
 | Testing utilities | Factory and Seeder | Migrated to `@baldin/testing` | Working |
 | Public subpaths | root, lite, concerns, plugins, generator | Core subpaths plus standalone plugins, testing, and typegen packages | Partial |
-| Test suites | 118 core and 176 plugin test files | 86 focused test files, 1,052 passing tests, 15 intentionally skipped timing/provider cases, plus 4 MinIO contract cases in CI | Partial |
+| Test suites | 118 core and 176 plugin test files | 132 focused test files, 1,626 passing tests, 17 intentionally skipped optional-integration cases, plus 4 MinIO contract cases in CI | Partial |
 | npm releases | `s3db.js` published | Nothing published | Missing |
 
 ## Architectural gaps
@@ -42,12 +42,13 @@ runs are still needed before release.
 
 ## Plugin migration inventory
 
-The baseline barrel exports 32 plugin families. The following 20 are standalone
+The baseline barrel exports 32 plugin families. The following 21 are standalone
 Baldin packages:
 
 | Migrated plugin | Baldin package |
 | --- | --- |
 | Audit | `@baldin/plugin-audit` |
+| API | `@baldin/plugin-api` |
 | Backup | `@baldin/plugin-backup` |
 | Cache | `@baldin/plugin-cache` |
 | Costs | `@baldin/plugin-costs` |
@@ -68,8 +69,7 @@ Baldin packages:
 | TTL | `@baldin/plugin-ttl` |
 | Vector | `@baldin/plugin-vector` |
 
-The 12 remaining families are CloudInventory, ML,
-API, Identity,
+The 11 remaining families are CloudInventory, ML, Identity,
 KubernetesInventory, Puppeteer, Spider, CookieFarm, CookieFarmSuite, Recon,
 Replicator, and WebSocket.
 
@@ -77,7 +77,7 @@ Replicator, and WebSocket.
 
 1. Run the storage contract suite against configured AWS S3 and R2 targets.
 2. Extend the shared contract to RedDB and remote SQLite test services.
-3. Migrate the remaining 12 plugin families to `@baldin/plugin-<name>` with their
+3. Migrate the remaining 11 plugin families to `@baldin/plugin-<name>` with their
    relevant original tests.
 4. Restore remaining public utilities and explicitly retire or migrate every old subpath export.
 5. Migrate CLI and MCP into applications that consume public workspace packages.

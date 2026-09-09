@@ -1,0 +1,106 @@
+import type { Context, Next, MiddlewareHandler } from '../../http/http-runtime.js';
+import type { Logger, LogLevel } from '@baldin/core/plugin';
+import type { ResourceLike, DatabaseLike } from '../resource-manager.js';
+import { createLogger } from '@baldin/core/plugin';
+
+export interface DriverDefinition {
+  driver: string;
+  type?: string;
+  config?: Record<string, unknown>;
+}
+
+export interface DriverConfigs {
+  jwt: Record<string, unknown>;
+  apiKey: Record<string, unknown>;
+  basic: Record<string, unknown>;
+  oauth2: Record<string, unknown>;
+  headerSecret: Record<string, unknown>;
+}
+
+export interface BaseAuthStrategyOptions {
+  drivers: DriverDefinition[];
+  authResource?: ResourceLike;
+  oidcMiddleware?: MiddlewareHandler | null;
+  database: DatabaseLike;
+  logLevel?: string;
+  logger?: Logger;
+}
+
+function normalizeDriverName(driverName: string): string {
+  const lowered = String(driverName || '').trim().toLowerCase();
+  if (lowered === 'api-key' || lowered === 'api_key' || lowered === 'apikey') {
+    return 'apiKey';
+  }
+
+  if (lowered === 'header-secret' || lowered === 'header_secret' || lowered === 'headersecret') {
+    return 'headerSecret';
+  }
+
+  return lowered;
+}
+
+export class BaseAuthStrategy {
+  protected drivers: DriverDefinition[];
+  protected authResource: ResourceLike | undefined;
+  protected oidcMiddleware: MiddlewareHandler | null | undefined;
+  protected database: DatabaseLike;
+  protected logger: Logger;
+
+  constructor({ drivers, authResource, oidcMiddleware, database, logLevel = 'info', logger }: BaseAuthStrategyOptions) {
+    this.drivers = drivers || [];
+    this.authResource = authResource;
+    this.oidcMiddleware = oidcMiddleware;
+    this.database = database;
+
+    if (logger) {
+      this.logger = logger;
+    } else {
+      this.logger = createLogger({ name: 'AuthStrategy', level: logLevel as LogLevel });
+    }
+  }
+
+  protected extractDriverConfigs(driverNames: string[] | null): DriverConfigs {
+    const configs: DriverConfigs = {
+      jwt: {},
+      apiKey: {},
+      basic: {},
+      oauth2: {},
+      headerSecret: {}
+    };
+
+    for (const driverDef of this.drivers) {
+      const driverName = normalizeDriverName(driverDef.driver || '');
+      const driverConfig = driverDef.config || {};
+
+      const normalizedFilter = driverNames
+        ? new Set(driverNames.map((name) => normalizeDriverName(name)))
+        : null;
+
+      if (normalizedFilter && !normalizedFilter.has(driverName)) {
+        continue;
+      }
+
+      if (driverName === 'oauth2-server' || driverName === 'oidc') {
+        continue;
+      }
+
+      if (driverName === 'jwt') {
+        configs.jwt = driverConfig;
+      } else if (driverName === 'apiKey') {
+        configs.apiKey = driverConfig;
+      } else if (driverName === 'basic') {
+        configs.basic = driverConfig;
+      } else if (driverName === 'oauth2') {
+        configs.oauth2 = driverConfig;
+      } else if (driverName === 'headerSecret') {
+        configs.headerSecret = driverConfig;
+      }
+    }
+
+    return configs;
+  }
+
+  async createMiddleware(): Promise<MiddlewareHandler> {
+    throw new Error('createMiddleware() must be implemented by subclass');
+  }
+}

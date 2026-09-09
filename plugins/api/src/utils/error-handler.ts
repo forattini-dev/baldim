@@ -1,0 +1,139 @@
+import type { Context } from '../http/http-runtime.js';
+import { error as formatError } from './response-formatter.js';
+import { createLogger } from '@baldin/core/plugin';
+import type { Logger } from '@baldin/core/plugin';
+
+const logger: Logger = createLogger({ name: 'ErrorHandler', level: 'info' });
+
+export interface BaldinError extends Error {
+  resource?: string;
+  bucket?: string;
+  key?: string;
+  operation?: string;
+  suggestion?: string;
+  availableResources?: string[];
+}
+
+export interface ErrorDetails {
+  resource?: string;
+  bucket?: string;
+  key?: string;
+  operation?: string;
+  suggestion?: string;
+  availableResources?: string[];
+  [key: string]: unknown;
+}
+
+const errorStatusMap: Record<string, number> = {
+  'ValidationError': 400,
+  'InvalidResourceItem': 400,
+  'ResourceNotFound': 404,
+  'NoSuchKey': 404,
+  'NoSuchBucket': 404,
+  'PartitionError': 400,
+  'CryptoError': 500,
+  'SchemaError': 400,
+  'QueueError': 500,
+  'ResourceError': 500
+};
+
+export function getStatusFromError(err: Error | BaldinError): number {
+  if (err.name && errorStatusMap[err.name]) {
+    return errorStatusMap[err.name]!;
+  }
+
+  if (err.constructor && err.constructor.name && errorStatusMap[err.constructor.name]) {
+    return errorStatusMap[err.constructor.name]!;
+  }
+
+  if (err.message) {
+    if (err.message.includes('not found') || err.message.includes('does not exist')) {
+      return 404;
+    }
+    if (err.message.includes('validation') || err.message.includes('invalid')) {
+      return 400;
+    }
+    if (err.message.includes('unauthorized') || err.message.includes('authentication')) {
+      return 401;
+    }
+    if (err.message.includes('forbidden') || err.message.includes('permission')) {
+      return 403;
+    }
+  }
+
+  return 500;
+}
+
+export function errorHandler(err: Error | BaldinError, c: Context): Response {
+  const status = getStatusFromError(err);
+  const code = err.name || 'INTERNAL_ERROR';
+
+  const details: ErrorDetails = {};
+
+  const baldinError = err as BaldinError;
+  if (baldinError.resource) details.resource = baldinError.resource;
+  if (baldinError.bucket) details.bucket = baldinError.bucket;
+  if (baldinError.key) details.key = baldinError.key;
+  if (baldinError.operation) details.operation = baldinError.operation;
+  if (baldinError.suggestion) details.suggestion = baldinError.suggestion;
+  if (baldinError.availableResources) details.availableResources = baldinError.availableResources;
+
+  const response = formatError(err, {
+    status,
+    code,
+    details
+  });
+
+  const logLevel = c?.get?.('logLevel');
+  if (logLevel === 'debug' || logLevel === 'trace') {
+    if (status >= 500) {
+      logger.error({
+        message: err.message,
+        code,
+        status,
+        stack: err.stack,
+        details
+      }, '[API Plugin] Error');
+    } else if (status >= 400 && status < 500) {
+      logger.warn({
+        message: err.message,
+        code,
+        status,
+        details
+      }, '[API Plugin] Client error');
+    }
+  }
+
+  return c.json(response, response._status as Parameters<typeof c.json>[1]);
+}
+
+export type AsyncRouteHandler = (c: Context) => Promise<Response>;
+
+export function asyncHandler(fn: AsyncRouteHandler): AsyncRouteHandler {
+  return async (c: Context): Promise<Response> => {
+    try {
+      return await fn(c);
+    } catch (err) {
+      return errorHandler(err as Error, c);
+    }
+  };
+}
+
+export type TryApiCallResult<T> = [true, null, T] | [false, Error, Response];
+
+export async function tryApiCall<T>(fn: () => Promise<T>, c: Context): Promise<TryApiCallResult<T>> {
+  try {
+    const result = await fn();
+    return [true, null, result];
+  } catch (err) {
+    const response = errorHandler(err as Error, c);
+    return [false, err as Error, response];
+  }
+}
+
+export default {
+  errorHandler,
+  asyncHandler,
+  tryApiCall,
+  getStatusFromError
+};

@@ -28,6 +28,10 @@
       "types": "./dist/concerns/base62.d.ts",
       "import": "./dist/concerns/base62.js"
     },
+    "./password": {
+      "types": "./dist/password.d.ts",
+      "import": "./dist/password.js"
+    },
     "./package.json": "./package.json",
     "./adapter": {
       "types": "./dist/adapter.d.ts",

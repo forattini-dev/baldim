@@ -1,0 +1,2008 @@
+/**
+ * API Server - Raffel-based HTTP server for Baldin API Plugin
+ *
+ * Manages HTTP server lifecycle and delegates routing/middleware concerns
+ * to dedicated components (MiddlewareChain, Router, HealthManager).
+ */
+
+import type { Context, MiddlewareHandler, HttpApp } from './http/http-runtime.js';
+import { serve } from './http/http-runtime.js';
+import type { Server as HttpServer } from 'node:http';
+import type { NetworkInterfaceInfo } from 'node:os';
+import type { Socket as UdpSocket } from 'node:dgram';
+import type { IncomingMessage } from 'node:http';
+import type { Server as NetServer, Socket as NetSocket } from 'node:net';
+import type { Logger } from '@baldin/core/plugin';
+import { networkInterfaces } from 'node:os';
+import { createErrorHandler } from './http/error-handler.js';
+import * as formatter from './http/response-formatter.js';
+import { createOIDCHandler } from './auth/oidc-auth.js';
+import { createSessionStore } from './concerns/session-store-factory.js';
+import { FailbanManager } from './concerns/failban-manager.js';
+import { bumpProcessMaxListeners } from './concerns/process-max-listeners.js';
+import { ApiEventEmitter } from './concerns/event-emitter.js';
+import { MetricsCollector } from './concerns/metrics-collector.js';
+import { MiddlewareChain } from './server/middleware-chain.class.js';
+import { Router } from './server/router.class.js';
+import { HealthManager } from './server/health-manager.class.js';
+import { OpenAPIGeneratorCached } from './utils/openapi-generator-cached.class.js';
+import { AuthStrategyFactory } from './auth/strategies/factory.class.js';
+import { applyBasePath } from './utils/base-path.js';
+import { ApiRouteRegistry } from './route-registry.js';
+import {
+  buildApiRuntimeContractTests,
+  buildApiRuntimeDoctorReport,
+  buildApiRuntimeInspectionPreview,
+  type ApiRuntimeInspectionPreview
+} from './runtime-inspection.js';
+import type {
+  ApiListenerConfigInputProtocol,
+  ApiListenerWebSocketConfig,
+  ApiListenerUdpConfig,
+  AuthConfig,
+  AuthPathRule,
+  DocsConfig
+} from './types.internal.js';
+import type { AuthRule } from './auth/path-rules-middleware.js';
+import type { TlsConfig } from './index.js';
+
+export interface ApiServerOptions {
+  port?: number;
+  host?: string;
+  listenerName?: string;
+  httpEnabled?: boolean;
+  tls?: boolean | TlsConfig;
+  database?: DatabaseLike;
+  namespace?: string | null;
+  basePath?: string;
+  versionPrefix?: string | boolean;
+  resources?: Record<string, unknown>;
+  routes?: Record<string, unknown>;
+  templates?: { enabled: boolean; engine: string };
+  middlewares?: MiddlewareHandler[];
+  cors?: { enabled: boolean; [key: string]: unknown };
+  security?: { enabled: boolean; [key: string]: unknown };
+  sessionTracking?: { enabled: boolean; [key: string]: unknown };
+  requestId?: { enabled: boolean; [key: string]: unknown };
+  httpLogger?: { enabled: boolean; [key: string]: unknown };
+  events?: { enabled: boolean; logLevel?: string; maxListeners?: number; [key: string]: unknown };
+  metrics?: {
+    enabled: boolean;
+    logLevel?: string;
+    maxPathsTracked?: number;
+    resetInterval?: number;
+    format?: string;
+    [key: string]: unknown;
+  };
+  failban?: {
+    enabled: boolean;
+    maxViolations?: number;
+    violationWindow?: number;
+    banDuration?: number;
+    whitelist?: string[];
+    blacklist?: string[];
+    persistViolations?: boolean;
+    logLevel?: string;
+    geo?: Record<string, unknown>;
+    resourceNames?: Record<string, string>;
+    [key: string]: unknown;
+  };
+  static?: StaticConfig[];
+  health?: { enabled: boolean; [key: string]: unknown };
+  logLevel?: string;
+  auth?: AuthConfig;
+  maxBodySize?: number;
+  startupBanner?: boolean;
+  rootRoute?: boolean | ((c: Context) => Response | Promise<Response>);
+  compression?: { enabled: boolean; threshold?: number };
+  logger?: Logger;
+  docs?: Partial<DocsConfig>;
+  routeRegistry?: ApiRouteRegistry;
+  /** Callback injected by ApiPlugin to register managed servers for lifecycle coupling. */
+  addManagedServer?: (server: { stop(): Promise<void> }, name?: string) => void;
+  /**
+   * Low-level setup hook. Called with the bare Raffel `HttpApp` and the full
+   * `raffel` module immediately after the app is created — before any Baldin
+   * middleware, routes, or auth handlers are registered.
+   *
+   * Use this to prepend middleware, mount sub-apps, configure proxy handlers,
+   * or do anything else that must run before the built-in chain.
+   *
+   * @example
+   * setup: async ({ app, raffel, listenerName, httpServer }) => {
+   *   // Forward all /upstream/* requests to another service
+   *   app.use('/upstream/*', async (c, next) => {
+   *     const upstream = new URL(c.req.url);
+   *     upstream.hostname = 'internal-svc';
+   *     return fetch(upstream.toString(), { method: c.req.method });
+   *   });
+   * }
+   */
+  setup?: (ctx: {
+    app: HttpApp;
+    raffel: typeof import('raffel');
+    listenerName: string | undefined;
+    /** Raw Node.js http.Server — available only after the server has started. Null during the first call. */
+    httpServer: import('node:http').Server | null;
+    /**
+     * Register a Raffel server (proxy, mesh node, etc.) for automatic lifecycle coupling.
+     * The registered server's `stop()` method will be called when the API plugin stops.
+     * @param server Any object with a `stop(): Promise<void>` method.
+     * @param name   Optional name for later retrieval via `apiPlugin.getManagedServer(name)`.
+     */
+    addManagedServer: (server: { stop(): Promise<void> }, name?: string) => void;
+  }) => void | Promise<void>;
+  websocket?: {
+    enabled: boolean;
+    path?: string;
+    maxPayloadBytes?: number;
+    heartbeatInterval?: number;
+    channels?: Record<string, unknown>;
+    auth?: Record<string, unknown>;
+    compression?: boolean | { threshold?: number; level?: number };
+    backpressure?: { maxBufferedAmount?: number; strategy?: 'drop' | 'disconnect' };
+    recovery?: { enabled?: boolean; ttl?: number };
+    logLevel?: string;
+    onConnection?: (socketId: string, send: (message: unknown) => void, req: IncomingMessage, ctx: { database: unknown; adapter: unknown; logger: unknown }) => void;
+    onMessage?: (socketId: string, raw: string | Buffer, send: (message: unknown) => void, ctx: { database: unknown; adapter: unknown; logger: unknown }) => boolean | Promise<boolean>;
+    onClose?: (socketId: string, code: number, reason: string, ctx: { database: unknown; adapter: unknown; logger: unknown }) => void;
+  };
+  udp?: {
+    enabled: boolean;
+    maxMessageBytes?: number;
+    logLevel?: string;
+    onMessage?: (message: Buffer, remoteInfo: { address: string; port: number; family: string; size: number }) => void;
+    onError?: (error: Error) => void;
+  };
+  tcp?: {
+    enabled: boolean;
+    logLevel?: string;
+    onConnection?: (socket: unknown) => void;
+    onData?: (socket: unknown, data: Buffer) => void;
+    onClose?: (socket: unknown, hadError: boolean) => void;
+    onError?: (error: Error) => void;
+  };
+  customProtocols?: Record<string, ApiListenerConfigInputProtocol | boolean>;
+}
+
+export interface StaticConfig {
+  path: string;
+  root: string;
+  spa?: boolean;
+  pwa?: boolean;
+  [key: string]: unknown;
+}
+
+export interface DatabaseLike {
+  resources?: Record<string, ResourceLike>;
+  baldinVersion?: string;
+  pluginRegistry?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface ResourceLike {
+  name?: string;
+  [key: string]: unknown;
+}
+
+export interface ServerInfo {
+  port: number;
+  hostname: string;
+}
+
+export interface ApiPluginServerInfo {
+  isRunning: boolean;
+  port?: number;
+  host?: string;
+  resources?: number;
+}
+
+export interface RouteSummary {
+  path: string;
+  methods: string[];
+  authEnabled: boolean;
+  authConfig?: string[] | boolean;
+}
+
+export interface OIDCConfig {
+  sessionStore?: SessionStoreConfig | SessionStore;
+  [key: string]: unknown;
+}
+
+export interface SessionStoreConfig {
+  driver: string;
+  config?: Record<string, unknown>;
+}
+
+export interface SessionStore {
+  get(id: string): Promise<unknown>;
+  set(id: string, data: unknown, ttl: number): Promise<void>;
+  destroy(id: string): Promise<void>;
+}
+
+function normalizeAuthPathRules(pathRules: AuthPathRule[] | undefined): AuthRule[] {
+  if (!Array.isArray(pathRules)) {
+    return [];
+  }
+
+  return pathRules
+    .map((rule): AuthRule | null => {
+      if (!rule || typeof rule !== 'object') {
+        return null;
+      }
+
+      const path = typeof rule.path === 'string' ? rule.path.trim() : '';
+      if (!path) {
+        return null;
+      }
+
+      return {
+        path,
+        methods: Array.isArray(rule.methods)
+          ? rule.methods
+            .filter((value): value is string => typeof value === 'string')
+            .map((value) => value.trim())
+            .filter(Boolean)
+          : [],
+        required: rule.required !== false,
+        roles: rule.roles,
+        scopes: rule.scopes,
+        allowServiceAccounts: rule.allowServiceAccounts
+      };
+    })
+    .filter((rule): rule is AuthRule => rule !== null);
+}
+
+function createDefaultAuthConfig(): AuthConfig {
+  return {
+    drivers: [],
+    pathRules: [],
+    strategy: 'any',
+    priorities: {},
+    registration: {
+      enabled: false,
+      allowedFields: [],
+      defaultRole: 'user'
+    },
+    loginThrottle: {
+      enabled: true,
+      maxAttempts: 5,
+      windowMs: 60_000,
+      blockDurationMs: 300_000,
+      maxEntries: 10_000
+    },
+    createResource: true,
+    driver: null,
+    resource: null,
+    usersResourcePasswordValidation: 'password|required|minlength:8',
+    enableIdentityContextMiddleware: true,
+    usersResourceAttributes: {}
+  };
+}
+
+export class ApiServer {
+  public readonly customProtocols: Record<string, ApiListenerConfigInputProtocol | boolean>;
+  private options: Required<Pick<ApiServerOptions, 'port' | 'host'>> & ApiServerOptions;
+  private logger: Logger;
+  private app: HttpApp | null = null;
+  private server: HttpServer | null = null;
+  private isRunning = false;
+  private initialized = false;
+  private oidcMiddleware: MiddlewareHandler | null = null;
+  private middlewareChain: MiddlewareChain | null = null;
+  router: Router | null = null;
+  private healthManager: HealthManager | null = null;
+  private inFlightRequests = new Set<symbol>();
+  private acceptingRequests = true;
+  events: ApiEventEmitter;
+  metrics: MetricsCollector;
+  failban: FailbanManager | null = null;
+  private relationsPlugin: unknown;
+  private openApiGenerator: OpenAPIGeneratorCached;
+  private routeRegistry: ApiRouteRegistry;
+  private _signalHandlersSetup = false;
+  private _boundSigtermHandler: (() => void) | null = null;
+  private _boundSigintHandler: (() => void) | null = null;
+  private _metricsListeners: Map<string, (data: any) => void> = new Map();
+  private _webSocketServer: {
+    start(): Promise<void>;
+    stop(): Promise<void>;
+    readonly clientCount: number;
+    readonly channels: unknown;
+    send(socketId: string, message: unknown): void;
+    broadcast(message: unknown, except?: string): void;
+    getClient(socketId: string): { id: string; remoteAddress?: string; connectedAt: number } | undefined;
+    getClients(): Array<{ id: string; remoteAddress?: string; connectedAt: number }>;
+    disconnect(socketId: string, code?: number, reason?: string): void;
+  } | null = null;
+  private _tcpServer: NetServer | null = null;
+  private _tcpServerErrorHandler: ((error: Error) => void) | null = null;
+  private _udpSocket: UdpSocket | null = null;
+  private _udpSocketMessageHandler: ((message: Buffer, remoteInfo: { address: string; port: number; family: string; size: number }) => void) | null = null;
+  private _udpSocketErrorHandler: ((error: Error) => void) | null = null;
+  private _tlsEnabled = false;
+
+  constructor(options: ApiServerOptions = {}) {
+    this.options = {
+      port: options.port || 3000,
+      host: options.host || '0.0.0.0',
+      httpEnabled: options.httpEnabled !== false,
+      database: options.database,
+      namespace: options.namespace || null,
+      basePath: options.basePath || '',
+      versionPrefix: options.versionPrefix,
+      resources: options.resources || {},
+      routes: options.routes || {},
+      templates: options.templates || { enabled: false, engine: 'jsx' },
+      middlewares: options.middlewares || [],
+      cors: options.cors || { enabled: false },
+      security: options.security || { enabled: false },
+      sessionTracking: options.sessionTracking || { enabled: false },
+      requestId: options.requestId || { enabled: false },
+      httpLogger: options.httpLogger || { enabled: false },
+      events: options.events || { enabled: false },
+      metrics: options.metrics || { enabled: false },
+      failban: options.failban || { enabled: false },
+      static: Array.isArray(options.static) ? options.static : [],
+      health: options.health ?? { enabled: true },
+      logLevel: options.logLevel || 'info',
+      auth: options.auth || createDefaultAuthConfig(),
+      docs: {
+        enabled: options.docs?.enabled !== false,
+        title: options.docs?.title || 'Baldin API',
+        version: options.docs?.version || '1.0.0',
+        description: options.docs?.description || 'Auto-generated REST API for Baldin resources',
+        uiTheme: options.docs?.uiTheme || 'auto',
+        tryItOut: options.docs?.tryItOut !== false,
+        codeGeneration: options.docs?.codeGeneration !== false
+      },
+      maxBodySize: options.maxBodySize || 10 * 1024 * 1024,
+      startupBanner: options.startupBanner !== false,
+      rootRoute: options.rootRoute,
+      compression: options.compression || { enabled: false },
+      tls: options.tls || false,
+      websocket: options.websocket,
+      udp: options.udp,
+      tcp: options.tcp,
+      customProtocols: options.customProtocols || {}
+    };
+    this.customProtocols = this.options.customProtocols || {};
+
+    this.logger = options.logger!;
+    this.routeRegistry = options.routeRegistry || new ApiRouteRegistry();
+
+    this.events = new ApiEventEmitter({
+      enabled: this.options.events?.enabled !== false,
+      logLevel: this.options.events?.logLevel || this.options.logLevel,
+      maxListeners: this.options.events?.maxListeners
+    });
+
+    this.metrics = new MetricsCollector({
+      enabled: this.options.metrics?.enabled !== false,
+      logLevel: this.options.metrics?.logLevel ?? false,
+      maxPathsTracked: this.options.metrics?.maxPathsTracked,
+      resetInterval: this.options.metrics?.resetInterval,
+      format: (this.options.metrics?.format || 'json') as 'json' | 'prometheus'
+    });
+
+    if (this.options.metrics?.enabled && this.options.events?.enabled !== false) {
+      this._setupMetricsEventListeners();
+    }
+
+    if (this.options.failban?.enabled) {
+      this.failban = new FailbanManager({
+        database: this.options.database as unknown,
+        namespace: this.options.namespace as string | undefined,
+        enabled: true,
+        maxViolations: this.options.failban.maxViolations || 3,
+        violationWindow: this.options.failban.violationWindow || 3600000,
+        banDuration: this.options.failban.banDuration || 86400000,
+        whitelist: this.options.failban.whitelist || ['127.0.0.1', '::1'],
+        blacklist: this.options.failban.blacklist || [],
+        persistViolations: this.options.failban.persistViolations !== false,
+        logLevel: (this.options.failban.logLevel || this.options.logLevel) as 'debug' | 'info' | 'warn' | 'error',
+        geo: this.options.failban.geo || {},
+        resourceNames: this.options.failban.resourceNames as Record<string, string> | undefined,
+        logger: this.logger
+      } as ConstructorParameters<typeof FailbanManager>[0]);
+    }
+
+    this.relationsPlugin = this.options.database?.pluginRegistry?.relation ||
+      this.options.database?.pluginRegistry?.RelationPlugin ||
+      null;
+
+    const resolvedHost = (this.options.host || 'localhost') === '0.0.0.0'
+      ? 'localhost'
+      : (this.options.host || 'localhost');
+
+    this.openApiGenerator = new OpenAPIGeneratorCached({
+      database: this.options.database as ConstructorParameters<typeof OpenAPIGeneratorCached>[0]['database'],
+      routeRegistry: this.routeRegistry,
+      logger: this.logger,
+      options: {
+        auth: this.options.auth,
+        resources: this.options.resources as ConstructorParameters<typeof OpenAPIGeneratorCached>[0]['options']['resources'],
+        routes: this.options.routes,
+        versionPrefix: this.options.versionPrefix,
+        basePath: this.options.basePath,
+        title: this.options.docs?.title,
+        version: this.options.docs?.version,
+        description: this.options.docs?.description,
+        serverUrl: `${this.options.tls ? 'https' : 'http'}://${resolvedHost}:${this.options.port}`,
+        logLevel: this.options.logLevel
+      }
+    });
+  }
+
+  async start(): Promise<void> {
+    if (this.isRunning) {
+      if (this.options.logLevel) {
+        this.logger.warn('Server is already running');
+      }
+      return;
+    }
+
+    if (!this.initialized) {
+      const { HttpApp } = await import('./http/http-runtime.js');
+      const { cors } = await import('raffel/http');
+
+      const corsMiddleware = cors as unknown as ConstructorParameters<typeof MiddlewareChain>[0]['corsMiddleware'];
+
+      this.routeRegistry.clear();
+      this.app = new HttpApp();
+
+      if (this.options.setup) {
+        const raffelModule = await import('raffel');
+        await this.options.setup({
+          app: this.app,
+          raffel: raffelModule,
+          listenerName: this.options.listenerName,
+          httpServer: this.server,
+          addManagedServer: this.options.addManagedServer ?? (() => {}),
+        });
+      }
+
+      if (this.failban) {
+        await this.failban.initialize();
+      }
+
+      this._registerMetricsPluginRoute();
+
+      this.middlewareChain = new MiddlewareChain({
+        requestId: this.options.requestId,
+        cors: this.options.cors,
+        security: this.options.security,
+        sessionTracking: this.options.sessionTracking,
+        middlewares: this.options.middlewares,
+        templates: this.options.templates,
+        maxBodySize: this.options.maxBodySize || 10 * 1024 * 1024,
+        failban: this.failban as unknown as ConstructorParameters<typeof MiddlewareChain>[0]['failban'],
+        events: this.events as ConstructorParameters<typeof MiddlewareChain>[0]['events'],
+        logLevel: this.options.logLevel,
+        logger: this.logger,
+        httpLogger: this.options.httpLogger,
+        database: this.options.database as ConstructorParameters<typeof MiddlewareChain>[0]['database'],
+        inFlightRequests: this.inFlightRequests,
+        acceptingRequests: () => this.acceptingRequests,
+        corsMiddleware
+      });
+      this.middlewareChain.apply(this.app!);
+
+      const oidcDriver = this.options.auth?.drivers?.find((d) => d.driver === 'oidc');
+      if (oidcDriver) {
+        await this._setupOIDCRoutes(oidcDriver.config as OIDCConfig);
+      }
+
+      const authMiddleware = await this._createAuthMiddleware();
+
+      await this._setupDocumentationRoutes();
+
+      if (this.options.health?.enabled !== false) {
+        this.healthManager = new HealthManager({
+          database: this.options.database as ConstructorParameters<typeof HealthManager>[0]['database'],
+          healthConfig: this.options.health as ConstructorParameters<typeof HealthManager>[0]['healthConfig'],
+          logLevel: this.options.logLevel,
+          logger: this.logger
+        });
+        this.healthManager.register(this.app!);
+        this._registerHealthRouteEntries();
+      }
+
+      this.router = this._createRouter(HttpApp, authMiddleware || undefined);
+      this.router.mount(this.app!, this.events);
+
+      const handleAppError = createErrorHandler({ logger: this.logger as Parameters<typeof createErrorHandler>[0]['logger'] });
+      this.app!.onError((err: Error, c: Context) => handleAppError(err, c));
+      this.app!.notFound((c: Context) => {
+        const response = formatter.error('Route not found', {
+          status: 404,
+          code: 'NOT_FOUND',
+          details: {
+            path: c.req.path,
+            method: c.req.method
+          }
+        });
+        return c.json(response, 404);
+      });
+
+      this.initialized = true;
+    }
+
+    const { port, host } = this.options;
+
+    let fetchHandler = (this.app as any).fetch;
+    if (this.options.compression?.enabled) {
+      const { threshold = 1024 } = this.options.compression;
+      const zlib = await import('node:zlib');
+      const { promisify } = await import('node:util');
+      const gzipAsync = promisify(zlib.gzip);
+      const deflateAsync = promisify(zlib.deflate);
+      const baseFetch = (this.app as any).fetch;
+
+      fetchHandler = async (req: Request, env?: unknown, ctx?: unknown): Promise<Response> => {
+        const res = await baseFetch(req, env, ctx);
+
+        const existingEncoding = res.headers.get('content-encoding');
+        if (existingEncoding) return res;
+
+        const acceptEncoding = req.headers.get('accept-encoding') || '';
+        const wantsGzip = acceptEncoding.includes('gzip');
+        const wantsDeflate = acceptEncoding.includes('deflate');
+        if (!wantsGzip && !wantsDeflate) return res;
+
+        const contentType = res.headers.get('content-type') || '';
+        const isTextLike = contentType.startsWith('text/') || contentType.includes('json');
+        if (!isTextLike) return res;
+
+        const source = typeof res.clone === 'function' ? res.clone() : res;
+        const buffer = Buffer.from(await source.arrayBuffer());
+        if (buffer.length < threshold) {
+          if (source === res) {
+            const headers = new Headers(res.headers);
+            return new Response(buffer, {
+              status: res.status,
+              statusText: res.statusText,
+              headers
+            });
+          }
+          return res;
+        }
+
+        const encoding = wantsGzip ? 'gzip' : 'deflate';
+        const compressed = encoding === 'gzip' ? await gzipAsync(buffer) : await deflateAsync(buffer);
+        const headers = new Headers(res.headers);
+        headers.set('Content-Encoding', encoding);
+        headers.set('Vary', 'Accept-Encoding');
+        headers.delete('Content-Length');
+
+        return new Response(new Uint8Array(compressed), {
+          status: res.status,
+          statusText: res.statusText,
+          headers
+        });
+      };
+    }
+
+    const resolvedTls = await this._resolveTls();
+    this._tlsEnabled = !!resolvedTls;
+
+    const serverInfo = resolvedTls
+      ? await this._startTlsServer(fetchHandler, port!, host!, resolvedTls)
+      : await new Promise<ServerInfo>((resolve, reject) => {
+          try {
+            this.server = serve({
+              fetch: fetchHandler,
+              port,
+              hostname: host,
+              keepAliveTimeout: 65000,
+              headersTimeout: 66000,
+              onListen: ({ port, hostname }) => {
+                resolve({ port, hostname });
+              }
+            });
+          } catch (err) {
+            reject(err);
+          }
+        });
+
+    try {
+      await this._setupProtocolBindings();
+    } catch (err) {
+      await this._teardownProtocolBindings();
+      await this._closeHttpServer();
+      throw err;
+    }
+
+    this.isRunning = true;
+    if (this.options.logLevel) {
+      this.logger.info(this._formatRuntimeListenerSummary(serverInfo));
+      this.logger.debug({
+        address: serverInfo.hostname,
+        port: serverInfo.port,
+        listenerName: this.options.listenerName,
+        protocols: this._getProtocolSummary()
+      }, 'Server listening');
+    }
+    this._printStartupBanner(serverInfo);
+
+    const shutdownHandler = async (signal: string) => {
+      if (this.options.logLevel) {
+        this.logger.info({ signal }, 'Received shutdown signal');
+      }
+      try {
+        await this.shutdown({ timeout: 30000 });
+        process.exit(0);
+      } catch (err) {
+        if (this.options.logLevel) {
+          this.logger.error({ error: (err as Error).message }, 'Error during shutdown');
+        }
+        process.exit(1);
+      }
+    };
+
+    if (!this._signalHandlersSetup) {
+      this._boundSigtermHandler = () => {
+        void shutdownHandler('SIGTERM');
+      };
+      this._boundSigintHandler = () => {
+        void shutdownHandler('SIGINT');
+      };
+      bumpProcessMaxListeners(2);
+      process.once('SIGTERM', this._boundSigtermHandler);
+      process.once('SIGINT', this._boundSigintHandler);
+      this._signalHandlersSetup = true;
+    }
+  }
+
+  async stop(): Promise<void> {
+    if (!this.isRunning) {
+      if (this.options.logLevel) {
+        this.logger.warn('Server is not running');
+      }
+      return;
+    }
+
+    await this._teardownProtocolBindings();
+
+    await this._closeHttpServer();
+    this.isRunning = false;
+    if (this.options.logLevel) {
+      this.logger.info('Server stopped');
+    }
+
+    if (this.metrics) {
+      this.metrics.stop();
+    }
+
+    this._removeMetricsEventListeners();
+
+    if (this.failban) {
+      await this.failban.cleanup();
+    }
+
+    if (this.oidcMiddleware && typeof (this.oidcMiddleware as unknown as { destroy?: () => void }).destroy === 'function') {
+      (this.oidcMiddleware as unknown as { destroy: () => void }).destroy();
+    }
+
+    if (this._signalHandlersSetup) {
+      if (this._boundSigtermHandler) {
+        process.removeListener('SIGTERM', this._boundSigtermHandler);
+        this._boundSigtermHandler = null;
+      }
+      if (this._boundSigintHandler) {
+        process.removeListener('SIGINT', this._boundSigintHandler);
+        this._boundSigintHandler = null;
+      }
+      this._signalHandlersSetup = false;
+      bumpProcessMaxListeners(-2);
+    }
+
+    this.inFlightRequests.clear();
+  }
+
+  private async _resolveTls(): Promise<{ key: Buffer; cert: Buffer; ca?: Buffer; autoGenerated?: boolean } | null> {
+    const tls = this.options.tls;
+    if (!tls) return null;
+
+    const tlsOptions = tls === true ? {} : tls;
+    const { resolveTlsOptions } = await import('raffel');
+    const resolved = await resolveTlsOptions(tlsOptions);
+
+    if (resolved.autoGenerated && this.options.logLevel) {
+      this.logger.warn('TLS enabled with auto-generated self-signed certificate (development only)');
+    }
+
+    return resolved;
+  }
+
+  private async _startTlsServer(
+    fetchHandler: (req: Request) => Response | Promise<Response>,
+    port: number,
+    host: string,
+    tlsCreds: { key: Buffer; cert: Buffer; ca?: Buffer }
+  ): Promise<ServerInfo> {
+    const { createServer: createSecureServer } = await import('node:https');
+
+    return new Promise<ServerInfo>((resolve, reject) => {
+      try {
+        const httpsServer = createSecureServer(
+          { key: tlsCreds.key, cert: tlsCreds.cert, ca: tlsCreds.ca },
+          async (req, res) => {
+            try {
+              const reqHost = req.headers.host || 'localhost';
+              const url = `https://${reqHost}${req.url || '/'}`;
+
+              let body: Buffer | undefined;
+              if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+                const chunks: Buffer[] = [];
+                for await (const chunk of req) {
+                  chunks.push(chunk as Buffer);
+                }
+                if (chunks.length > 0) {
+                  body = Buffer.concat(chunks);
+                }
+              }
+
+              const headers: Record<string, string> = {};
+              for (const [key, value] of Object.entries(req.headers)) {
+                if (value) {
+                  headers[key] = Array.isArray(value) ? value.join(', ') : value;
+                }
+              }
+
+              const webRequest = new Request(url, {
+                method: req.method,
+                headers,
+                body,
+                duplex: body ? 'half' : undefined,
+              } as RequestInit);
+
+              const webResponse = await fetchHandler(webRequest);
+
+              res.statusCode = webResponse.status;
+              res.statusMessage = webResponse.statusText || '';
+              webResponse.headers.forEach((value, key) => {
+                if (key.toLowerCase() === 'set-cookie') {
+                  const existing = res.getHeader('set-cookie');
+                  if (existing) {
+                    const values = Array.isArray(existing) ? existing : [String(existing)];
+                    res.setHeader('set-cookie', [...values, value]);
+                  } else {
+                    res.setHeader('set-cookie', value);
+                  }
+                } else {
+                  res.setHeader(key, value);
+                }
+              });
+
+              if (webResponse.body) {
+                const reader = webResponse.body.getReader();
+                try {
+                  while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    res.write(value);
+                  }
+                } finally {
+                  reader.releaseLock();
+                }
+              }
+
+              res.end();
+            } catch {
+              if (!res.headersSent) {
+                res.statusCode = 500;
+                res.end('Internal Server Error');
+              }
+            }
+          }
+        );
+
+        httpsServer.keepAliveTimeout = 65000;
+        httpsServer.headersTimeout = 66000;
+
+        this.server = httpsServer as unknown as HttpServer;
+
+        httpsServer.on('error', (err) => reject(err));
+        httpsServer.listen(port, host, () => {
+          resolve({ port, hostname: host });
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  getInfo(): ApiPluginServerInfo {
+    return {
+      isRunning: this.isRunning,
+      port: this.options.port,
+      host: this.options.host,
+      resources: Object.keys(this.options.database?.resources || {}).length
+    };
+  }
+
+  getApp(): HttpApp | null {
+    return this.app;
+  }
+
+  /**
+   * Returns the underlying Node.js `http.Server` (or `https.Server`) after the
+   * server has started. Returns `null` before `start()` has resolved.
+   *
+   * Use this to attach low-level handlers that require direct access to the
+   * Node.js server — for example CONNECT-tunnel proxies, raw TCP upgrade
+   * interception, or attaching a Raffel forward proxy:
+   *
+   * @example
+   * const httpServer = apiPlugin.getHttpServer();
+   * const proxy = raffel.createHttpForwardProxy({ ... });
+   * proxy.attach(httpServer);
+   */
+  getHttpServer(): import('node:http').Server | null {
+    return this.server;
+  }
+
+  getWebSocket() {
+    return this._webSocketServer;
+  }
+
+  getRegisteredRoutes() {
+    return this.routeRegistry.list();
+  }
+
+  private async _closeHttpServer(): Promise<void> {
+    if (!this.server) {
+      return;
+    }
+
+    const server = this.server;
+    await new Promise<void>((resolve, reject) => {
+      let settled = false;
+      const finish = (error?: Error): void => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(forceCloseTimer);
+        if (error) reject(error);
+        else resolve();
+      };
+      const forceCloseTimer = setTimeout(() => {
+        server.closeAllConnections?.();
+        finish();
+      }, 1_000);
+      forceCloseTimer.unref?.();
+
+      server.close((err) => {
+        if (err) {
+          finish(err);
+          return;
+        }
+        finish();
+      });
+      server.closeIdleConnections?.();
+    });
+
+    this.server = null;
+  }
+
+  private _normalizeTransportPath(rawPath?: string): string {
+    if (!rawPath) {
+      return '/';
+    }
+
+    const normalized = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
+    if (normalized === '/') {
+      return '/';
+    }
+
+    return normalized.endsWith('/') ? normalized.slice(0, -1) : normalized;
+  }
+
+  private _isProtocolEnabled(config: ApiListenerConfigInputProtocol | boolean | undefined): boolean {
+    if (config === undefined) {
+      return false;
+    }
+    if (typeof config === 'boolean') {
+      return config;
+    }
+    return config.enabled !== false;
+  }
+
+  private _normalizeCustomProtocolConfig(config: ApiListenerConfigInputProtocol | boolean | undefined): {
+    enabled: boolean;
+    path?: string;
+    maxPayloadBytes?: number;
+    maxMessageBytes?: number;
+  } {
+    if (!this._isProtocolEnabled(config)) {
+      return { enabled: false };
+    }
+
+    if (typeof config === 'boolean' || !config) {
+      return { enabled: true };
+    }
+
+    return {
+      enabled: true,
+      path: config.path,
+      maxPayloadBytes: config.maxPayloadBytes,
+      maxMessageBytes: config.maxMessageBytes
+    };
+  }
+
+  private _getProtocolSummary(): {
+    http: { enabled: boolean; path: string };
+    websocket: { enabled: boolean; path: string; maxPayloadBytes: number; hasHandlers: { onConnection: boolean; onMessage: boolean; onClose: boolean } };
+    tcp: { enabled: boolean; hasHandlers: { onConnection: boolean; onData: boolean; onClose: boolean; onError: boolean } };
+    udp: { enabled: boolean; maxMessageBytes: number; hasHandlers: { onMessage: boolean; onError: boolean } };
+    custom: Record<string, { enabled: boolean; path?: string; maxPayloadBytes?: number; maxMessageBytes?: number }>;
+  } {
+    const websocketOptions = this.options.websocket || { enabled: false } as {
+      enabled?: boolean;
+      path?: string;
+      maxPayloadBytes?: number;
+      onConnection?: (socketId: string, send: (message: unknown) => void, req: unknown) => void;
+      onMessage?: (socketId: string, raw: string | Buffer, send: (message: unknown) => void) => boolean | Promise<boolean>;
+      onClose?: (socketId: string, code: number, reason: string) => void;
+    };
+
+    const udpOptions = this.options.udp || { enabled: false } as {
+      enabled?: boolean;
+      maxMessageBytes?: number;
+      onMessage?: (message: Buffer, remoteInfo: { address: string; port: number; family: string; size: number }) => void;
+      onError?: (error: Error) => void;
+    };
+    const tcpOptions = this.options.tcp || { enabled: false } as {
+      enabled?: boolean;
+      onConnection?: (socket: unknown) => void;
+      onData?: (socket: unknown, data: Buffer) => void;
+      onClose?: (socket: unknown, hadError: boolean) => void;
+      onError?: (error: Error) => void;
+    };
+
+    const custom: Record<string, {
+      enabled: boolean;
+      path?: string;
+      maxPayloadBytes?: number;
+      maxMessageBytes?: number;
+    }> = {};
+
+    Object.entries(this.customProtocols || {}).forEach(([name, protocol]) => {
+      custom[name] = this._normalizeCustomProtocolConfig(protocol);
+    });
+
+    return {
+      http: {
+        enabled: this.options.httpEnabled !== false,
+        path: this.options.basePath || '/'
+      },
+      websocket: {
+        enabled: this._isProtocolEnabled(websocketOptions),
+        path: this._normalizeTransportPath(websocketOptions.path),
+        maxPayloadBytes: websocketOptions.maxPayloadBytes || 1024 * 1024,
+        hasHandlers: {
+          onConnection: typeof websocketOptions.onConnection === 'function',
+          onMessage: typeof websocketOptions.onMessage === 'function',
+          onClose: typeof websocketOptions.onClose === 'function'
+        }
+      },
+      tcp: {
+        enabled: this._isProtocolEnabled(tcpOptions),
+        hasHandlers: {
+          onConnection: typeof tcpOptions.onConnection === 'function',
+          onData: typeof tcpOptions.onData === 'function',
+          onClose: typeof tcpOptions.onClose === 'function',
+          onError: typeof tcpOptions.onError === 'function'
+        }
+      },
+      udp: {
+        enabled: this._isProtocolEnabled(udpOptions),
+        maxMessageBytes: udpOptions.maxMessageBytes || 65507,
+        hasHandlers: {
+          onMessage: typeof udpOptions.onMessage === 'function',
+          onError: typeof udpOptions.onError === 'function'
+        }
+      },
+      custom
+    };
+  }
+
+  private _formatConfiguredListenerSummary(): string {
+    return `${this._formatConfiguredListenerName()} on ${this.options.host}:${this.options.port} (${this._formatProtocolList(this._getProtocolSummary())})`;
+  }
+
+  private _formatRuntimeListenerSummary(serverInfo: ServerInfo): string {
+    return `${this._formatConfiguredListenerName()} listening on ${serverInfo.hostname}:${serverInfo.port} (${this._formatProtocolList(this._getProtocolSummary())})`;
+  }
+
+  private _formatConfiguredListenerName(): string {
+    return this.options.listenerName || 'listener';
+  }
+
+  private _formatProtocolList(summary: ReturnType<ApiServer['_getProtocolSummary']>): string {
+    const protocols: string[] = [];
+
+    if (summary.http.enabled) {
+      protocols.push(this._formatProtocolLabel(this._tlsEnabled ? 'https' : 'http', summary.http.path));
+    }
+
+    if (summary.websocket.enabled) {
+      protocols.push(this._formatProtocolLabel(this._tlsEnabled ? 'wss' : 'ws', summary.websocket.path));
+    }
+
+    if (summary.tcp.enabled) {
+      protocols.push('tcp');
+    }
+
+    if (summary.udp.enabled) {
+      protocols.push('udp');
+    }
+
+    Object.entries(summary.custom).forEach(([name, protocol]) => {
+      if (!protocol.enabled) {
+        return;
+      }
+
+      protocols.push(this._formatProtocolLabel(name, protocol.path));
+    });
+
+    return protocols.join(', ') || 'no protocols';
+  }
+
+  private _formatProtocolLabel(name: string, path?: string): string {
+    if (typeof path !== 'string') {
+      return name;
+    }
+
+    const normalizedPath = path.trim();
+
+    if (!normalizedPath || normalizedPath === '/') {
+      return name;
+    }
+
+    return `${name}:${normalizedPath}`;
+  }
+
+  private _isMatchingPath(requestPath: string, protocolPath: string): boolean {
+    const pathname = (() => {
+      try {
+        return new URL(requestPath, 'http://localhost').pathname;
+      } catch {
+        return requestPath;
+      }
+    })();
+
+    const normalizedRequest = this._normalizeTransportPath(pathname);
+    return normalizedRequest === protocolPath;
+  }
+
+  private async _setupProtocolBindings(): Promise<void> {
+    if (this.options.logLevel) {
+      this.logger.info(`Preparing ${this._formatConfiguredListenerSummary()}`);
+      this.logger.debug({
+        listenerName: this.options.listenerName,
+        bind: {
+          host: this.options.host,
+          port: this.options.port
+        },
+        protocols: this._getProtocolSummary()
+      }, 'Preparing protocol transports');
+    }
+
+    if (this.options.tcp?.enabled) {
+      await this._setupTcpProtocol();
+    }
+
+    if (this.options.websocket?.enabled) {
+      await this._setupWebSocketProtocol();
+    }
+
+    if (this.options.udp?.enabled) {
+      await this._setupUdpProtocol();
+    }
+  }
+
+  private async _teardownProtocolBindings(): Promise<void> {
+    await this._closeTcpProtocol();
+    await this._closeUdpProtocol();
+    await this._closeWebSocketProtocol();
+  }
+
+  private async _setupTcpProtocol(): Promise<void> {
+    if (!this.options.tcp?.enabled) {
+      return;
+    }
+
+    const tcpOptions = this.options.tcp;
+    const { createServer } = await import('node:net');
+    const tcpServer = createServer((socket: NetSocket) => {
+      const onConnection = tcpOptions.onConnection;
+      const onData = tcpOptions.onData;
+      const onClose = tcpOptions.onClose;
+      const onError = tcpOptions.onError;
+
+      if (typeof onConnection === 'function') {
+        onConnection(socket);
+      }
+
+      const safeDataHandler = (data: Buffer) => {
+        try {
+          onData?.(socket, data);
+        } catch (error) {
+          const err = error as Error;
+          this._loggerError('Error in TCP onData handler', err);
+        }
+      };
+
+      const safeCloseHandler = (hadError: boolean) => {
+        if (typeof onClose === 'function') {
+          onClose(socket, hadError);
+        }
+      };
+
+      if (typeof onData === 'function') {
+        socket.on('data', safeDataHandler);
+      }
+      if (typeof onClose === 'function') {
+        socket.on('close', safeCloseHandler);
+      }
+      if (typeof onError === 'function') {
+        socket.on('error', onError);
+      }
+    });
+
+    this._tcpServer = tcpServer;
+    this._tcpServerErrorHandler = (error: Error) => {
+      if (typeof tcpOptions.onError === 'function') {
+        tcpOptions.onError(error);
+      } else if (this.options.logLevel) {
+        this.logger.error({ error: error.message }, 'TCP protocol error');
+      }
+    };
+
+    tcpServer.on('error', this._tcpServerErrorHandler);
+
+    await new Promise<void>((resolve, reject) => {
+      const onTcpError = (error: Error) => {
+        if (this._tcpServerErrorHandler) {
+          tcpServer.off('error', this._tcpServerErrorHandler);
+        }
+        this._tcpServer = null;
+        this._tcpServerErrorHandler = null;
+        reject(error);
+      };
+
+      tcpServer.once('error', onTcpError);
+      tcpServer.once('listening', () => {
+        tcpServer.off('error', onTcpError);
+        tcpServer.on('error', this._tcpServerErrorHandler!);
+
+        if (this.options.logLevel) {
+          const tcpLevel = this.options.tcp?.logLevel || 'debug';
+          (this.logger as unknown as Record<string, (msg: string) => void>)[tcpLevel]?.(`TCP transport bound for ${this._formatConfiguredListenerName()} on ${this.options.host}:${this.options.port}`);
+        }
+        resolve();
+      });
+
+      tcpServer.listen(this.options.port, this.options.host);
+    });
+  }
+
+  private async _closeTcpProtocol(): Promise<void> {
+    if (!this._tcpServer) {
+      return;
+    }
+
+    if (this._tcpServerErrorHandler) {
+      this._tcpServer.off('error', this._tcpServerErrorHandler);
+      this._tcpServerErrorHandler = null;
+    }
+
+    await new Promise<void>((resolve) => {
+      this._tcpServer!.close(() => {
+        resolve();
+      });
+    });
+    this._tcpServer = null;
+  }
+
+  private async _setupWebSocketProtocol(): Promise<void> {
+    if (!this.options.websocket?.enabled || !this.server) {
+      return;
+    }
+
+    const wsOpts = this.options.websocket;
+    const { createWebSocketAdapter, createRegistry, createRouter } = await import('raffel');
+
+    const path = this._normalizeTransportPath(wsOpts.path);
+    const registry = createRegistry();
+    const router = createRouter(registry);
+
+    const adapter = createWebSocketAdapter(router, {
+      server: this.server,
+      path,
+      maxPayloadSize: wsOpts.maxPayloadBytes || 1024 * 1024,
+      heartbeatInterval: wsOpts.heartbeatInterval,
+      channels: wsOpts.channels as any,
+      auth: wsOpts.auth as any,
+      compression: wsOpts.compression,
+      backpressure: wsOpts.backpressure as any,
+      recovery: wsOpts.recovery as any,
+      onConnection: (socketId: string, send: (message: unknown) => void, req: IncomingMessage) => {
+        if (this.options.logLevel) {
+          const wsLevel = wsOpts.logLevel || 'info';
+          (this.logger as unknown as Record<string, (msg: string) => void>)[wsLevel]?.(`WebSocket connected: ${socketId} on ${this._formatConfiguredListenerName()}`);
+        }
+        if (wsOpts.onConnection) {
+          wsOpts.onConnection(socketId, send, req, { database: this.options.database, adapter, logger: this.logger });
+        }
+      },
+      onMessage: wsOpts.onMessage
+        ? (socketId: string, raw: string | Buffer, send: (message: unknown) => void) => {
+            return wsOpts.onMessage!(socketId, raw, send, { database: this.options.database, adapter, logger: this.logger });
+          }
+        : undefined,
+      onClose: (socketId: string, code: number, reason: string) => {
+        if (this.options.logLevel) {
+          const wsLevel = wsOpts.logLevel || 'debug';
+          const reasonSuffix = reason ? `: ${reason}` : '';
+          (this.logger as unknown as Record<string, (msg: string) => void>)[wsLevel]?.(`WebSocket closed: ${socketId} (${code}${reasonSuffix})`);
+        }
+        if (wsOpts.onClose) {
+          wsOpts.onClose(socketId, code, reason, { database: this.options.database, adapter, logger: this.logger });
+        }
+      }
+    });
+
+    this._webSocketServer = adapter;
+    await adapter.start();
+  }
+
+  private async _closeWebSocketProtocol(): Promise<void> {
+    if (!this._webSocketServer) {
+      return;
+    }
+
+    await this._webSocketServer.stop();
+    this._webSocketServer = null;
+  }
+
+  private async _setupUdpProtocol(): Promise<void> {
+    if (!this.options.udp?.enabled || !this.options.udp) {
+      return;
+    }
+
+    const { createSocket } = await import('node:dgram');
+    const udpOptions = this.options.udp;
+    const maxMessageBytes = udpOptions.maxMessageBytes || 65507;
+    const socket = createSocket(this.options.host.includes(':') ? 'udp6' : 'udp4');
+    this._udpSocket = socket;
+
+    this._udpSocketMessageHandler = (message, remoteInfo) => {
+      if (message.length > maxMessageBytes) {
+        if (this.options.logLevel) {
+          this.logger.debug(
+            { messageLength: message.length, maxMessageBytes, address: remoteInfo.address, port: remoteInfo.port },
+            'Dropped UDP message bigger than maxMessageBytes'
+          );
+        }
+        return;
+      }
+
+      if (typeof udpOptions.onMessage === 'function') {
+        udpOptions.onMessage(message, remoteInfo);
+      }
+    };
+
+    this._udpSocketErrorHandler = (error) => {
+      if (typeof udpOptions.onError === 'function') {
+        udpOptions.onError(error);
+      } else if (this.options.logLevel) {
+        this.logger.error({ error: error.message }, 'UDP protocol error');
+      }
+    };
+
+    socket.on('message', this._udpSocketMessageHandler);
+    socket.on('error', this._udpSocketErrorHandler);
+
+    await new Promise<void>((resolve, reject) => {
+      const onBindError = (error: Error) => {
+        socket.off('error', this._udpSocketErrorHandler as (...args: unknown[]) => void);
+        this._udpSocket = null;
+        socket.close();
+        reject(error);
+      };
+      socket.once('error', onBindError);
+      socket.once('listening', () => {
+        socket.off('error', onBindError);
+        if (this.options.logLevel) {
+          const udpLevel = udpOptions.logLevel || 'debug';
+          (this.logger as unknown as Record<string, (msg: string) => void>)[udpLevel]?.(`UDP transport bound for ${this._formatConfiguredListenerName()} on ${this.options.host}:${this.options.port} (max ${maxMessageBytes} bytes)`);
+        }
+        resolve();
+      });
+
+      socket.bind(this.options.port, this.options.host);
+    });
+  }
+
+  private async _closeUdpProtocol(): Promise<void> {
+    if (!this._udpSocket) {
+      return;
+    }
+
+    if (this._udpSocketMessageHandler) {
+      this._udpSocket.off('message', this._udpSocketMessageHandler);
+      this._udpSocketMessageHandler = null;
+    }
+
+    if (this._udpSocketErrorHandler) {
+      this._udpSocket.off('error', this._udpSocketErrorHandler);
+      this._udpSocketErrorHandler = null;
+    }
+
+    await new Promise<void>((resolve) => {
+      this._udpSocket!.close(() => {
+        resolve();
+      });
+    });
+    this._udpSocket = null;
+  }
+
+  private _loggerError(message: string, error: Error): void {
+    if (!this.options.logLevel) {
+      return;
+    }
+
+    this.logger.error({ error: error.message }, message);
+  }
+
+  async previewRuntime(): Promise<ApiRuntimeInspectionPreview> {
+    await this._ensurePlannedRouteRegistry();
+
+    return buildApiRuntimeInspectionPreview({
+      spec: this.openApiGenerator.generate(),
+      routes: this.routeRegistry.list(),
+      host: this.options.host,
+      port: this.options.port,
+      basePath: this.options.basePath || ''
+    });
+  }
+
+  async doctor() {
+    return buildApiRuntimeDoctorReport(await this.previewRuntime());
+  }
+
+  async contractTests() {
+    return buildApiRuntimeContractTests(await this.previewRuntime());
+  }
+
+  stopAcceptingRequests(): void {
+    this.acceptingRequests = false;
+    if (this.options.logLevel) {
+      this.logger.info('Stopped accepting new requests');
+    }
+  }
+
+  private _registerMetricsPluginRoute(): void {
+    const metricsRoute = this._getIntegratedMetricsPluginRoute();
+    if (!metricsRoute || !this.app) return;
+
+    const { metricsPlugin, path, enforceIpAllowlist, ipAllowlist } = metricsRoute;
+
+    this.app!.get(path, async (c: Context) => {
+      if (enforceIpAllowlist) {
+        const { isIpAllowed, getClientIp } = await import('./http/ip-allowlist.js');
+        const clientIp = getClientIp(c as unknown as Parameters<typeof getClientIp>[0]);
+
+        if (!clientIp || !isIpAllowed(clientIp, ipAllowlist)) {
+          if (this.options.logLevel) {
+            this.logger.warn(
+              { clientIp: clientIp || 'unknown' },
+              'Blocked /metrics request from unauthorized IP'
+            );
+          }
+          return c.text('Forbidden', 403);
+        }
+      }
+
+      try {
+        const metrics = await (metricsPlugin as { getPrometheusMetrics: () => Promise<string> }).getPrometheusMetrics();
+        return c.text(metrics, 200, {
+          'Content-Type': 'text/plain; version=0.0.4; charset=utf-8'
+        });
+      } catch (err) {
+        if (this.options.logLevel) {
+          this.logger.error({ error: (err as Error).message }, 'Error generating Prometheus metrics');
+        }
+        return c.text('Internal Server Error', 500);
+      }
+    });
+
+    this._registerMetricsPluginRouteEntry();
+
+    if (this.options.logLevel) {
+      const ipFilter = enforceIpAllowlist ? ` (IP allowlist: ${ipAllowlist.length} ranges)` : ' (no IP filtering)';
+      this.logger.debug(
+        { path, ipFilter, ipAllowlistSize: ipAllowlist.length },
+        'Registered MetricsPlugin route'
+      );
+    }
+  }
+
+  async waitForRequestsToFinish({ timeout = 30000 } = {}): Promise<boolean> {
+    const startTime = Date.now();
+
+    while (this.inFlightRequests.size > 0) {
+      const elapsed = Date.now() - startTime;
+      if (elapsed >= timeout) {
+        if (this.options.logLevel) {
+          this.logger.warn({ inFlightCount: this.inFlightRequests.size }, 'Timeout waiting for in-flight requests');
+        }
+        return false;
+      }
+
+      if (this.options.logLevel) {
+        this.logger.debug({ inFlightCount: this.inFlightRequests.size }, 'Waiting for in-flight requests');
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    if (this.options.logLevel) {
+      this.logger.info('All requests finished');
+    }
+
+    return true;
+  }
+
+  async shutdown({ timeout = 30000 } = {}): Promise<void> {
+    if (!this.isRunning) {
+      if (this.options.logLevel) {
+        this.logger.warn('Server is not running');
+      }
+      return;
+    }
+
+    if (this.options.logLevel) {
+      this.logger.info('Initiating graceful shutdown');
+    }
+    this.stopAcceptingRequests();
+
+    const finished = await this.waitForRequestsToFinish({ timeout });
+    if (!finished) {
+      if (this.options.logLevel) {
+        this.logger.warn({ inFlightCount: this.inFlightRequests.size }, 'Some requests did not finish in time');
+      }
+    }
+
+    if (this.server) {
+      await this._teardownProtocolBindings();
+      await this._closeHttpServer();
+    }
+
+    this.isRunning = false;
+    if (this.options.logLevel) {
+      this.logger.info('Shutdown complete');
+    }
+  }
+
+  private _setupMetricsEventListeners(): void {
+    const requestEndHandler = (data: { method: string; path: string; status: number; duration: number }) => {
+      this.metrics.recordRequest({
+        method: data.method,
+        path: data.path,
+        status: data.status,
+        duration: data.duration
+      });
+    };
+    this._metricsListeners.set('request:end', requestEndHandler);
+    this.events.on('request:end', requestEndHandler);
+
+    const requestErrorHandler = (data: { error: Error }) => {
+      this.metrics.recordError({
+        error: data.error.message,
+        type: 'request'
+      });
+    };
+    this._metricsListeners.set('request:error', requestErrorHandler);
+    this.events.on('request:error', requestErrorHandler);
+
+    const authSuccessHandler = (data: { method: string }) => {
+      this.metrics.recordAuth({
+        success: true,
+        method: data.method
+      });
+    };
+    this._metricsListeners.set('auth:success', authSuccessHandler);
+    this.events.on('auth:success', authSuccessHandler);
+
+    const authFailureHandler = (data: { allowedMethods?: string[] }) => {
+      this.metrics.recordAuth({
+        success: false,
+        method: data.allowedMethods?.[0] || 'unknown'
+      });
+    };
+    this._metricsListeners.set('auth:failure', authFailureHandler);
+    this.events.on('auth:failure', authFailureHandler);
+
+    const resourceCreatedHandler = (data: { resource: string }) => {
+      this.metrics.recordResourceOperation({
+        action: 'created',
+        resource: data.resource
+      });
+    };
+    this._metricsListeners.set('resource:created', resourceCreatedHandler);
+    this.events.on('resource:created', resourceCreatedHandler);
+
+    const resourceUpdatedHandler = (data: { resource: string }) => {
+      this.metrics.recordResourceOperation({
+        action: 'updated',
+        resource: data.resource
+      });
+    };
+    this._metricsListeners.set('resource:updated', resourceUpdatedHandler);
+    this.events.on('resource:updated', resourceUpdatedHandler);
+
+    const resourceDeletedHandler = (data: { resource: string }) => {
+      this.metrics.recordResourceOperation({
+        action: 'deleted',
+        resource: data.resource
+      });
+    };
+    this._metricsListeners.set('resource:deleted', resourceDeletedHandler);
+    this.events.on('resource:deleted', resourceDeletedHandler);
+
+    const userCreatedHandler = () => {
+      this.metrics.recordUserEvent({ action: 'created' });
+    };
+    this._metricsListeners.set('user:created', userCreatedHandler);
+    this.events.on('user:created', userCreatedHandler);
+
+    const userLoginHandler = () => {
+      this.metrics.recordUserEvent({ action: 'login' });
+    };
+    this._metricsListeners.set('user:login', userLoginHandler);
+    this.events.on('user:login', userLoginHandler);
+
+    if (this.options.logLevel) {
+      this.logger.debug('Metrics event listeners configured');
+    }
+  }
+
+  private _removeMetricsEventListeners(): void {
+    for (const [event, handler] of this._metricsListeners) {
+      this.events.removeListener(event, handler);
+    }
+    this._metricsListeners.clear();
+  }
+
+  private async _setupDocumentationRoutes(): Promise<void> {
+    const { createUSDHandlers, createRegistry, createSchemaRegistry } = await import('raffel');
+
+    if (this.options.logLevel) {
+      this.logger.debug({ docsEnabled: this.options.docs?.enabled }, 'Setting up documentation routes');
+    }
+
+    const basePath = this.options.basePath || '';
+    const openApiPath = applyBasePath(basePath, '/openapi.json');
+    const usdPath = applyBasePath(basePath, '/api.usd.json');
+    const docsPath = applyBasePath(basePath, '/docs');
+    const docsOpenApiPath = applyBasePath(basePath, '/docs/openapi.json');
+    const docsUsdJsonPath = applyBasePath(basePath, '/docs/usd.json');
+    const docsUsdYamlPath = applyBasePath(basePath, '/docs/usd.yaml');
+
+    if (this.options.logLevel) {
+      this.logger.debug(
+        { docsPath, openApiPath, usdPath, docsOpenApiPath, docsUsdJsonPath, docsUsdYamlPath },
+        'Documentation paths configured'
+      );
+    }
+
+    if (this.options.docs?.enabled) {
+      const registry = createRegistry();
+      const schemaRegistry = createSchemaRegistry();
+
+      const getHandlers = () => {
+        const spec = this.openApiGenerator.generate();
+        return createUSDHandlers(
+          { registry, schemaRegistry },
+          {
+            info: {
+              title: this.options.docs?.title || 'Baldin API',
+              version: this.options.docs?.version || '1.0.0',
+              description: this.options.docs?.description,
+            },
+            protocols: ['http'],
+            externalPaths: spec.paths as Record<string, never>,
+            externalComponents: {
+              schemas: spec.components.schemas as Record<string, never>,
+              securitySchemes: spec.components.securitySchemes as Record<string, never>,
+            },
+            ui: {
+              theme: this.options.docs?.uiTheme || 'auto',
+              tryItOut: this.options.docs?.tryItOut !== false,
+              codeGeneration: this.options.docs?.codeGeneration !== false
+                ? { enabled: true, languages: ['typescript', 'curl', 'python', 'go'] as ('typescript' | 'python' | 'go' | 'curl')[] }
+                : { enabled: false }
+            }
+          }
+        );
+      };
+
+      this.app!.get(openApiPath, (c: Context) => {
+        return c.json(this.openApiGenerator.generate());
+      });
+      this.app!.get(usdPath, () => getHandlers().serveUSD());
+      this.app!.get(docsOpenApiPath, () => getHandlers().serveOpenAPI());
+      this.app!.get(docsUsdJsonPath, () => getHandlers().serveUSD());
+      this.app!.get(docsUsdYamlPath, () => getHandlers().serveUSDYaml());
+      this.app!.get(docsPath, () => getHandlers().serveUI());
+
+      this._registerDocumentationRouteEntries();
+
+      if (this.options.logLevel) {
+        this.logger.debug(
+          { docsPath, openApiPath, usdPath, docsOpenApiPath, docsUsdJsonPath, docsUsdYamlPath },
+          'Docs routes registered with Raffel USD'
+        );
+      }
+    }
+  }
+
+  private async _setupOIDCRoutes(config: OIDCConfig): Promise<void> {
+    this.logger.debug({ hasConfig: !!config }, '[API] Setting up OIDC routes');
+    const { database, auth } = this.options;
+    const authResource = database?.resources?.[auth?.resource || ''];
+
+    if (!authResource) {
+      this.logger.error({ resource: auth?.resource }, 'Auth resource not found for OIDC');
+      return;
+    }
+
+    let sessionStore: SessionStore | null = null;
+    if (config.sessionStore) {
+      try {
+        if ((config.sessionStore as SessionStoreConfig).driver) {
+          sessionStore = await createSessionStore(config.sessionStore as unknown as Parameters<typeof createSessionStore>[0], database as unknown as Parameters<typeof createSessionStore>[1]);
+
+          if (this.options.logLevel) {
+            this.logger.info({ driver: (config.sessionStore as SessionStoreConfig).driver }, 'Session store initialized');
+          }
+        } else {
+          sessionStore = config.sessionStore as SessionStore;
+        }
+      } catch (err) {
+        this.logger.error({ error: (err as Error).message }, 'Failed to create session store');
+        throw err;
+      }
+
+      config.sessionStore = sessionStore as SessionStore;
+    }
+
+    const oidcHandler = await createOIDCHandler(config as unknown as Parameters<typeof createOIDCHandler>[0], this.app!, database as unknown as Parameters<typeof createOIDCHandler>[2], this.events);
+    this.oidcMiddleware = oidcHandler.middleware;
+
+    if (this.options.logLevel && oidcHandler.routes) {
+      const routes = Object.entries(oidcHandler.routes).map(([path, description]) => ({ path, description }));
+      this.logger.info({ routes }, 'Mounted OIDC routes');
+    }
+  }
+
+  private async _createAuthMiddleware(): Promise<MiddlewareHandler | null> {
+    const { database, auth } = this.options;
+    const { drivers, resource: defaultResourceName, pathRules } = auth || {};
+
+    if (!drivers || drivers.length === 0) {
+      return null;
+    }
+
+    const requiresAuthResource = (drivers || []).some((driver) => {
+      const value = String(driver?.driver || '').trim().toLowerCase();
+      return value !== 'oidc'
+        && value !== 'header-secret'
+        && value !== 'header_secret'
+        && value !== 'headersecret';
+    });
+
+    const authResource = database?.resources?.[defaultResourceName || ''];
+    if (requiresAuthResource && !authResource) {
+      this.logger.error({ resource: defaultResourceName }, 'Auth resource not found for middleware');
+      return null;
+    }
+
+    const strategy = AuthStrategyFactory.create({
+      drivers,
+      authResource: authResource as unknown as Parameters<typeof AuthStrategyFactory.create>[0]['authResource'],
+      oidcMiddleware: this.oidcMiddleware || null,
+      database: database as unknown as Parameters<typeof AuthStrategyFactory.create>[0]['database'],
+      pathRules: normalizeAuthPathRules(pathRules),
+      events: this.events,
+      logLevel: this.options.logLevel || 'info',
+      logger: this.logger
+    } as Parameters<typeof AuthStrategyFactory.create>[0]);
+
+    try {
+      return await strategy.createMiddleware();
+    } catch (err) {
+      this.logger.error({ error: (err as Error).message }, 'Failed to create auth middleware');
+      throw err;
+    }
+  }
+
+  private _printStartupBanner(info: ServerInfo): void {
+    if (this.options.startupBanner === false) {
+      return;
+    }
+
+    const version = this.options.database?.baldinVersion || 'latest';
+    const basePath = this.options.basePath || '';
+    const localHost = this._resolveLocalHostname();
+    const localUrl = this._buildUrl(localHost, info.port, basePath);
+    const networkHost = this._resolveNetworkHostname();
+    const networkUrl = networkHost ? this._buildUrl(networkHost, info.port, basePath) : null;
+    const docsPath = this.options.docs?.enabled !== false
+      ? (basePath ? `${basePath}/docs` : '/docs')
+      : null;
+    const docsUrl = docsPath ? this._buildUrl(localHost, info.port, docsPath) : null;
+
+    const lines = [
+      '',
+      `  🗄️  Baldin API ${version}`,
+      `     - Local:    ${localUrl}`
+    ];
+
+    if (networkUrl && networkUrl !== localUrl) {
+      lines.push(`     - Network:  ${networkUrl}`);
+    }
+
+    if (docsUrl) {
+      lines.push(`     - Docs:     ${docsUrl}`);
+    }
+
+    const routeSummaries = this.router?.getRouteSummaries?.() || [];
+    if (routeSummaries.length > 0) {
+      lines.push('     Routes:');
+
+      const globalDrivers = this.options.auth?.drivers?.map(d => d.driver === 'apiKey' ? 'apikey' : d.driver) || [];
+      const maxPathLen = routeSummaries.reduce((max: number, r: RouteSummary) => Math.max(max, r.path.length), 0);
+
+      routeSummaries.forEach((route: RouteSummary) => {
+        const actions: string[] = [];
+        const m = route.methods;
+        if (m.includes('GET')) actions.push('list', 'show');
+        if (m.includes('POST')) actions.push('create');
+        if (m.includes('PATCH')) actions.push('update');
+        if (m.includes('PUT')) actions.push('replace');
+        if (m.includes('DELETE')) actions.push('delete');
+
+        const actionStr = actions.join(', ');
+
+        let authTag = '[public]';
+        if (route.authEnabled) {
+          let activeDrivers = globalDrivers;
+          if (Array.isArray(route.authConfig)) {
+             activeDrivers = globalDrivers.filter(d => (route.authConfig as string[]).includes(d) || (route.authConfig as string[]).includes(d === 'apikey' ? 'apiKey' : d));
+          }
+
+          authTag = activeDrivers.length > 0
+            ? `[auth:${activeDrivers.join(',')}]`
+            : '[auth:none]';
+        }
+
+        lines.push(`       ${route.path.padEnd(maxPathLen + 2)} ${authTag.padEnd(25)} ${actionStr}`);
+      });
+    }
+
+    lines.push('');
+    this.logger.info(lines.join('\n'));
+  }
+
+  private _resolveLocalHostname(): string {
+    const host = this.options.host;
+    if (!host || host === '0.0.0.0' || host === '::') {
+      return 'localhost';
+    }
+    return host;
+  }
+
+  private _resolveNetworkHostname(): string | null {
+    const host = this.options.host;
+    if (host && host !== '0.0.0.0' && host !== '::') {
+      return host;
+    }
+    return this._findLanAddress() || null;
+  }
+
+  private _findLanAddress(): string | null {
+    const nets = networkInterfaces();
+    for (const interfaceDetails of Object.values(nets)) {
+      if (!interfaceDetails) continue;
+      for (const detail of interfaceDetails as NetworkInterfaceInfo[]) {
+        if (detail.family === 'IPv4' && !detail.internal) {
+          return detail.address;
+        }
+      }
+    }
+    return null;
+  }
+
+  private _buildUrl(host: string | null, port: number, path: string = ''): string {
+    if (!host) return '';
+    const isIPv6 = host.includes(':') && !host.startsWith('[');
+    const hostPart = isIPv6 ? `[${host}]` : host;
+    const protocol = this._tlsEnabled ? 'https' : 'http';
+    const base = `${protocol}://${hostPart}:${port}`;
+
+    if (!path) {
+      return base;
+    }
+
+    const normalizedPath = path === '/'
+      ? '/'
+      : (path.startsWith('/') ? path : `/${path}`);
+
+    if (normalizedPath === '/') {
+      return `${base}/`;
+    }
+
+    return `${base}${normalizedPath}`;
+  }
+
+  _generateOpenAPISpec(): Record<string, unknown> {
+    return this.openApiGenerator.generate() as unknown as Record<string, unknown>;
+  }
+
+  private _createRouter(
+    HttpAppCtor: new () => HttpApp,
+    authMiddleware?: MiddlewareHandler
+  ): Router {
+    return new Router({
+      database: this.options.database as ConstructorParameters<typeof Router>[0]['database'],
+      resources: this.options.resources as ConstructorParameters<typeof Router>[0]['resources'],
+      routes: this.options.routes,
+      versionPrefix: this.options.versionPrefix,
+      basePath: this.options.basePath,
+      auth: this.options.auth,
+      static: this.options.static as ConstructorParameters<typeof Router>[0]['static'],
+      failban: this.failban as unknown as ConstructorParameters<typeof Router>[0]['failban'],
+      metrics: this.metrics as unknown as ConstructorParameters<typeof Router>[0]['metrics'],
+      relationsPlugin: this.relationsPlugin as unknown as ConstructorParameters<typeof Router>[0]['relationsPlugin'],
+      authMiddleware,
+      logLevel: this.options.logLevel,
+      logger: this.logger,
+      HttpApp: HttpAppCtor,
+      docs: {
+        enabled: this.options.docs?.enabled !== false,
+        title: this.options.docs?.title || 'Baldin API',
+        description: this.options.docs?.description || 'Auto-generated REST API for Baldin resources'
+      },
+      rootRoute: this.options.rootRoute,
+      routeRegistry: this.routeRegistry
+    });
+  }
+
+  private async _ensurePlannedRouteRegistry(): Promise<void> {
+    if (this.routeRegistry.list().length > 0) {
+      return;
+    }
+
+    const { HttpApp } = await import('./http/http-runtime.js');
+
+    this.routeRegistry.clear();
+    this._registerMetricsPluginRouteEntry();
+    this._registerDocumentationRouteEntries();
+    if (this.options.health?.enabled !== false) {
+      this._registerHealthRouteEntries();
+    }
+
+    this.router = this._createRouter(HttpApp as unknown as new () => HttpApp);
+
+    const noopApp = {
+      use() {},
+      get() {},
+      on() {},
+      route() {}
+    };
+
+    this.router.mount(
+      noopApp as unknown as HttpApp,
+      { emitResourceEvent() {} }
+    );
+  }
+
+  private _getIntegratedMetricsPluginRoute():
+    | {
+        metricsPlugin: Record<string, unknown>;
+        path: string;
+        enforceIpAllowlist: boolean | undefined;
+        ipAllowlist: string[];
+      }
+    | null {
+    const metricsPlugin = this.options.database?.pluginRegistry?.metrics ||
+                          this.options.database?.pluginRegistry?.MetricsPlugin;
+
+    if (!metricsPlugin) return null;
+
+    const config = (metricsPlugin as { config?: { prometheus?: { enabled?: boolean; mode?: string; path?: string; enforceIpAllowlist?: boolean; ipAllowlist?: string[] } } }).config;
+    if (!config?.prometheus?.enabled) return null;
+
+    const mode = config.prometheus.mode;
+    if (mode !== 'integrated' && mode !== 'auto') return null;
+
+    return {
+      metricsPlugin: metricsPlugin as Record<string, unknown>,
+      path: config.prometheus.path || '/metrics',
+      enforceIpAllowlist: config.prometheus.enforceIpAllowlist,
+      ipAllowlist: config.prometheus.ipAllowlist || []
+    };
+  }
+
+  private _registerMetricsPluginRouteEntry(): void {
+    const metricsRoute = this._getIntegratedMetricsPluginRoute();
+    if (!metricsRoute) {
+      return;
+    }
+
+    this.routeRegistry.register({
+      kind: 'metrics',
+      path: metricsRoute.path,
+      methods: ['GET'],
+      summary: 'Prometheus Metrics',
+      tags: ['Monitoring'],
+      sourceKind: 'programmatic'
+    });
+  }
+
+  private _registerDocumentationRouteEntries(): void {
+    if (this.options.docs?.enabled === false) {
+      return;
+    }
+
+    const basePath = this.options.basePath || '';
+    const entries = [
+      applyBasePath(basePath, '/openapi.json'),
+      applyBasePath(basePath, '/api.usd.json'),
+      applyBasePath(basePath, '/docs/openapi.json'),
+      applyBasePath(basePath, '/docs/usd.json'),
+      applyBasePath(basePath, '/docs/usd.yaml'),
+      applyBasePath(basePath, '/docs')
+    ].map((path) => ({
+      kind: 'docs' as const,
+      path,
+      methods: ['GET'],
+      tags: ['Documentation'],
+      sourceKind: 'programmatic' as const
+    }));
+
+    this.routeRegistry.registerMany(entries);
+  }
+
+  private _registerHealthRouteEntries(): void {
+    this.routeRegistry.registerMany([
+      {
+        kind: 'health',
+        path: '/health',
+        methods: ['GET'],
+        tags: ['Health'],
+        sourceKind: 'programmatic'
+      },
+      {
+        kind: 'health',
+        path: '/health/live',
+        methods: ['GET'],
+        tags: ['Health'],
+        sourceKind: 'programmatic'
+      },
+      {
+        kind: 'health',
+        path: '/health/ready',
+        methods: ['GET'],
+        tags: ['Health'],
+        sourceKind: 'programmatic'
+      }
+    ]);
+  }
+}
+
+export default ApiServer;

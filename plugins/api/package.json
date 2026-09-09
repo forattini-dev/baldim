@@ -1,0 +1,66 @@
+{
+  "name": "@baldin/plugin-api",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Raffel-based HTTP, WebSocket, authentication, OpenAPI, and runtime inspection plugin for Baldin.",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">=24"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "directory": "plugins/api"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "UNLICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.contract.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1026.0",
+    "@aws-sdk/s3-request-presigner": "^3.1026.0",
+    "fastest-validator": "^1.19.1",
+    "jose": "^6.2.2",
+    "lodash-es": "^4.18.1",
+    "raffel": "1.0.26",
+    "recker": "1.0.103"
+  },
+  "optionalDependencies": {
+    "@maxmind/geoip2-node": "^6.3.4",
+    "ejs": "^3.1.10",
+    "pino-http": "^11.0.0",
+    "pug": "^3.0.3",
+    "redis": "^5.11.0"
+  },
+  "peerDependencies": {
+    "@baldin/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "@baldin/adapter-memory": "workspace:*",
+    "@baldin/core": "workspace:*",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "25.5.2",
+    "typescript": "6.0.2",
+    "vitest": "4.1.3"
+  }
+}

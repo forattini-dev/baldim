@@ -1,0 +1,122 @@
+import type { Context } from '../http/http-runtime.js';
+import { asyncHandler } from './error-handler.js';
+import { createLogger } from '@baldin/core/plugin';
+import type { Logger } from '@baldin/core/plugin';
+import { createRouteContext, type RouteContext } from '../concerns/route-context.js';
+import { applyBasePath } from './base-path.js';
+
+const logger: Logger = createLogger({ name: 'CustomRoutes', level: 'info' });
+
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+
+export interface ParsedRoute {
+  method: HttpMethod;
+  path: string;
+}
+
+export interface RouteContextOptions {
+  resource?: unknown;
+  database?: unknown;
+  plugins?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export type RouteHandler = (c: Context, ctx: RouteContext) => Promise<Response> | Response;
+
+export interface Routes {
+  [key: string]: RouteHandler;
+}
+
+export interface ValidationError {
+  key: string;
+  error: string;
+}
+
+export interface HttpAppLike {
+  on(method: string, path: string, handler: (c: Context) => Promise<Response> | Response): void;
+}
+
+export function parseRouteKey(key: string): ParsedRoute {
+  const match = key.match(/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(.+)$/i);
+
+  if (!match) {
+    throw new Error(`Invalid route key format: "${key}". Expected format: "METHOD /path"`);
+  }
+
+  return {
+    method: match[1]!.toUpperCase() as HttpMethod,
+    path: match[2]!
+  };
+}
+
+export function mountCustomRoutes(
+  app: HttpAppLike,
+  routes: Routes | null | undefined,
+  context: RouteContextOptions = {},
+  logLevel: string = 'info',
+  options: { pathPrefix?: string } = {}
+): void {
+  if (!routes || typeof routes !== 'object') {
+    return;
+  }
+
+  const { pathPrefix = '' } = options;
+
+  for (const [key, handler] of Object.entries(routes)) {
+    try {
+      const { method, path } = parseRouteKey(key);
+      const finalPath = pathPrefix ? applyBasePath(pathPrefix, path) : path;
+
+      const wrappedHandler = asyncHandler(async (c: Context): Promise<Response> => {
+        const ctx = createRouteContext(c, {
+          database: context.database as any,
+          resource: (context.resource || null) as any,
+          plugins: context.plugins
+        });
+        return await handler(c, ctx);
+      });
+
+      app.on(method, finalPath, wrappedHandler);
+
+      if (logLevel === 'debug' || logLevel === 'trace') {
+        logger.info(`[Custom Routes] Mounted ${method} ${finalPath}`);
+      }
+    } catch (err) {
+      if (logLevel === 'debug' || logLevel === 'trace') {
+        logger.error({ route: key, error: (err as Error).message }, '[Custom Routes] Error mounting route');
+      }
+    }
+  }
+}
+
+export function validateCustomRoutes(routes: Routes | null | undefined): ValidationError[] {
+  const errors: ValidationError[] = [];
+
+  if (!routes || typeof routes !== 'object') {
+    return errors;
+  }
+
+  for (const [key, handler] of Object.entries(routes)) {
+    try {
+      parseRouteKey(key);
+    } catch (err) {
+      errors.push({ key, error: (err as Error).message });
+      continue;
+    }
+
+    if (typeof handler !== 'function') {
+      errors.push({
+        key,
+        error: `Handler must be a function, got ${typeof handler}`
+      });
+    }
+  }
+
+  return errors;
+}
+
+export default {
+  parseRouteKey,
+  mountCustomRoutes,
+  validateCustomRoutes
+};

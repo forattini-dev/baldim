@@ -399,7 +399,7 @@ export {
   getCronManager,
   resetCronManager,
 } from './concerns/cron-manager.js';
-export type { CronManagerOptions } from './concerns/cron-manager.js';
+export type { CronManagerOptions, CronTask } from './concerns/cron-manager.js';
 export { tryFn } from './concerns/try-fn.js';
 export { mapWithConcurrency, forEachWithConcurrency } from './concerns/map-with-concurrency.js';
 export { idGenerator } from './concerns/id.js';
