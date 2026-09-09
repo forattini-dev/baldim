@@ -469,6 +469,7 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund \
             "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
             "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-utils-*.tgz \
             "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-filesystem-*.tgz \
             "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-reddb-*.tgz \
             "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-sqlite-*.tgz \
