@@ -11,7 +11,7 @@ import {
   createSecurityMiddleware,
   createLoggingMiddleware
 } from './http/middlewares/index.js';
-import { idGenerator } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
 import { createJsonRateLimitMiddleware, RateLimiter } from './concerns/rate-limit.js';
 import { HttpApp, type Context as AppContext } from './http/http-runtime.js';
 import { serve } from './http/http-runtime.js';
@@ -547,7 +547,7 @@ export class IdentityServer {
     this.app.get('/.well-known/openid-configuration', wrap(oauth2Server.discoveryHandler));
     this.app.get('/.well-known/jwks.json', wrap(oauth2Server.jwksHandler));
 
-    this.app.get('/.well-known/baldin-identity.json', (c: AppContext) => {
+    this.app.get('/.well-known/baldim-identity.json', (c: AppContext) => {
       const metadata = this.identityPlugin!.getIntegrationMetadata();
       const etag = `"${Buffer.from(JSON.stringify(metadata)).toString('base64').slice(0, 16)}"`;
 
@@ -592,7 +592,7 @@ export class IdentityServer {
       this.logger.info('[Identity Server] Mounted OAuth2/OIDC routes:');
       this.logger.info('[Identity Server]   GET  /.well-known/openid-configuration (OIDC Discovery)');
       this.logger.info('[Identity Server]   GET  /.well-known/jwks.json (JWKS)');
-      this.logger.info('[Identity Server]   GET  /.well-known/baldin-identity.json (Baldin Integration Metadata)');
+      this.logger.info('[Identity Server]   GET  /.well-known/baldim-identity.json (Baldim Integration Metadata)');
       this.logger.info('[Identity Server]   GET  /oauth/authorize (Authorization UI)');
       this.logger.info('[Identity Server]   POST /oauth/authorize (Process Login)');
       this.logger.info('[Identity Server]   POST /oauth/token (Token)');

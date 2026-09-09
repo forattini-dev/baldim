@@ -1,4 +1,4 @@
-import { ValidationError } from '@baldin/core';
+import { ValidationError } from '@baldim/core';
 
 export interface FactoryResource {
   insert(data: Record<string, unknown>): Promise<Record<string, unknown>>;

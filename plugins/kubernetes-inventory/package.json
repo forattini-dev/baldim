@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/plugin-kubernetes-inventory",
+  "name": "@baldim/plugin-kubernetes-inventory",
   "version": "0.1.0",
   "type": "module",
-  "description": "Kubernetes resource discovery, snapshots, version history, diffs, and scheduled inventory for Baldin.",
+  "description": "Kubernetes resource discovery, snapshots, version history, diffs, and scheduled inventory for Baldim.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "plugins/kubernetes-inventory"
   },
   "main": "./dist/index.js",
@@ -43,11 +43,11 @@
     "node-cron": "^4.0.0"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.2.0"
+    "@baldim/core": "^0.2.0"
   },
   "devDependencies": {
-    "@baldin/adapter-memory": "workspace:*",
-    "@baldin/core": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
+    "@baldim/core": "workspace:*",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "25.5.2",
     "typescript": "6.0.2"

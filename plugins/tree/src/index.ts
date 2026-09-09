@@ -1,4 +1,4 @@
-import { Plugin, createLogger, type Logger, type PluginOptions } from '@baldin/core/plugin';
+import { Plugin, createLogger, type Logger, type PluginOptions } from '@baldim/core/plugin';
 import { NestedSetDriver } from './drivers/nested-set.js';
 import { AdjacencyListDriver } from './drivers/adjacency-list.js';
 import { TreeConfigurationError } from './errors.js';

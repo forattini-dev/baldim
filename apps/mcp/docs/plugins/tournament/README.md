@@ -1,20 +1,20 @@
-# @baldin/plugin-tournament
+# @baldim/plugin-tournament
 
-Tournament management for Baldin, including registration, seeding, brackets,
+Tournament management for Baldim, including registration, seeding, brackets,
 match reporting, standings, ladders, circuits, and promotion/relegation leagues.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { TournamentPlugin } from '@baldin/plugin-tournament';
+import { Baldim } from '@baldim/core';
+import { TournamentPlugin } from '@baldim/plugin-tournament';
 
-const database = new Baldin({ connectionString: 'memory://competitions' });
+const database = new Baldim({ connectionString: 'memory://competitions' });
 await database.connect();
 
 const tournaments = new TournamentPlugin({ logLevel: 'silent' });
 await database.usePlugin(tournaments);
 
 const tournament = await tournaments.create({
-  name: 'Baldin Cup',
+  name: 'Baldim Cup',
   organizerId: 'organizer-1',
   format: 'single-elimination',
   participantType: 'team',
@@ -22,4 +22,4 @@ const tournament = await tournaments.create({
 ```
 
 Format classes, bracket generators, seeding functions, and standings calculators
-are available from `@baldin/plugin-tournament/toolkit`.
+are available from `@baldim/plugin-tournament/toolkit`.

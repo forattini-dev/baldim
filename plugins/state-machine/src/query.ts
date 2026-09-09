@@ -2,7 +2,7 @@ import type { StateMachinePluginContext, StateRecord, TransitionRecord, RawTrans
 import { TRANSITION_HISTORY_PAGE_SIZE } from './types.js';
 import { StateMachineError } from './errors.js';
 import { toEpoch, normalizeTransitionRecord, applyTransitionFilters, sortTransitions } from './helpers.js';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 
 export async function getState(plugin: StateMachinePluginContext, machineId: string, entityId: string): Promise<string> {
   const snapshot = await plugin.getStateSnapshot(machineId, entityId);

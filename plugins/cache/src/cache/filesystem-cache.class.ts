@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 const gzipAsync = promisify(zlib.gzip);
 const gunzipAsync = promisify(zlib.gunzip);
 import { Cache, type CacheConfig } from './cache.class.js';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { CacheError } from '../errors.js';
 
 export type FilesystemEvictionPolicy = 'lru' | 'fifo';

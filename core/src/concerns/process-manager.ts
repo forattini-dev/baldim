@@ -1,11 +1,11 @@
-import { createLogger, BaldinLogger, LogLevel } from './logger.js';
+import { createLogger, BaldimLogger, LogLevel } from './logger.js';
 import { bumpProcessMaxListeners } from './process-max-listeners.js';
 
 export interface ProcessManagerOptions {
   logLevel?: LogLevel;
   shutdownTimeout?: number;
   exitOnSignal?: boolean;
-  logger?: BaldinLogger;
+  logger?: BaldimLogger;
 }
 
 export interface IntervalEntry {
@@ -40,8 +40,8 @@ export interface ShutdownOptions {
 }
 
 export class ProcessManager {
-  private options: Required<Omit<ProcessManagerOptions, 'logger'>> & { logger?: BaldinLogger };
-  private logger: BaldinLogger;
+  private options: Required<Omit<ProcessManagerOptions, 'logger'>> & { logger?: BaldimLogger };
+  private logger: BaldimLogger;
   private intervals: Map<string, IntervalEntry>;
   private timeouts: Map<string, TimeoutEntry>;
   private cleanups: Map<string, CleanupFn>;

@@ -1,11 +1,11 @@
-# @baldin/core
+# @baldim/core
 
-Baldin's document database engine, multidatabase manager, and extension contracts.
+Baldim's document database engine, multidatabase manager, and extension contracts.
 
 ```ts
-import { Baldin } from '@baldin/core';
+import { Baldim } from '@baldim/core';
 
-const database = new Baldin({
+const database = new Baldim({
   connectionString: 'memory://my-app',
 });
 
@@ -19,14 +19,14 @@ const notes = await database.createResource({
   },
 });
 
-await notes.insert({ id: 'first', title: 'Try Baldin', done: false });
+await notes.insert({ id: 'first', title: 'Try Baldim', done: false });
 ```
 
 For multiple databases, use the manager with named connections:
 
 ```ts
-import { DatabaseManager } from '@baldin/core';
-import '@baldin/adapter-s3';
+import { DatabaseManager } from '@baldim/core';
+import '@baldim/adapter-s3';
 
 const databases = new DatabaseManager({
   default: 'primary',
@@ -50,12 +50,12 @@ Use `connection(name)` for direct database access or `resource(name)` for unifie
 lookup; direct resource creation is indexed, but cross-connection creation should
 go through the manager so it can reject duplicates before writing metadata.
 
-The memory implementation lives in `@baldin/adapter-memory` and is installed by
+The memory implementation lives in `@baldim/adapter-memory` and is installed by
 core, so `memory:` works without setup. Filesystem, SQLite/libSQL/D1, RedDB, and
 S3-compatible storage live in separate adapter packages and register when imported.
 
 `S3db` remains available as a deprecated class alias so applications can migrate
-their imports before changing persisted data. Baldin continues to read and
+their imports before changing persisted data. Baldim continues to read and
 write the established `s3db.json` metadata format during this compatibility phase.
 
 No package has been published to npm yet.

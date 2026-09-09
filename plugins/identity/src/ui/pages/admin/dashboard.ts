@@ -95,7 +95,7 @@ export function AdminDashboardPage(props: AdminDashboardPageProps = {}): HtmlEsc
           </p>
         </div>
         <div class="rounded-2xl border border-white/15 bg-white/[0.06] px-4 py-3 text-xs text-slate-300">
-          <div class="text-sm font-semibold text-white">${user.email || 'admin@baldin.identity'}</div>
+          <div class="text-sm font-semibold text-white">${user.email || 'admin@baldim.identity'}</div>
           <div class="mt-1 flex flex-wrap items-center gap-2">
             <span class="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-200">
               Administrator
@@ -180,7 +180,7 @@ export function AdminDashboardPage(props: AdminDashboardPageProps = {}): HtmlEsc
         <dl class="mt-4 divide-y divide-white/10 text-sm text-slate-200">
           <div class="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
             <dt class="text-slate-400">Identity Provider</dt>
-            <dd class="font-medium text-white">${config.title || 'Baldin Identity'}</dd>
+            <dd class="font-medium text-white">${config.title || 'Baldim Identity'}</dd>
           </div>
           <div class="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
             <dt class="text-slate-400">Your Role</dt>
@@ -194,7 +194,7 @@ export function AdminDashboardPage(props: AdminDashboardPageProps = {}): HtmlEsc
           ` : ''}
           <div class="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
             <dt class="text-slate-400">Database Type</dt>
-            <dd>Baldin document database</dd>
+            <dd>Baldim document database</dd>
           </div>
         </dl>
       </div>

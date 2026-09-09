@@ -4,8 +4,8 @@
  * Reads Terraform/OpenTofu state files from S3 buckets
  */
 import { TfStateDriver, type StateFileMetadata } from './base-driver.js';
-import { S3Client } from '@baldin/adapter-s3';
-import { tryFn } from '@baldin/core/plugin';
+import { S3Client } from '@baldim/adapter-s3';
+import { tryFn } from '@baldim/core/plugin';
 import { TfStateError, InvalidStateFileError, StateFileNotFoundError } from './errors.js';
 
 export class S3TfStateDriver extends TfStateDriver {
@@ -92,7 +92,7 @@ export class S3TfStateDriver extends TfStateDriver {
   override async initialize(): Promise<void> {
     const { bucket, credentials, region, prefix } = this.connectionConfig;
 
-    // Build connection string for Baldin's S3 adapter client
+    // Build connection string for Baldim's S3 adapter client
     let connectionString = 's3://';
     if (credentials?.accessKeyId && credentials?.secretAccessKey) {
       connectionString += `${encodeURIComponent(credentials.accessKeyId)}:${encodeURIComponent(credentials.secretAccessKey)}@`;
@@ -103,7 +103,7 @@ export class S3TfStateDriver extends TfStateDriver {
     }
     connectionString += `?region=${region || 'us-east-1'}`;
 
-    // Create S3 client using Baldin's S3 adapter client class
+    // Create S3 client using Baldim's S3 adapter client class
     this.client = new S3Client({
       connectionString
     });

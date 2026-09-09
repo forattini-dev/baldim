@@ -1,4 +1,4 @@
-import { CoordinatorPlugin, type CoordinatorConfig } from '@baldin/core/coordinator';
+import { CoordinatorPlugin, type CoordinatorConfig } from '@baldim/core/coordinator';
 import {
   createLogger,
   getCronManager,
@@ -6,7 +6,7 @@ import {
   resolveResourceName,
   tryFn,
   type LogLevel,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 import { QueueError } from './errors.js';
 
 interface Resource {

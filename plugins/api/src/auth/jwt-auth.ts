@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import type { Context, Next } from '../http/http-runtime.js';
 import type { ContentfulStatusCode } from '../http/http-runtime.js';
 import type { ResourceLike, DatabaseLike } from './resource-manager.js';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 import { unauthorized } from '../utils/response-formatter.js';
 import { getCookie } from '../http/http-runtime.js';
 import { LRUCache } from '../concerns/lru-cache.js';

@@ -1,10 +1,10 @@
-import { Baldin } from '@baldin/core';
+import { Baldim } from '@baldim/core';
 
 export function createMemoryDatabaseForTest(
   name: string,
   options: Record<string, unknown> = {},
-): Baldin {
-  return new Baldin({
+): Baldim {
+  return new Baldim({
     connectionString: `memory://${name}`,
     ...options,
   });

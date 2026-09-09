@@ -5,7 +5,7 @@ import { PuppeteerPlugin } from '../src/index.js';
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url));
 
-describe('@baldin/plugin-puppeteer package contract', () => {
+describe('@baldim/plugin-puppeteer package contract', () => {
   it('owns every browser runtime dependency it imports', async () => {
     const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
@@ -18,9 +18,9 @@ describe('@baldin/plugin-puppeteer package contract', () => {
     expect(manifest.optionalDependencies).toMatchObject({
       puppeteer: expect.any(String),
     });
-    expect(manifest.dependencies).not.toHaveProperty('@baldin/core');
+    expect(manifest.dependencies).not.toHaveProperty('@baldim/core');
     expect(manifest.peerDependencies).toEqual({
-      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+      '@baldim/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
     });
   });
 

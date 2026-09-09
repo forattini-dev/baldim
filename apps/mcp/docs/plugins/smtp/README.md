@@ -1,14 +1,14 @@
-# @baldin/plugin-smtp
+# @baldim/plugin-smtp
 
-Email delivery and receiving for Baldin. The plugin supports provider and custom
+Email delivery and receiving for Baldim. The plugin supports provider and custom
 SMTP relays, multi-relay strategies, an optional SMTP server, templates, retry
 metadata, rate limiting, and delivery webhooks.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { SMTPPlugin } from '@baldin/plugin-smtp';
+import { Baldim } from '@baldim/core';
+import { SMTPPlugin } from '@baldim/plugin-smtp';
 
-const database = new Baldin({ connectionString: 'memory://mail' });
+const database = new Baldim({ connectionString: 'memory://mail' });
 await database.connect();
 
 const smtp = new SMTPPlugin({
@@ -22,7 +22,7 @@ await smtp.sendEmail({
   from: 'noreply@example.com',
   to: 'user@example.com',
   subject: 'Welcome',
-  body: 'Hello from Baldin',
+  body: 'Hello from Baldim',
 });
 ```
 

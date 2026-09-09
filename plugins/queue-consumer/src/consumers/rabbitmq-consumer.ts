@@ -1,4 +1,4 @@
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { loadOptionalDependency } from '../optional-dependency.js';
 
 interface RabbitMQMessage {

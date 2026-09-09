@@ -8,17 +8,17 @@ import { join, dirname, basename, relative } from 'path';
 import { fileURLToPath } from 'url';
 import { homedir } from 'os';
 import { execSync } from 'child_process';
-import type { BaldinMCPServer } from '../entrypoint.js';
-import type { BaldinSearchDocsArgs, BaldinListTopicsArgs } from '../types/index.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
+import type { BaldimSearchDocsArgs, BaldimListTopicsArgs } from '../types/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PROJECT_ROOT = join(__dirname, '../../');
 const LOCAL_DOCS_ROOT = join(PROJECT_ROOT, 'docs');
 
-const CACHE_DIR = join(homedir(), '.cache', 'baldin-mcp');
+const CACHE_DIR = join(homedir(), '.cache', 'baldim-mcp');
 const CACHED_DOCS_ROOT = join(CACHE_DIR, 'docs');
-const REPO_URL = 'https://github.com/forattini-dev/baldin.git';
+const REPO_URL = 'https://github.com/forattini-dev/baldim.git';
 
 function getDocsRoot(): string {
   if (existsSync(LOCAL_DOCS_ROOT)) {
@@ -167,17 +167,17 @@ function pathToResourceUri(path: string): string | null {
     const [, pluginName, rest] = pluginMatch;
     if (!pluginName || !rest) return null;
     if (rest === 'README.md') {
-      return `baldin://plugin/${pluginName}`;
+      return `baldim://plugin/${pluginName}`;
     }
     const subDoc = rest.replace(/\.md$/, '');
-    return `baldin://plugin/${pluginName}/${subDoc}`;
+    return `baldim://plugin/${pluginName}/${subDoc}`;
   }
   const coreMatch = normalized.match(/^core\/([^.]+)\.md$/);
-  if (coreMatch) return `baldin://core/${coreMatch[1]}`;
+  if (coreMatch) return `baldim://core/${coreMatch[1]}`;
   const guideMatch = normalized.match(/^guides\/([^.]+)\.md$/);
-  if (guideMatch) return `baldin://guide/${guideMatch[1]}`;
+  if (guideMatch) return `baldim://guide/${guideMatch[1]}`;
   const refMatch = normalized.match(/^reference\/([^.]+)\.md$/);
-  if (refMatch) return `baldin://reference/${refMatch[1]}`;
+  if (refMatch) return `baldim://reference/${refMatch[1]}`;
   return null;
 }
 
@@ -371,8 +371,8 @@ async function listTopics(type: 'core' | 'plugins'): Promise<any> {
 
 export const docsSearchTools = [
   {
-    name: 'baldinSearchDocs',
-    description: `Search all Baldin documentation (core + plugins). Supports fuzzy search (query), regex search (pattern), and document group filtering (group). Use group to narrow scope before searching. TIP: For security/password/encryption topics, read baldin://core/security directly.`,
+    name: 'baldimSearchDocs',
+    description: `Search all Baldim documentation (core + plugins). Supports fuzzy search (query), regex search (pattern), and document group filtering (group). Use group to narrow scope before searching. TIP: For security/password/encryption topics, read baldim://core/security directly.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -397,8 +397,8 @@ export const docsSearchTools = [
     },
   },
   {
-    name: 'baldinSearchCoreDocs',
-    description: `Search Baldin CORE documentation using fuzzy search.`,
+    name: 'baldimSearchCoreDocs',
+    description: `Search Baldim CORE documentation using fuzzy search.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -409,8 +409,8 @@ export const docsSearchTools = [
     },
   },
   {
-    name: 'baldinSearchPluginDocs',
-    description: `Search Baldin PLUGIN documentation using fuzzy search.`,
+    name: 'baldimSearchPluginDocs',
+    description: `Search Baldim PLUGIN documentation using fuzzy search.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -421,20 +421,20 @@ export const docsSearchTools = [
     },
   },
   {
-    name: 'baldinListCoreTopics',
-    description: 'List all available topics in Baldin CORE documentation',
+    name: 'baldimListCoreTopics',
+    description: 'List all available topics in Baldim CORE documentation',
     inputSchema: { type: 'object', properties: {}, required: [] },
   },
   {
-    name: 'baldinListPluginTopics',
-    description: 'List all available topics in Baldin PLUGIN documentation',
+    name: 'baldimListPluginTopics',
+    description: 'List all available topics in Baldim PLUGIN documentation',
     inputSchema: { type: 'object', properties: {}, required: [] },
   },
 ];
 
-export function createDocsSearchHandlers(server: BaldinMCPServer) {
+export function createDocsSearchHandlers(server: BaldimMCPServer) {
   return {
-    async baldinSearchDocs(args: BaldinSearchDocsArgs): Promise<any> {
+    async baldimSearchDocs(args: BaldimSearchDocsArgs): Promise<any> {
       const { query, pattern, group, limit = 5 } = args;
 
       if (!query && !pattern && !group) {
@@ -464,7 +464,7 @@ export function createDocsSearchHandlers(server: BaldinMCPServer) {
             uri: pathToResourceUri(d.path),
             category: d.category,
           })),
-          hint: 'Read full docs via baldin:// URIs shown in each result.',
+          hint: 'Read full docs via baldim:// URIs shown in each result.',
         };
       }
 
@@ -491,25 +491,25 @@ export function createDocsSearchHandlers(server: BaldinMCPServer) {
           snippet: r.snippet,
           score: r.score,
         })),
-        hint: 'Read full docs via baldin:// URIs shown in each result.',
+        hint: 'Read full docs via baldim:// URIs shown in each result.',
       };
     },
 
-    async baldinSearchCoreDocs(args: BaldinSearchDocsArgs): Promise<any> {
+    async baldimSearchCoreDocs(args: BaldimSearchDocsArgs): Promise<any> {
       const { query, limit = 5 } = args;
       return searchDocs('core', query || '', limit);
     },
 
-    async baldinSearchPluginDocs(args: BaldinSearchDocsArgs): Promise<any> {
+    async baldimSearchPluginDocs(args: BaldimSearchDocsArgs): Promise<any> {
       const { query, limit = 5 } = args;
       return searchDocs('plugins', query || '', limit);
     },
 
-    async baldinListCoreTopics(_args: BaldinListTopicsArgs): Promise<any> {
+    async baldimListCoreTopics(_args: BaldimListTopicsArgs): Promise<any> {
       return listTopics('core');
     },
 
-    async baldinListPluginTopics(_args: BaldinListTopicsArgs): Promise<any> {
+    async baldimListPluginTopics(_args: BaldimListTopicsArgs): Promise<any> {
       return listTopics('plugins');
     },
   };

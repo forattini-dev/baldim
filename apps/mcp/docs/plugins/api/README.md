@@ -1,12 +1,12 @@
-# @baldin/plugin-api
+# @baldim/plugin-api
 
-Raffel-based API plugin for Baldin. It exposes database resources through HTTP and WebSocket endpoints with authentication, authorization, validation, rate limiting, OpenAPI/USD documentation, static files, health checks, and runtime inspection.
+Raffel-based API plugin for Baldim. It exposes database resources through HTTP and WebSocket endpoints with authentication, authorization, validation, rate limiting, OpenAPI/USD documentation, static files, health checks, and runtime inspection.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { ApiPlugin } from '@baldin/plugin-api';
+import { Baldim } from '@baldim/core';
+import { ApiPlugin } from '@baldim/plugin-api';
 
-const database = new Baldin({ connectionString: 'memory://app' });
+const database = new Baldim({ connectionString: 'memory://app' });
 await database.connect();
 await database.usePlugin(new ApiPlugin({ port: 3000 }));
 ```

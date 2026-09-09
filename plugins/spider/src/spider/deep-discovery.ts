@@ -172,7 +172,7 @@ export class DeepDiscovery {
    */
   constructor(config: DeepDiscoveryConfig = {}) {
     this.config = {
-      userAgent: config.userAgent || 'baldin-spider',
+      userAgent: config.userAgent || 'baldim-spider',
       timeout: config.timeout || 10000,
       maxConcurrent: config.maxConcurrent || 10,
       checkSubdomains: config.checkSubdomains !== false,

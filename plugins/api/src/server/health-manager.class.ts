@@ -1,7 +1,7 @@
 import type { Context } from '../http/http-runtime.js';
-import type { Logger, LogLevel } from '@baldin/core/plugin';
+import type { Logger, LogLevel } from '@baldim/core/plugin';
 import * as formatter from '../http/response-formatter.js';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 
 type HttpAppType = {
   get: (path: string, handler: (c: Context) => Response | Promise<Response>) => void;
@@ -99,13 +99,13 @@ export class HealthManager {
       const latency = Date.now() - startTime;
 
       if (isDbReady) {
-        checks.baldin = {
+        checks.baldim = {
           status: 'healthy',
           latency_ms: latency,
           resources: resourceCount
         };
       } else {
-        checks.baldin = {
+        checks.baldim = {
           status: 'unhealthy',
           connected: dbConnected,
           resources: resourceCount
@@ -124,7 +124,7 @@ export class HealthManager {
         }
       }
     } catch (err) {
-      checks.baldin = {
+      checks.baldim = {
         status: 'unhealthy',
         error: (err as Error).message
       };

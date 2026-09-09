@@ -9,7 +9,7 @@ export interface DatabaseLike {
   resources: Record<string, ResourceLike>;
 }
 
-export interface BaldinStoreConfig {
+export interface BaldimStoreConfig {
   resourceName?: string;
   logLevel?: string;
 }
@@ -27,11 +27,11 @@ export interface MemoryStoreConfig {
   logLevel?: string;
 }
 
-export type StoreDriver = 'baldin' | 'redis' | 'memory';
+export type StoreDriver = 'baldim' | 'redis' | 'memory';
 
 export interface StoreConfig {
   driver: StoreDriver;
-  config?: BaldinStoreConfig | RedisStoreConfig | MemoryStoreConfig;
+  config?: BaldimStoreConfig | RedisStoreConfig | MemoryStoreConfig;
 }
 
 export async function createSessionStore(
@@ -45,8 +45,8 @@ export async function createSessionStore(
   const { driver, config = {} } = storeConfig;
 
   switch (driver) {
-    case 'baldin':
-      return createBaldinSessionStore(config as BaldinStoreConfig, database);
+    case 'baldim':
+      return createBaldimSessionStore(config as BaldimStoreConfig, database);
 
     case 'redis':
       return createRedisSessionStore(config as RedisStoreConfig);
@@ -57,15 +57,15 @@ export async function createSessionStore(
     default:
       throw new Error(
         `Unknown session store driver: "${driver}". ` +
-        `Supported drivers: baldin, redis, memory`
+        `Supported drivers: baldim, redis, memory`
       );
   }
 }
 
-function createBaldinSessionStore(config: BaldinStoreConfig, database?: DatabaseLike): ResourceSessionStore {
+function createBaldimSessionStore(config: BaldimStoreConfig, database?: DatabaseLike): ResourceSessionStore {
   if (!database) {
     throw new Error(
-      'Baldin session store requires a database instance. ' +
+      'Baldim session store requires a database instance. ' +
       'Make sure to pass the database as the second argument to createSessionStore().'
     );
   }
@@ -74,7 +74,7 @@ function createBaldinSessionStore(config: BaldinStoreConfig, database?: Database
 
   if (!database.resources[resourceName]) {
     throw new Error(
-      `Baldin session store resource not found: "${resourceName}". ` +
+      `Baldim session store resource not found: "${resourceName}". ` +
       `Create it first with: ` +
       `await db.createResource({ name: '${resourceName}', attributes: { expiresAt: 'datetime|required' } })`
     );

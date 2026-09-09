@@ -1,16 +1,16 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import { Baldin, MemoryClient, type Database } from '@baldin/core';
+import { Baldim, MemoryClient, type Database } from '@baldim/core';
 import {
   Plugin,
   resolveResourceNames,
   type ResourceLike,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 
 let sequence = 0;
 const databases: Database[] = [];
 
 function createDatabase(label: string): Database {
-  const database = new Baldin({
+  const database = new Baldim({
     connectionString: `memory://plugin-sdk-${label}-${++sequence}`,
     logLevel: 'silent',
   });
@@ -25,7 +25,7 @@ afterEach(async () => {
   MemoryClient.clearAllStorage();
 });
 
-describe('@baldin/core plugin SDK', () => {
+describe('@baldim/core plugin SDK', () => {
   test('stops plugins installed after connect during database disconnect', async () => {
     class LifecyclePlugin extends Plugin {
       stops = 0;

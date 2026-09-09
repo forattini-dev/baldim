@@ -1,15 +1,15 @@
-# @baldin/plugin-identity
+# @baldim/plugin-identity
 
-OAuth2 and OpenID Connect identity provider for Baldin. It includes RSA signing
+OAuth2 and OpenID Connect identity provider for Baldim. It includes RSA signing
 keys, authorization code, refresh token, password and client credentials grants,
 sessions, onboarding, account lockout, rate limiting, optional MFA and email,
 and an administrative UI.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { IdentityPlugin } from '@baldin/plugin-identity';
+import { Baldim } from '@baldim/core';
+import { IdentityPlugin } from '@baldim/plugin-identity';
 
-const database = new Baldin({ connectionString: 'memory://identity' });
+const database = new Baldim({ connectionString: 'memory://identity' });
 await database.connect();
 
 const identity = new IdentityPlugin({
@@ -35,15 +35,15 @@ await database.usePlugin(identity);
 
 The package owns its Raffel HTTP runtime. `nodemailer`, `otpauth`, `qrcode`,
 and GeoIP support are optional dependencies used only when their matching
-features are enabled. Audit support is supplied by `@baldin/plugin-audit`.
+features are enabled. Audit support is supplied by `@baldim/plugin-audit`.
 
 The server publishes OIDC discovery at `/.well-known/openid-configuration`,
-keys at `/.well-known/jwks.json`, and Baldin integration metadata at
-`/.well-known/baldin-identity.json`.
+keys at `/.well-known/jwks.json`, and Baldim integration metadata at
+`/.well-known/baldim-identity.json`.
 
 ```ts
 import {
   ClientCredentialsAuthDriver,
   PasswordAuthDriver,
-} from '@baldin/plugin-identity/drivers';
+} from '@baldim/plugin-identity/drivers';
 ```

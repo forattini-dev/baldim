@@ -2,7 +2,7 @@
  * Graph Plugin Tests
  */
 
-import { Baldin as Database, MemoryClient } from '@baldin/core';
+import { Baldim as Database, MemoryClient } from '@baldim/core';
 import { GraphPlugin } from '../src/index.js';
 
 describe('GraphPlugin', () => {

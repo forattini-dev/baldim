@@ -1,7 +1,7 @@
 /**
  * Session Manager - Handles user sessions for Identity Provider
  *
- * Manages session lifecycle using Baldin resource as storage:
+ * Manages session lifecycle using Baldim resource as storage:
  * - Create/validate/destroy sessions
  * - Cookie-based session handling
  * - Automatic session cleanup (expired sessions)
@@ -9,9 +9,9 @@
  */
 
 import { generateSessionId, calculateExpiration, isExpired } from './concerns/token-generator.js';
-import { tryFn } from '@baldin/core/plugin';
-import { PluginError } from '@baldin/core/plugin';
-import { getCronManager, CronManager } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
+import { getCronManager, CronManager } from '@baldim/core/plugin';
 
 export interface SessionConfig {
   sessionExpiry: string;
@@ -93,7 +93,7 @@ interface Logger {
 
 const DEFAULT_CONFIG: SessionConfig = {
   sessionExpiry: '24h',
-  cookieName: 'baldin_session',
+  cookieName: 'baldim_session',
   cookiePath: '/',
   cookieHttpOnly: true,
   cookieSecure: false,

@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/plugin-fulltext",
+  "name": "@baldim/plugin-fulltext",
   "version": "0.1.1",
   "type": "module",
-  "description": "Persistent full-text indexes and ranked search for Baldin resources.",
+  "description": "Persistent full-text indexes and ranked search for Baldim resources.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "plugins/fulltext"
   },
   "main": "./dist/index.js",
@@ -37,10 +37,10 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.2.0"
+    "@baldim/core": "^0.2.0"
   },
   "devDependencies": {
-    "@baldin/core": "workspace:*",
+    "@baldim/core": "workspace:*",
     "@types/node": "25.5.2",
     "typescript": "6.0.2"
   }

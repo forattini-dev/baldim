@@ -26,7 +26,7 @@ jobs:
       - name: Verify npm publisher access
         run: |
           echo "Authenticated to npm as $(npm whoami)"
-          npm access list packages @baldin --json
+          npm access list packages @baldim --json
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm install --frozen-lockfile

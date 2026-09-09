@@ -1,4 +1,4 @@
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface MLErrorContext {
   pluginName?: string;
@@ -110,7 +110,7 @@ export class TensorFlowDependencyError extends MLError {
   constructor(message: string = 'The bundled @tensorflow/tfjs dependency could not be loaded', context: MLErrorContext = {}) {
     super(message, {
       retriable: false,
-      suggestion: context.suggestion ?? 'Reinstall @baldin/plugin-ml and verify the TensorFlow.js package can load.',
+      suggestion: context.suggestion ?? 'Reinstall @baldim/plugin-ml and verify the TensorFlow.js package can load.',
       ...context
     });
     this.name = 'TensorFlowDependencyError';

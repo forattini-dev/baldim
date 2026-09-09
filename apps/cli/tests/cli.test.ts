@@ -13,18 +13,18 @@ afterEach(async () => {
   await Promise.all(temporaryDirectories.splice(0).map((path) => rm(path, { recursive: true, force: true })));
 });
 
-describe('@baldin/cli', () => {
-  it('ships a runnable Baldin command', async () => {
+describe('@baldim/cli', () => {
+  it('ships a runnable Baldim command', async () => {
     const entrypoint = new URL('../dist/index.js', import.meta.url);
     const { stdout } = await execFileAsync(process.execPath, [entrypoint.pathname, '--help']);
 
-    expect(stdout).toContain('Baldin CLI');
-    expect(stdout).toContain('mcp              Start the Baldin MCP');
+    expect(stdout).toContain('Baldim CLI');
+    expect(stdout).toContain('mcp              Start the Baldim MCP');
     expect(stdout).not.toContain('s3db.js');
   });
 
   it('generates executable migration modules', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'baldin-cli-'));
+    const directory = await mkdtemp(join(tmpdir(), 'baldim-cli-'));
     temporaryDirectories.push(directory);
     const manager = new MigrationManager(null, directory);
     const generated = await manager.generate('create_users');

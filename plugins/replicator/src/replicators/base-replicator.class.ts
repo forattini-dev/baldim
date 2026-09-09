@@ -1,7 +1,7 @@
 import EventEmitter from 'node:events';
-import { TasksPool } from '@baldin/core';
+import { TasksPool } from '@baldim/core';
 import { ReplicationError } from '../replicator.errors.js';
-import { createLogger, type Logger } from '@baldin/core/plugin';
+import { createLogger, type Logger } from '@baldim/core/plugin';
 
 export interface BaseReplicatorConfig {
   enabled?: boolean;

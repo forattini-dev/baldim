@@ -1,4 +1,4 @@
-# @baldin/plugin-cloud-inventory
+# @baldim/plugin-cloud-inventory
 
 ## 0.1.0
 
@@ -17,4 +17,4 @@
 - Updated dependencies [6ed3bd3]
 - Updated dependencies [f686e95]
 - Updated dependencies [e150c2f]
-  - @baldin/core@0.2.0
+  - @baldim/core@0.2.0

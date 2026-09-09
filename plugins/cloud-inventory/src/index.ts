@@ -9,7 +9,7 @@ import {
   resolveResourceNames,
   tryFn,
   type PluginOptions,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 
 import {
   createCloudDriver,

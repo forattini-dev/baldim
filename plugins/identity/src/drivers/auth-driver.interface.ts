@@ -5,7 +5,7 @@
  * All auth drivers must extend this class and implement the required methods.
  */
 
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface AuthDriverContext {
   database?: any;

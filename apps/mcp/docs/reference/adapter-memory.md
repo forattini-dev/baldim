@@ -1,3 +1,3 @@
-# @baldin/adapter-memory
+# @baldim/adapter-memory
 
-Baldin's in-memory storage implementation. `@baldin/core` loads this package automatically for `memory:` connections.
+Baldim's in-memory storage implementation. `@baldim/core` loads this package automatically for `memory:` connections.

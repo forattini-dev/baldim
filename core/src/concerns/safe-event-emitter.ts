@@ -1,10 +1,10 @@
 import EventEmitter from 'events';
-import { createLogger, BaldinLogger, LogLevel } from './logger.js';
+import { createLogger, BaldimLogger, LogLevel } from './logger.js';
 import { bumpProcessMaxListeners } from './process-max-listeners.js';
 
 export interface SafeEventEmitterOptions {
   logLevel?: LogLevel;
-  logger?: BaldinLogger;
+  logger?: BaldimLogger;
   autoCleanup?: boolean;
   maxListeners?: number;
 }
@@ -14,8 +14,8 @@ export interface ListenerStats {
 }
 
 export class SafeEventEmitter extends EventEmitter {
-  options: Required<Omit<SafeEventEmitterOptions, 'logger'>> & { logger?: BaldinLogger };
-  logger: BaldinLogger;
+  options: Required<Omit<SafeEventEmitterOptions, 'logger'>> & { logger?: BaldimLogger };
+  logger: BaldimLogger;
   private _signalHandlersSetup: boolean;
   private _isDestroyed: boolean;
   private _boundCleanupHandler?: (signal: string) => void;

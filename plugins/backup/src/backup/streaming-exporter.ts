@@ -1,6 +1,6 @@
 import { createWriteStream, type WriteStream } from 'fs';
 import zlib from 'node:zlib';
-import type { Resource } from '@baldin/core/plugin';
+import type { Resource } from '@baldim/core/plugin';
 
 export interface StreamingExporterOptions {
   encoding?: BufferEncoding;

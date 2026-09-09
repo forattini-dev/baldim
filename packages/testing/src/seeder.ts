@@ -1,5 +1,5 @@
-import { ValidationError } from '@baldin/core';
-import { createLogger, type Logger, type LogLevel } from '@baldin/core/plugin';
+import { ValidationError } from '@baldim/core';
+import { createLogger, type Logger, type LogLevel } from '@baldim/core/plugin';
 import { Factory, type FactoryDatabase, type FactoryResource } from './factory.js';
 
 export interface SeederResource extends FactoryResource {

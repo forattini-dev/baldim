@@ -1,4 +1,4 @@
-import { StorageError } from '@baldin/core';
+import { StorageError } from '@baldim/core';
 
 export interface MetricsErrorDetails {
   metricName?: string;
@@ -31,7 +31,7 @@ Common causes:
 Solution:
 Check metrics configuration and ensure proper initialization.
 
-Docs: https://github.com/forattini-dev/baldin
+Docs: https://github.com/forattini-dev/baldim
 `.trim();
     }
 

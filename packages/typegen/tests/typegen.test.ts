@@ -1,8 +1,8 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import {
   generateResourceInterface,
   generateTypes,
@@ -11,10 +11,10 @@ import {
   printTypes,
 } from '../src/index.js';
 
-describe('@baldin/typegen', () => {
+describe('@baldim/typegen', () => {
   beforeEach(() => MemoryClient.clearAllStorage());
 
-  it('maps Baldin field types to TypeScript', () => {
+  it('maps Baldim field types to TypeScript', () => {
     expect(mapFieldTypeToTypeScript('string|required')).toBe('string');
     expect(mapFieldTypeToTypeScript('embedding:1536')).toBe('number[]');
     expect(mapFieldTypeToTypeScript('json')).toBe('unknown');
@@ -51,15 +51,15 @@ describe('@baldin/typegen', () => {
     expect(output.match(/\bupdatedAt:/g)).toHaveLength(1);
   });
 
-  it('generates resource maps from a connected Baldin database', async () => {
-    const database = new Baldin({ connectionString: 'memory://typegen', logLevel: 'silent' });
+  it('generates resource maps from a connected Baldim database', async () => {
+    const database = new Baldim({ connectionString: 'memory://typegen', logLevel: 'silent' });
     await database.connect();
     await database.createResource({
       name: 'users', timestamps: true,
       attributes: { name: 'string|required', age: 'number', profile: { type: 'object', props: { bio: 'string' } } },
     });
     const output = await printTypes(database);
-    expect(output).toContain("import type { Database, Resource } from \"@baldin/core\";");
+    expect(output).toContain("import type { Database, Resource } from \"@baldim/core\";");
     expect(output).toContain('export interface Users');
     expect(output).toContain('name: string;');
     expect(output).toContain('age?: number;');
@@ -89,7 +89,7 @@ describe('@baldin/typegen', () => {
   });
 
   it('writes generated output and creates parent directories', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'baldin-typegen-'));
+    const directory = await mkdtemp(join(tmpdir(), 'baldim-typegen-'));
     const outputPath = join(directory, 'nested', 'database.generated.ts');
     try {
       const generated = await generateTypes({ resources: {} }, { outputPath });

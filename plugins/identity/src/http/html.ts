@@ -1,8 +1,8 @@
 export type HtmlEscapedString = string & {
-  readonly __baldinHtmlEscaped: true;
+  readonly __baldimHtmlEscaped: true;
 };
 
-const HTML_ESCAPE_MARKER: unique symbol = Symbol('baldin-html-escaped');
+const HTML_ESCAPE_MARKER: unique symbol = Symbol('baldim-html-escaped');
 
 type HtmlSafeString = string & {
   readonly [HTML_ESCAPE_MARKER]: true;

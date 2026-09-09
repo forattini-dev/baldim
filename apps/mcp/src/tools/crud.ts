@@ -1,4 +1,4 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
 import type {
   ResourceInsertArgs,
   ResourceGetArgs,
@@ -9,7 +9,7 @@ import type {
   ResourceDeleteArgs,
   ResourcePageArgs
 } from '../types/index.js';
-import type { Baldin } from '@baldin/core';
+import type { Baldim } from '@baldim/core';
 
 export const crudTools = [
   {
@@ -203,7 +203,7 @@ export const crudTools = [
 Example without partition: resourceList({ resourceName: "users", limit: 50 })
 Example with partition: resourceList({ resourceName: "orders", partition: "by-status", partitionValues: { status: "pending" }, limit: 20 })
 
-For paginated access on large datasets, prefer resourcePage (cursor-based). Use baldin://resource/{name} to discover available partitions.`,
+For paginated access on large datasets, prefer resourcePage (cursor-based). Use baldim://resource/{name} to discover available partitions.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -223,7 +223,7 @@ For paginated access on large datasets, prefer resourcePage (cursor-based). Use 
         },
         partition: {
           type: 'string',
-          description: 'Partition name (e.g. "by-status", "by-userId"). See baldin://resource/{name} for available partitions.'
+          description: 'Partition name (e.g. "by-status", "by-userId"). See baldim://resource/{name} for available partitions.'
         },
         partitionValues: {
           type: 'object',
@@ -368,9 +368,9 @@ Returns: { data, nextCursor, totalCount, hasMore, page, totalPages }. Use skipCo
   }
 ];
 
-export function createCrudHandlers(server: BaldinMCPServer) {
+export function createCrudHandlers(server: BaldimMCPServer) {
   return {
-    async resourceInsert(args: ResourceInsertArgs, database: Baldin): Promise<any> {
+    async resourceInsert(args: ResourceInsertArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, data } = args;
 
@@ -391,7 +391,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceInsertMany(args: { resourceName: string; data: any[] }, database: Baldin): Promise<any> {
+    async resourceInsertMany(args: { resourceName: string; data: any[] }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, data } = args;
 
@@ -405,7 +405,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceGet(args: ResourceGetArgs, database: Baldin): Promise<any> {
+    async resourceGet(args: ResourceGetArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, id, partition, partitionValues } = args;
 
@@ -430,7 +430,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceGetMany(args: { resourceName: string; ids: string[] }, database: Baldin): Promise<any> {
+    async resourceGetMany(args: { resourceName: string; ids: string[] }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, ids } = args;
 
@@ -444,7 +444,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceUpdate(args: ResourceUpdateArgs, database: Baldin): Promise<any> {
+    async resourceUpdate(args: ResourceUpdateArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, id, data } = args;
 
@@ -461,7 +461,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceUpsert(args: ResourceUpsertArgs, database: Baldin): Promise<any> {
+    async resourceUpsert(args: ResourceUpsertArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, data } = args;
 
@@ -474,7 +474,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceDelete(args: ResourceDeleteArgs, database: Baldin): Promise<any> {
+    async resourceDelete(args: ResourceDeleteArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, id } = args;
 
@@ -487,7 +487,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceDeleteMany(args: { resourceName: string; ids: string[] }, database: Baldin): Promise<any> {
+    async resourceDeleteMany(args: { resourceName: string; ids: string[] }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, ids } = args;
 
@@ -501,7 +501,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceExists(args: ResourceGetArgs, database: Baldin): Promise<any> {
+    async resourceExists(args: ResourceGetArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, id, partition, partitionValues } = args;
 
@@ -526,7 +526,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceList(args: ResourceListArgs, database: Baldin): Promise<any> {
+    async resourceList(args: ResourceListArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, limit = 100, offset = 0, partition, partitionValues } = args;
 
@@ -563,7 +563,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceListIds(args: ResourceListArgs, database: Baldin): Promise<any> {
+    async resourceListIds(args: ResourceListArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, limit = 1000, offset = 0 } = args;
 
@@ -582,7 +582,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceCount(args: ResourceCountArgs, database: Baldin): Promise<any> {
+    async resourceCount(args: ResourceCountArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, partition, partitionValues } = args;
 
@@ -612,7 +612,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceGetAll(args: { resourceName: string }, database: Baldin): Promise<any> {
+    async resourceGetAll(args: { resourceName: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName } = args;
 
@@ -637,7 +637,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceDeleteAll(args: { resourceName: string; confirm: boolean }, database: Baldin): Promise<any> {
+    async resourceDeleteAll(args: { resourceName: string; confirm: boolean }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, confirm } = args;
 
@@ -654,7 +654,7 @@ export function createCrudHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourcePage(args: ResourcePageArgs, database: Baldin): Promise<any> {
+    async resourcePage(args: ResourcePageArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, size = 20, cursor, page, partition, partitionValues, skipCount } = args;
 

@@ -1,6 +1,6 @@
 import type { Context, MiddlewareHandler, Next } from '../http/http-runtime.js';
-import { getCronManager } from '@baldin/core/plugin';
-import type { CronManager } from '@baldin/core/plugin';
+import { getCronManager } from '@baldim/core/plugin';
+import type { CronManager } from '@baldim/core/plugin';
 
 export interface RateLimitEntry {
   attempts: number[];

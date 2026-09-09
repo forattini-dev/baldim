@@ -255,7 +255,7 @@ export class PluginStorage {
       throw new PluginStorageError('PluginStorage requires a client instance', {
         operation: 'constructor',
         pluginSlug,
-        suggestion: 'Pass a valid Baldin storage client when creating PluginStorage'
+        suggestion: 'Pass a valid Baldim storage client when creating PluginStorage'
       });
     }
     if (!pluginSlug) {

@@ -43,7 +43,7 @@ export const prompts = [
   },
   {
     name: 'compare-costs',
-    description: 'Compare Baldin costs vs traditional databases for a given scenario. Provides detailed cost breakdown.',
+    description: 'Compare Baldim costs vs traditional databases for a given scenario. Provides detailed cost breakdown.',
     arguments: [
       {
         name: 'scenario',
@@ -74,7 +74,7 @@ export const prompts = [
   },
   {
     name: 'design-multitenancy',
-    description: 'Recommend a multi-tenancy pattern for Baldin based on requirements. Covers isolation, performance, and cost trade-offs.',
+    description: 'Recommend a multi-tenancy pattern for Baldim based on requirements. Covers isolation, performance, and cost trade-offs.',
     arguments: [
       {
         name: 'requirements',
@@ -111,7 +111,7 @@ export const prompts = [
   },
   {
     name: 'migration-guide',
-    description: 'Generate a step-by-step migration guide from a source database to Baldin.',
+    description: 'Generate a step-by-step migration guide from a source database to Baldim.',
     arguments: [
       {
         name: 'source',
@@ -138,7 +138,7 @@ export function getPromptContent(name: string, args: Record<string, string>): { 
       return [
         {
           role: 'user',
-          content: `You are an Baldin schema design expert. Analyze the following use case and generate a recommended schema.
+          content: `You are an Baldim schema design expert. Analyze the following use case and generate a recommended schema.
 
 Use Case: ${args.useCase}
 Expected Records: ${args.expectedRecordCount || 'Not specified'}
@@ -151,7 +151,7 @@ Please provide:
 4. Any plugins that would be beneficial (cache, ttl, audit, etc.)
 5. Performance considerations
 
-Format the schema as valid JavaScript/TypeScript code that can be used with Baldin.`
+Format the schema as valid JavaScript/TypeScript code that can be used with Baldim.`
         }
       ];
 
@@ -159,7 +159,7 @@ Format the schema as valid JavaScript/TypeScript code that can be used with Bald
       return [
         {
           role: 'user',
-          content: `You are an Baldin partitioning expert. Analyze the query pattern and recommend an optimal partitioning strategy.
+          content: `You are an Baldim partitioning expert. Analyze the query pattern and recommend an optimal partitioning strategy.
 
 Query Pattern: ${args.queryPattern}
 Current Schema: ${args.schema || 'Not provided'}
@@ -178,7 +178,7 @@ Please provide:
       return [
         {
           role: 'user',
-          content: `You are a cloud cost analyst. Compare the costs of using Baldin vs traditional databases.
+          content: `You are a cloud cost analyst. Compare the costs of using Baldim vs traditional databases.
 
 Scenario: ${args.scenario}
 Records: ${args.recordCount}
@@ -187,7 +187,7 @@ Monthly Reads: ${args.readsPerMonth}
 Monthly Writes: ${args.writesPerMonth}
 
 Please provide:
-1. Baldin cost breakdown (storage, API calls, data transfer)
+1. Baldim cost breakdown (storage, API calls, data transfer)
 2. Comparison with:
    - Amazon DynamoDB
    - Amazon RDS PostgreSQL
@@ -202,7 +202,7 @@ Please provide:
       return [
         {
           role: 'user',
-          content: `You are an Baldin multi-tenancy architect. Design a multi-tenancy strategy.
+          content: `You are an Baldim multi-tenancy architect. Design a multi-tenancy strategy.
 
 Requirements: ${args.requirements}
 Expected Tenants: ${args.tenantCount || 'Not specified'}
@@ -225,7 +225,7 @@ Please provide:
       return [
         {
           role: 'user',
-          content: `You are an Baldin troubleshooting expert. Analyze the schema and data for 2KB metadata limit issues.
+          content: `You are an Baldim troubleshooting expert. Analyze the schema and data for 2KB metadata limit issues.
 
 Schema: ${args.schema}
 Sample Data: ${args.sampleData || 'Not provided'}
@@ -246,14 +246,14 @@ Please analyze:
       return [
         {
           role: 'user',
-          content: `You are a database migration expert. Create a migration guide from ${args.source} to Baldin.
+          content: `You are a database migration expert. Create a migration guide from ${args.source} to Baldim.
 
 Source Database: ${args.source}
 Source Schema: ${args.schema || 'Not provided'}
 Data Volume: ${args.dataVolume || 'Not specified'}
 
 Please provide:
-1. Schema mapping (source → Baldin)
+1. Schema mapping (source → Baldim)
 2. Data type conversions
 3. Step-by-step migration process
 4. Code examples for data export/import

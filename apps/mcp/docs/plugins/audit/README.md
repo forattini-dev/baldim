@@ -1,12 +1,12 @@
-# @baldin/plugin-audit
+# @baldim/plugin-audit
 
-Persistent audit records for creates, updates, and deletes in Baldin resources.
+Persistent audit records for creates, updates, and deletes in Baldim resources.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { AuditPlugin } from '@baldin/plugin-audit';
+import { Baldim } from '@baldim/core';
+import { AuditPlugin } from '@baldim/plugin-audit';
 
-const database = new Baldin({ connectionString: 'memory://app' });
+const database = new Baldim({ connectionString: 'memory://app' });
 await database.connect();
 await database.usePlugin(new AuditPlugin({ includeData: true }));
 ```

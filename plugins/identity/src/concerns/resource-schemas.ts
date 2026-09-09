@@ -4,7 +4,7 @@
  * These are the REQUIRED attributes that the Identity Plugin needs to function.
  * Users can extend these with custom attributes, but cannot override base fields.
  */
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export type AttributeSchema = string;
 

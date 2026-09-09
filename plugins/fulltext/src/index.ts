@@ -5,7 +5,7 @@ import {
   tryFn,
   type PluginOptions,
   type ResourceLike,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 import { FulltextError } from './errors.js';
 
 export { FulltextError } from './errors.js';

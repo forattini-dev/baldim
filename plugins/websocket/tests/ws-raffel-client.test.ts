@@ -62,7 +62,7 @@ describe('WebSocket Plugin — RaffelClient Integration', () => {
   });
 
   // ============================================
-  // Raw mode — Baldin CRUD protocol
+  // Raw mode — Baldim CRUD protocol
   // ============================================
 
   describe('Raw mode — CRUD protocol via sendRaw/waitFor', () => {

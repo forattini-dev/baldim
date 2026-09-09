@@ -1,4 +1,4 @@
-import { Baldin, MemoryClient, type Database, type Resource } from '@baldin/core';
+import { Baldim, MemoryClient, type Database, type Resource } from '@baldim/core';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { FullTextPlugin } from '../src/index.js';
 
@@ -9,7 +9,7 @@ function connection(label: string): string {
 }
 
 function createDatabase(connectionString: string): Database {
-  return new Baldin({ connectionString, logLevel: 'silent' });
+  return new Baldim({ connectionString, logLevel: 'silent' });
 }
 
 async function createArticles(db: Database, name = 'articles'): Promise<Resource> {
@@ -35,10 +35,10 @@ beforeEach(() => {
   MemoryClient.clearAllStorage();
 });
 
-describe('@baldin/plugin-fulltext', () => {
+describe('@baldim/plugin-fulltext', () => {
   test('tokenizes case-insensitively while preserving accented words', () => {
     const plugin = createPlugin();
-    expect(plugin.tokenize('Baldin, RÁPIDO e útil!')).toEqual(['baldin', 'rápido', 'e', 'útil']);
+    expect(plugin.tokenize('Baldim, RÁPIDO e útil!')).toEqual(['baldim', 'rápido', 'e', 'útil']);
   });
 
   test('does not create indexes or attach hooks when disabled', async () => {
@@ -61,10 +61,10 @@ describe('@baldin/plugin-fulltext', () => {
     const plugin = createPlugin();
     await db.usePlugin(plugin);
 
-    await articles.insert({ id: 'one', title: 'Baldin database', content: 'fast object database' });
-    await articles.insert({ id: 'two', title: 'Baldin guide', content: 'setup tutorial' });
+    await articles.insert({ id: 'one', title: 'Baldim database', content: 'fast object database' });
+    await articles.insert({ id: 'two', title: 'Baldim guide', content: 'setup tutorial' });
 
-    const matches = await plugin.searchRecords('articles', 'baldin database');
+    const matches = await plugin.searchRecords('articles', 'baldim database');
     expect(matches.map((record) => record.id)).toEqual(['one', 'two']);
     expect(matches[0]!._searchScore).toBeGreaterThan(matches[1]!._searchScore);
     await db.disconnect();

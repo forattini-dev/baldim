@@ -3,7 +3,7 @@
  * Handles email sending via SMTP with template support
  */
 
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface SMTPAuth {
   user: string;
@@ -123,7 +123,7 @@ export class EmailService {
   constructor(options: EmailServiceOptions = {}) {
     this.config = {
       enabled: options.enabled !== false,
-      from: options.from || 'noreply@baldin.identity',
+      from: options.from || 'noreply@baldim.identity',
       replyTo: options.replyTo || null,
 
       smtp: {
@@ -141,7 +141,7 @@ export class EmailService {
 
       templates: {
         baseUrl: options.templates?.baseUrl || 'http://localhost:4000',
-        brandName: options.templates?.brandName || 'Baldin Identity',
+        brandName: options.templates?.brandName || 'Baldim Identity',
         brandLogo: options.templates?.brandLogo || null,
         brandColor: options.templates?.brandColor || '#007bff',
         supportEmail: options.templates?.supportEmail || null,

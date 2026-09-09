@@ -1,4 +1,4 @@
-import { Plugin, type CronManager } from '@baldin/core/plugin';
+import { Plugin, type CronManager } from '@baldim/core/plugin';
 
 export const TRANSITION_HISTORY_PAGE_SIZE = 1000;
 

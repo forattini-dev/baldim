@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import {
   BackupPlugin,
   FilesystemBackupDriver,
@@ -15,12 +15,12 @@ import {
 } from '../src/index.js';
 import { readBackupArchive, writeBackupArchive, decodeArchiveFile } from '../src/archive.js';
 
-let database: Baldin | undefined;
+let database: Baldim | undefined;
 let testDir: string;
 
 beforeEach(async () => {
   MemoryClient.clearAllStorage();
-  testDir = await mkdtemp(path.join(tmpdir(), 'baldin-backup-test-'));
+  testDir = await mkdtemp(path.join(tmpdir(), 'baldim-backup-test-'));
 });
 
 afterEach(async () => {
@@ -29,8 +29,8 @@ afterEach(async () => {
   await rm(testDir, { recursive: true, force: true });
 });
 
-async function createDatabase(name: string): Promise<Baldin> {
-  database = new Baldin({ connectionString: `memory://${name}`, logLevel: 'silent' });
+async function createDatabase(name: string): Promise<Baldim> {
+  database = new Baldim({ connectionString: `memory://${name}`, logLevel: 'silent' });
   await database.connect();
   return database;
 }
@@ -72,7 +72,7 @@ describe('filesystem backup driver', () => {
 
 
 describe('S3 backup driver contract', () => {
-  it('works with the public structural methods used by @baldin/adapter-s3', async () => {
+  it('works with the public structural methods used by @baldim/adapter-s3', async () => {
     const objects = new Map<string, Buffer>();
     const client = {
       config: { bucket: 'unit-test' },
@@ -131,7 +131,7 @@ describe('S3 backup driver contract', () => {
 });
 
 describe('BackupPlugin', () => {
-  it('backs up, lists, and restores a resource through the public Baldin API', async () => {
+  it('backs up, lists, and restores a resource through the public Baldim API', async () => {
     const db = await createDatabase('backup-e2e');
     const users = await db.createResource({
       name: 'users',

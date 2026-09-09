@@ -3,7 +3,7 @@
  * @module eventual-consistency/install
  */
 
-import { getCronManager, PluginError, tryFn } from '@baldin/core/plugin';
+import { getCronManager, PluginError, tryFn } from '@baldim/core/plugin';
 import { createPartitionConfig } from './partitions.js';
 import {
   addHelperMethods,

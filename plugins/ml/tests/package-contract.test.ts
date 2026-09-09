@@ -5,14 +5,14 @@ import { describe, expect, it } from 'vitest';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-describe('@baldin/plugin-ml package contract', () => {
-  it('owns TensorFlow and keeps Baldin core as a peer', async () => {
+describe('@baldim/plugin-ml package contract', () => {
+  it('owns TensorFlow and keeps Baldim core as a peer', async () => {
     const manifest = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
 
-    expect(manifest.name).toBe('@baldin/plugin-ml');
+    expect(manifest.name).toBe('@baldim/plugin-ml');
     expect(manifest.dependencies).toEqual({ '@tensorflow/tfjs': '^4.22.0' });
     expect(manifest.peerDependencies).toEqual({
-      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+      '@baldim/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
     });
   });
 

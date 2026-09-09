@@ -22,9 +22,9 @@ import {
   DiscoveryDocument,
   UserClaimsPayload
 } from './oidc-discovery.js';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { verifyPassword } from './concerns/password.js';
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface OAuth2ServerOptions {
   issuer: string;
@@ -270,7 +270,7 @@ export class OAuth2Server {
         operation: 'OAuth2Server.constructor',
         statusCode: 400,
         retriable: false,
-        suggestion: 'Provide a keyResource (Baldin resource) to store signing keys.'
+        suggestion: 'Provide a keyResource (Baldim resource) to store signing keys.'
       });
     }
 

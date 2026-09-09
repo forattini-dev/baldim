@@ -1,9 +1,9 @@
-# @baldin/plugin-recon
+# @baldim/plugin-recon
 
-Modular reconnaissance for Baldin, with DNS, certificates, HTTP, ports, subdomains, web discovery, vulnerability, TLS, fingerprinting, screenshots, OSINT, ASN, and reporting stages.
+Modular reconnaissance for Baldim, with DNS, certificates, HTTP, ports, subdomains, web discovery, vulnerability, TLS, fingerprinting, screenshots, OSINT, ASN, and reporting stages.
 
 ```ts
-import { ReconPlugin } from '@baldin/plugin-recon';
+import { ReconPlugin } from '@baldim/plugin-recon';
 
 const recon = new ReconPlugin({
   behavior: 'passive',

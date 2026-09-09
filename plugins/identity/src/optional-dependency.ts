@@ -1,4 +1,4 @@
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export async function loadOptionalDependency<T>(packageName: string, feature: string): Promise<T> {
   try {

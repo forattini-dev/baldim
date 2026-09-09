@@ -14,7 +14,7 @@ async function sourceText(directory: string): Promise<string> {
   }))).join('\n');
 }
 
-describe('@baldin/plugin-cloud-inventory package contract', () => {
+describe('@baldim/plugin-cloud-inventory package contract', () => {
   it('owns all provider SDKs and keeps core as a peer', async () => {
     const manifest = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
     const declared = new Set([
@@ -23,7 +23,7 @@ describe('@baldin/plugin-cloud-inventory package contract', () => {
     ]);
 
     expect(manifest.peerDependencies).toEqual({
-      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+      '@baldim/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
     });
     expect([...declared]).toEqual(expect.arrayContaining([
       '@aws-sdk/client-ec2',

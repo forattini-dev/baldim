@@ -1,4 +1,4 @@
-import { StorageError } from '@baldin/core';
+import { StorageError } from '@baldim/core';
 
 export interface CacheErrorDetails {
   driver?: string;
@@ -33,7 +33,7 @@ Common causes:
 Solution:
 Check cache configuration and ensure the cache driver is properly initialized.
 
-Docs: https://github.com/forattini-dev/baldin
+Docs: https://github.com/forattini-dev/baldim
 `.trim();
     }
 

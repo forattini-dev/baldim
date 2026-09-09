@@ -1,12 +1,12 @@
-# @baldin/plugin-costs
+# @baldim/plugin-costs
 
 Provider-aware accounting and projections for requests, rows, storage, and data transfer.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { CostsPlugin } from '@baldin/plugin-costs';
+import { Baldim } from '@baldim/core';
+import { CostsPlugin } from '@baldim/plugin-costs';
 
-const db = new Baldin({ connectionString: 'memory://costs' });
+const db = new Baldim({ connectionString: 'memory://costs' });
 await db.connect();
 
 const costs = new CostsPlugin();

@@ -71,7 +71,7 @@ export class ReckerLinkDiscoverer {
       ignoreQueryString: config.ignoreQueryString || false,
       ignoreHash: config.ignoreHash !== false,
       removeTrackingParams: config.removeTrackingParams !== false,
-      robotsUserAgent: config.robotsUserAgent || 'baldin-spider',
+      robotsUserAgent: config.robotsUserAgent || 'baldim-spider',
       robotsCacheTimeout: config.robotsCacheTimeout || 3600000,
       useSitemaps: config.useSitemaps !== false,
       sitemapMaxUrls: config.sitemapMaxUrls || 10000,

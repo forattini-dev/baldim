@@ -1,4 +1,4 @@
-import { ValidationError } from '@baldin/core';
+import { ValidationError } from '@baldim/core';
 
 function assertSameDimensions(a: number[], b: number[], operation: string): void {
   if (a.length !== b.length) {

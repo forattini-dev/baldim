@@ -1,4 +1,4 @@
-# @baldin/adapter-reddb
+# @baldim/adapter-reddb
 
 ## 0.2.0
 
@@ -13,8 +13,8 @@
 - Updated dependencies [6ed3bd3]
 - Updated dependencies [f686e95]
 - Updated dependencies [e150c2f]
-  - @baldin/core@0.2.0
-  - @baldin/utils@0.1.0
+  - @baldim/core@0.2.0
+  - @baldim/utils@0.1.0
 
 ## 0.1.0
 
@@ -32,4 +32,4 @@
 ### Patch Changes
 
 - Updated dependencies [7662680]
-  - @baldin/core@0.1.0
+  - @baldim/core@0.1.0

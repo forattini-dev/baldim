@@ -2,7 +2,7 @@
 import { ReplicatorPlugin } from '../src/index.js';
 
 const minimalReplicator = {
-  driver: 'baldin',
+  driver: 'baldim',
   config: { connectionString: 's3://user:pass@bucket/path' },
   resources: { users: 'users' }
 };
@@ -30,9 +30,9 @@ describe('ReplicatorPlugin configuration', () => {
     const plugin = new ReplicatorPlugin({
       logLevel: 'silent',
       replicators: [
-        { driver: 'baldin', client: {}, resources: ['users', 'orders'] },
+        { driver: 'baldim', client: {}, resources: ['users', 'orders'] },
         {
-          driver: 'baldin',
+          driver: 'baldim',
           client: {},
           resources: {
             users: { resource: 'users', actions: ['insert'], transform }

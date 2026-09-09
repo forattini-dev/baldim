@@ -1,4 +1,4 @@
-import { Plugin, type Database, type PluginOptions, type Resource } from '@baldin/core/plugin';
+import { Plugin, type Database, type PluginOptions, type Resource } from '@baldim/core/plugin';
 import {
   SMTPConnectionManager,
   type SMTPAuthHandler,

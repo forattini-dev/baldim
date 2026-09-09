@@ -169,7 +169,7 @@ describe('Spider Adapters', () => {
   });
 
   describe('Filesystem CrawlStorage', () => {
-    const testDir = path.join(os.tmpdir(), `baldin-spider-fs-test-${Date.now()}`);
+    const testDir = path.join(os.tmpdir(), `baldim-spider-fs-test-${Date.now()}`);
 
     afterAll(async () => {
       await fs.rm(testDir, { recursive: true, force: true }).catch(() => {});

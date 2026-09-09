@@ -8,7 +8,7 @@ import {
   type Principal
 } from 'raffel';
 import type { Context } from '../http/http-runtime.js';
-import type { Database } from '@baldin/core';
+import type { Database } from '@baldim/core';
 import { decodeRequestParam, decodeRequestParams } from '../utils/request-params.js';
 
 export interface UserInfo {

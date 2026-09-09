@@ -1,7 +1,7 @@
 import path from 'path';
 import { mkdir, rm as rmdir, readdir, stat, writeFile, readFile } from 'fs/promises';
 import { FilesystemCache, type FilesystemCacheConfig } from './filesystem-cache.class.js';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { CacheError } from '../errors.js';
 
 export interface PartitionAwareFilesystemCacheConfig extends FilesystemCacheConfig {

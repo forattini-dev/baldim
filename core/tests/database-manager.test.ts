@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Baldin, DatabaseError, DatabaseManager } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim, DatabaseError, DatabaseManager } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 
 describe('DatabaseManager public API', () => {
   let manager: DatabaseManager | undefined;
@@ -45,6 +45,9 @@ describe('DatabaseManager public API', () => {
     expect(manager.getConnectionForResource('events')).toBe('analytics');
     expect(await manager.resource('users').get('user-1')).toMatchObject({ name: 'Ada' });
     expect(await manager.resource('events').get('event-1')).toMatchObject({ type: 'signed-in' });
+    expect(manager.resources.users).toBe(users);
+    expect(manager.resources.events).toBe(events);
+    expect(manager.connection('analytics').resources.events).toBe(events);
   });
 
   it('rejects duplicate resource names across databases', async () => {
@@ -111,7 +114,7 @@ describe('DatabaseManager public API', () => {
 
   it('rolls back every connection when restored resources have duplicate names', async () => {
     const seed = async (connectionString: string) => {
-      const database = new Baldin({
+      const database = new Baldim({
         connectionString,
         logLevel: 'silent',
         deferMetadataWrites: false,

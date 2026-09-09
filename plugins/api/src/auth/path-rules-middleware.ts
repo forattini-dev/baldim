@@ -1,6 +1,6 @@
 import type { Context, Next, MiddlewareHandler } from '../http/http-runtime.js';
-import type { Logger } from '@baldin/core/plugin';
-import { createLogger } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 
 const logger = createLogger({ name: 'PathRulesMiddleware', level: 'info' });
 

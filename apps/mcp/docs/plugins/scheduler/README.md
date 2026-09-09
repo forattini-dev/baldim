@@ -1,12 +1,12 @@
-# @baldin/plugin-scheduler
+# @baldim/plugin-scheduler
 
-Cron-style jobs for Baldin with distributed locking, retries, timeouts, execution history, and coordinator election.
+Cron-style jobs for Baldim with distributed locking, retries, timeouts, execution history, and coordinator election.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { SchedulerPlugin } from '@baldin/plugin-scheduler';
+import { Baldim } from '@baldim/core';
+import { SchedulerPlugin } from '@baldim/plugin-scheduler';
 
-const database = new Baldin({ connectionString: 'memory://jobs' });
+const database = new Baldim({ connectionString: 'memory://jobs' });
 await database.connect();
 
 await database.usePlugin(new SchedulerPlugin({
@@ -21,4 +21,4 @@ await database.usePlugin(new SchedulerPlugin({
 }));
 ```
 
-The scheduler uses Baldin's provider-neutral plugin storage for execution locks. In a distributed deployment, only the elected coordinator schedules timers and a lock prevents duplicate execution.
+The scheduler uses Baldim's provider-neutral plugin storage for execution locks. In a distributed deployment, only the elected coordinator schedules timers and a lock prevents duplicate execution.

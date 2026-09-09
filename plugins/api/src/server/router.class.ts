@@ -1,5 +1,5 @@
 import type { Context, HttpApp as HttpAppType, MiddlewareHandler } from '../http/http-runtime.js';
-import type { Logger, LogLevel } from '@baldin/core/plugin';
+import type { Logger, LogLevel } from '@baldim/core/plugin';
 import { createResourceRoutes, createRelationalRoutes } from '../routes/resource-routes.js';
 import { createAuthRoutes } from '../routes/auth-routes.js';
 import { mountCustomRoutes, parseRouteKey } from '../utils/custom-routes.js';
@@ -10,7 +10,7 @@ import { createFailbanAdminRoutes } from '../middlewares/failban.js';
 import { createContextInjectionMiddleware } from '../middlewares/context-injection.js';
 import { createVersionAdapterMiddleware } from '../middlewares/version-adapter.js';
 import { applyBasePath } from '../utils/base-path.js';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 import { ApiRouteRegistry } from '../route-registry.js';
 import { assertNoLegacyResourceRoutes, getResourceCustomRoutes } from '../utils/resource-custom-routes.js';
 import type { AuthConfig, DocsConfig } from '../types.internal.js';
@@ -210,8 +210,8 @@ export class Router {
     this.HttpApp = HttpApp;
     this.docs = {
       enabled: docs?.enabled !== false,
-      title: docs?.title || 'Baldin API',
-      description: docs?.description || 'Auto-generated REST API for Baldin resources'
+      title: docs?.title || 'Baldim API',
+      description: docs?.description || 'Auto-generated REST API for Baldim resources'
     };
     this.rootRoute = rootRoute;
     this.routeSummaries = [];
@@ -425,7 +425,7 @@ export class Router {
     <p class="description">${description}</p>
     ${docsLink}
     <div class="footer">
-      Powered by <a href="https://github.com/forattini-dev/baldin" target="_blank">Baldin</a>
+      Powered by <a href="https://github.com/forattini-dev/baldim" target="_blank">Baldim</a>
     </div>
   </div>
 </body>

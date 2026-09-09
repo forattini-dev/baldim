@@ -12,28 +12,28 @@ function readTree(directory: string): string {
   }).join('\n');
 }
 
-describe('@baldin/mcp package contract', () => {
+describe('@baldim/mcp package contract', () => {
   it('owns every runtime dependency used by the application', () => {
     expect(manifest.dependencies).toMatchObject({
-      '@baldin/core': 'workspace:*',
-      '@baldin/adapter-memory': 'workspace:*',
-      '@baldin/adapter-filesystem': 'workspace:*',
-      '@baldin/adapter-reddb': 'workspace:*',
-      '@baldin/adapter-s3': 'workspace:*',
-      '@baldin/adapter-sqlite': 'workspace:*',
-      '@baldin/plugin-cache': 'workspace:*',
-      '@baldin/plugin-costs': 'workspace:*',
+      '@baldim/core': 'workspace:*',
+      '@baldim/adapter-memory': 'workspace:*',
+      '@baldim/adapter-filesystem': 'workspace:*',
+      '@baldim/adapter-reddb': 'workspace:*',
+      '@baldim/adapter-s3': 'workspace:*',
+      '@baldim/adapter-sqlite': 'workspace:*',
+      '@baldim/plugin-cache': 'workspace:*',
+      '@baldim/plugin-costs': 'workspace:*',
       '@modelcontextprotocol/sdk': expect.any(String),
       dotenv: expect.any(String),
       'fuse.js': expect.any(String),
     });
   });
 
-  it('uses Baldin package boundaries and branding', () => {
+  it('uses Baldim package boundaries and branding', () => {
     const source = readTree(new URL('src', packageRoot).pathname);
     expect(source).not.toContain("from 's3db.js'");
     expect(source).not.toContain('s3db://');
     expect(source).not.toContain('S3DB_CONNECTION_STRING');
-    expect(source).toContain('baldin://');
+    expect(source).toContain('baldim://');
   });
 });

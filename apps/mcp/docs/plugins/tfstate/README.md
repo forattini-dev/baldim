@@ -1,16 +1,16 @@
-# @baldin/plugin-tfstate
+# @baldim/plugin-tfstate
 
-Import, inspect, diff, monitor, and export Terraform or OpenTofu state with Baldin.
+Import, inspect, diff, monitor, and export Terraform or OpenTofu state with Baldim.
 
 ```sh
-pnpm add @baldin/core @baldin/plugin-tfstate
+pnpm add @baldim/core @baldim/plugin-tfstate
 ```
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { TfStatePlugin } from '@baldin/plugin-tfstate';
+import { Baldim } from '@baldim/core';
+import { TfStatePlugin } from '@baldim/plugin-tfstate';
 
-const database = new Baldin();
+const database = new Baldim();
 await database.connect();
 
 const tfstate = new TfStatePlugin({
@@ -23,6 +23,6 @@ await database.usePlugin(tfstate);
 await tfstate.triggerMonitoring();
 ```
 
-The plugin owns its filesystem glob dependency and its S3 integration dependency. The S3 driver uses `@baldin/adapter-s3`; provider code does not enter `@baldin/core`.
+The plugin owns its filesystem glob dependency and its S3 integration dependency. The S3 driver uses `@baldim/adapter-s3`; provider code does not enter `@baldim/core`.
 
-Driver classes are also available from `@baldin/plugin-tfstate/drivers`.
+Driver classes are also available from `@baldim/plugin-tfstate/drivers`.

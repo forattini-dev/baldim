@@ -2,10 +2,10 @@ import path from 'path';
 import EventEmitter from 'events';
 import { chunk } from 'lodash-es';
 
-import { BaseError, DatabaseError, TasksRunner, idGenerator, mapStorageError, metadataDecode, metadataEncode, tryFn } from '@baldin/core/adapter';
+import { BaseError, DatabaseError, TasksRunner, idGenerator, mapStorageError, metadataDecode, metadataEncode, tryFn } from '@baldim/core/adapter';
 import type { FileSystemClientConfig, FileSystemStorageStats } from './types.js';
 import { FileSystemStorage } from './filesystem-storage.class.js';
-import { createLogger, type LogLevel } from '@baldin/core/adapter';
+import { createLogger, type LogLevel } from '@baldim/core/adapter';
 import type {
   Logger,
   TaskManager,
@@ -22,7 +22,7 @@ import type {
   StorageDeleteObjectResponse,
   StorageDeleteObjectsResponse,
   StorageListObjectsResponse,
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 
 const pathPosix = path.posix;
 

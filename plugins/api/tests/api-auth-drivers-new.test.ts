@@ -9,12 +9,12 @@
  * - OpenAPI security scheme generation
  */
 
-import { Database } from '@baldin/core';
+import { Database } from '@baldim/core';
 import { ApiPlugin } from '../src/index.js';
 import { createDatabaseForTest, sleep } from './config.js';
 import { jwtLogin } from '../src/auth/jwt-auth.js';
 import { generateApiKey } from '../src/auth/api-key-auth.js';
-import { encrypt } from '@baldin/core';
+import { encrypt } from '@baldim/core';
 import { getApiPort } from './helpers/server.js';
 
 // Helper to create Basic Auth header

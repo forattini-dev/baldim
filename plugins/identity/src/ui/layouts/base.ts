@@ -106,7 +106,7 @@ export function BaseLayout(props: BaseLayoutProps): HtmlEscapedString {
   } = props;
 
   const theme = {
-    title: config.title || 'Baldin Identity',
+    title: config.title || 'Baldim Identity',
     logoUrl: config.logoUrl || null,
     favicon: config.favicon || null,
     registrationEnabled: config.registrationEnabled !== false,
@@ -131,8 +131,8 @@ export function BaseLayout(props: BaseLayoutProps): HtmlEscapedString {
     borderRadius: config.borderRadius || '0.375rem',
     boxShadow: config.boxShadow || '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)',
 
-    companyName: config.companyName || 'Baldin',
-    legalName: config.legalName || config.companyName || 'Baldin',
+    companyName: config.companyName || 'Baldim',
+    legalName: config.legalName || config.companyName || 'Baldim',
     tagline: config.tagline || 'Secure Identity & Access Management',
     welcomeMessage: config.welcomeMessage || 'Welcome back!',
     footerText: config.footerText || null,

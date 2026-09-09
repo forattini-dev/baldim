@@ -1,6 +1,6 @@
 import { EventualConsistencyPlugin } from '../src/index.js';
 import { createDatabaseForTest } from './helpers.js';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { createTicketsForHandler, claimTickets, processTicket, reclaimStaleTickets } from '../src/tickets.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

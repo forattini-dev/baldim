@@ -1,5 +1,5 @@
-import { Baldin, ValidationError } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim, ValidationError } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { Factory, Seeder } from '../src/index.js';
 
 describe('Seeder', () => {
@@ -9,7 +9,7 @@ describe('Seeder', () => {
   });
 
   async function setup(name: string) {
-    const database = new Baldin({ connectionString: `memory://${name}`, logLevel: 'silent' });
+    const database = new Baldim({ connectionString: `memory://${name}`, logLevel: 'silent' });
     await database.connect();
     const users = await database.createResource({ name: 'users', attributes: { name: 'string|required' } });
     return { database, users, seeder: new Seeder(database, { logLevel: 'silent' }) };

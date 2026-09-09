@@ -1,9 +1,9 @@
-import { tryFn } from '@baldin/core/plugin';
-import { resolveResourceNames } from '@baldin/core/plugin';
-import { getCronManager, type CronTask } from '@baldin/core/plugin';
-import { createLogger, Logger } from '@baldin/core/plugin';
-import type { Database } from '@baldin/core';
-import type { Resource } from '@baldin/core';
+import { tryFn } from '@baldim/core/plugin';
+import { resolveResourceNames } from '@baldim/core/plugin';
+import { getCronManager, type CronTask } from '@baldim/core/plugin';
+import { createLogger, Logger } from '@baldim/core/plugin';
+import type { Database } from '@baldim/core';
+import type { Resource } from '@baldim/core';
 
 export interface GeoOptions {
   enabled?: boolean;

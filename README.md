@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="docs/readme/hero.svg" alt="Baldin — one document API across modular storage adapters and plugins" width="100%">
+  <img src="docs/readme/hero.svg" alt="Baldim — one document API across modular storage adapters and plugins" width="100%">
 </p>
 
 <p align="center">
-  <a href="https://github.com/forattini-dev/baldin/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/forattini-dev/baldin/ci.yml?branch=main&amp;style=flat-square&amp;label=CI&amp;labelColor=0b1021&amp;color=22d3ee"></a>
+  <a href="https://github.com/forattini-dev/baldim/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/forattini-dev/baldim/ci.yml?branch=main&amp;style=flat-square&amp;label=CI&amp;labelColor=0b1021&amp;color=22d3ee"></a>
   <img alt="Node.js 24 or newer" src="https://img.shields.io/badge/Node.js-24%2B-4ade80?style=flat-square&amp;labelColor=0b1021">
   <img alt="43 public packages" src="https://img.shields.io/badge/packages-43-8b5cf6?style=flat-square&amp;labelColor=0b1021">
   <img alt="32 plugins" src="https://img.shields.io/badge/plugins-32-fbbf24?style=flat-square&amp;labelColor=0b1021">
@@ -17,7 +17,7 @@
 
 ---
 
-Baldin gives every backend the same resource API: schemas, validation, CRUD, queries, partitions, streams, behaviors, hooks, and concurrency. Storage adapters translate that contract to the provider. Plugins add complete capabilities and own their runtime dependencies.
+Baldim gives every backend the same resource API: schemas, validation, CRUD, queries, partitions, streams, behaviors, hooks, and concurrency. Storage adapters translate that contract to the provider. Plugins add complete capabilities and own their runtime dependencies.
 
 | What you get | What it means |
 | --- | --- |
@@ -51,15 +51,15 @@ Baldin gives every backend the same resource API: schemas, validation, CRUD, que
 ## Quick start
 
 ```sh
-pnpm add @baldin/core
+pnpm add @baldim/core
 ```
 
 The separate memory adapter is included by core, so the first database needs no provider setup.
 
 ```ts
-import { Baldin } from '@baldin/core';
+import { Baldim } from '@baldim/core';
 
-const database = new Baldin({
+const database = new Baldim({
   connectionString: 'memory://my-app',
 });
 
@@ -75,7 +75,7 @@ const tasks = await database.createResource({
 
 const task = await tasks.insert({
   id: 'ship-it',
-  title: 'Launch Baldin',
+  title: 'Launch Baldim',
   done: false,
 });
 
@@ -221,7 +221,7 @@ console.log(result.deleted, result.errors);
 
 ### Query and list documents
 
-`query()` performs equality matching. When the filter covers a partition, Baldin automatically chooses the best matching partition and only scans that path. Any remaining fields are applied as residual equality filters.
+`query()` performs equality matching. When the filter covers a partition, Baldim automatically chooses the best matching partition and only scans that path. Any remaining fields are applied as residual equality filters.
 
 ```ts
 const activeUsers = await users.query(
@@ -395,7 +395,7 @@ const pending = await orders.query({
 });
 ```
 
-Baldin creates partition references on insert, moves them when indexed fields change, and removes them on delete. Every field used by a partition must exist in `attributes`. Use `asyncPartitions: false` when the write must wait for portable partition-reference maintenance; adapters with native transactional indexes can provide stronger behavior directly.
+Baldim creates partition references on insert, moves them when indexed fields change, and removes them on delete. Every field used by a partition must exist in `attributes`. Use `asyncPartitions: false` when the write must wait for portable partition-reference maintenance; adapters with native transactional indexes can provide stronger behavior directly.
 
 <img src="docs/readme/storage.svg" alt="Storage adapters — pour data anywhere" width="100%">
 
@@ -405,21 +405,21 @@ Install the adapter next to your application, import it once in the process entr
 
 | Adapter | Protocols | Designed for |
 | --- | --- | --- |
-| [`@baldin/adapter-memory`](adapters/memory) | `memory:` | Tests, prototypes, ephemeral workloads; loaded by core automatically. |
-| [`@baldin/adapter-filesystem`](adapters/filesystem) | `file:` | Local and mounted filesystems with durable object layout. |
-| [`@baldin/adapter-sqlite`](adapters/sqlite) | `sqlite:`, `sqlite+libsql:`, `sqlite+d1:` | Local SQLite, remote libSQL, and Cloudflare D1. |
-| [`@baldin/adapter-s3`](adapters/s3) | `s3:`, `http:`, `https:` | AWS S3, Cloudflare R2, MinIO, and compatible object stores. |
-| [`@baldin/adapter-reddb`](adapters/reddb) | `reddb:` | RedDB through its public HTTP storage contract. |
+| [`@baldim/adapter-memory`](adapters/memory) | `memory:` | Tests, prototypes, ephemeral workloads; loaded by core automatically. |
+| [`@baldim/adapter-filesystem`](adapters/filesystem) | `file:` | Local and mounted filesystems with durable object layout. |
+| [`@baldim/adapter-sqlite`](adapters/sqlite) | `sqlite:`, `sqlite+libsql:`, `sqlite+d1:` | Local SQLite, remote libSQL, and Cloudflare D1. |
+| [`@baldim/adapter-s3`](adapters/s3) | `s3:`, `http:`, `https:` | AWS S3, Cloudflare R2, MinIO, and compatible object stores. |
+| [`@baldim/adapter-reddb`](adapters/reddb) | `reddb:` | RedDB through its public HTTP storage contract. |
 
 ```sh
-pnpm add @baldin/core @baldin/adapter-sqlite
+pnpm add @baldim/core @baldim/adapter-sqlite
 ```
 
 ```ts
-import { Baldin } from '@baldin/core';
-import '@baldin/adapter-sqlite'; // registers sqlite:, sqlite+libsql:, sqlite+d1:
+import { Baldim } from '@baldim/core';
+import '@baldim/adapter-sqlite'; // registers sqlite:, sqlite+libsql:, sqlite+d1:
 
-const database = new Baldin({
+const database = new Baldim({
   connectionString: 'sqlite:./data/app.sqlite',
 });
 
@@ -429,10 +429,10 @@ await database.connect();
 The connection string selects the adapter while `clientOptions` carries provider configuration:
 
 ```ts
-import { Baldin } from '@baldin/core';
-import '@baldin/adapter-s3';
+import { Baldim } from '@baldim/core';
+import '@baldim/adapter-s3';
 
-const database = new Baldin({
+const database = new Baldim({
   connectionString: 's3://application-data/prefix',
   clientOptions: {
     region: 'us-east-1',
@@ -445,14 +445,14 @@ const database = new Baldin({
 You can bypass protocol registration by constructing a client explicitly:
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { S3Client } from '@baldin/adapter-s3';
+import { Baldim } from '@baldim/core';
+import { S3Client } from '@baldim/adapter-s3';
 
 const client = new S3Client({
   connectionString: 's3://application-data/prefix',
 });
 
-const database = new Baldin({ client });
+const database = new Baldim({ client });
 ```
 
 Changing storage does not change resource code. Adapter-specific credentials, endpoints, bindings, retries, and transport options stay with the adapter package that uses them.
@@ -460,8 +460,8 @@ Changing storage does not change resource code. Adapter-specific credentials, en
 ### Common database options
 
 ```ts
-const database = new Baldin({
-  connectionString: process.env.BALDIN_CONNECTION_STRING!,
+const database = new Baldim({
+  connectionString: process.env.BALDIM_CONNECTION_STRING!,
   logLevel: 'info',
   parallelism: 20,
   strictValidation: true,
@@ -490,8 +490,8 @@ const database = new Baldin({
 `DatabaseManager` connects named databases, forwards lifecycle events, routes work through a default connection, and provides unified resource lookup. Resource names created through the manager are unique across all of its connections.
 
 ```ts
-import { DatabaseManager } from '@baldin/core';
-import '@baldin/adapter-s3'; // registers s3:, http:, https:
+import { DatabaseManager } from '@baldim/core';
+import '@baldim/adapter-s3'; // registers s3:, http:, https:
 
 const databases = new DatabaseManager({
   default: 'primary',
@@ -512,6 +512,7 @@ const databases = new DatabaseManager({
 await databases.connect();
 
 await databases.createResource({
+  connection: 'primary', // optional: `primary` is the configured default
   name: 'users',
   attributes: { name: 'string|required' },
 });
@@ -522,8 +523,10 @@ await databases.createResource({
   attributes: { type: 'string|required' },
 });
 
-const events = databases.resource('events');
+const users = databases.resources.users; // unified map across every connection
+const events = databases.resource('events'); // unified lookup by globally unique name
 const analytics = databases.connection('analytics');
+const analyticsEvents = analytics.resources.events; // connection-local lookup
 
 console.log(databases.connectionNames); // ['primary', 'analytics']
 console.log(databases.getConnectionForResource('events')); // 'analytics'
@@ -531,7 +534,7 @@ console.log(databases.getConnectionForResource('events')); // 'analytics'
 await databases.disconnect();
 ```
 
-`defaults` are merged into every connection; values inside a named connection win. Omitting `connection` from `createResource()` routes the resource to the configured default database.
+`defaults` are merged into every connection; values inside a named connection win. The `connection` field passed to `createResource()` is optional: omitting it routes the resource to the configured default database. Because resource names are globally unique inside a manager, `resource(name)` and `resources` can provide a unified view without asking for a connection. Use `connection(name).resource(...)` or `connection(name).resources` when you want to work explicitly inside one database.
 
 | Manager API | Purpose |
 | --- | --- |
@@ -555,16 +558,16 @@ Every plugin is an independently publishable package with its own source, tests,
 Install only the plugin packages used by the application:
 
 ```sh
-pnpm add @baldin/core @baldin/plugin-fulltext @baldin/plugin-ttl
+pnpm add @baldim/core @baldim/plugin-fulltext @baldim/plugin-ttl
 ```
 
 Attach a plugin with `database.usePlugin()`. Installation, startup, hooks, resource extensions, and cleanup then follow the database lifecycle.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { FullTextPlugin } from '@baldin/plugin-fulltext';
+import { Baldim } from '@baldim/core';
+import { FullTextPlugin } from '@baldim/plugin-fulltext';
 
-const database = new Baldin({ connectionString: 'memory://catalog' });
+const database = new Baldim({ connectionString: 'memory://catalog' });
 await database.connect();
 
 const products = await database.createResource({
@@ -661,7 +664,7 @@ Plugins may create their own namespaced resources, add hooks or middleware, and 
 For example, expose resources through the Raffel-based API plugin:
 
 ```ts
-import { ApiPlugin } from '@baldin/plugin-api';
+import { ApiPlugin } from '@baldim/plugin-api';
 
 await database.usePlugin(new ApiPlugin({ port: 3000 }));
 ```
@@ -669,7 +672,7 @@ await database.usePlugin(new ApiPlugin({ port: 3000 }));
 Or add indexed and lazy expiration policies:
 
 ```ts
-import { TTLPlugin } from '@baldin/plugin-ttl';
+import { TTLPlugin } from '@baldim/plugin-ttl';
 
 await database.createResource({
   name: 'sessions',
@@ -685,28 +688,28 @@ await database.usePlugin(new TTLPlugin({
 
 The API, Identity, WebSocket, and SMTP plugins each depend on Raffel directly because they use it directly. Core and every storage adapter remain Raffel-free.
 
-<img src="docs/readme/tooling.svg" alt="Developer toolbox — drive Baldin from anywhere" width="100%">
+<img src="docs/readme/tooling.svg" alt="Developer toolbox — drive Baldim from anywhere" width="100%">
 
 ## Work from code, shell, or an agent
 
 | Package | Purpose |
 | --- | --- |
-| [`@baldin/cli`](apps/cli) | The `baldin` command: configuration, resources, migrations, schemas, seeds, type generation, and an interactive console. |
-| [`@baldin/mcp`](apps/mcp) | Stdio or Streamable HTTP MCP server with bundled documentation and database tools. |
-| [`@baldin/typegen`](packages/typegen) | Generates typed resource maps for applications. |
-| [`@baldin/testing`](packages/testing) | Factories and seeders for application and plugin tests. |
-| [`@baldin/utils`](packages/utils) | Shared HTTP, error, memory, money, and encoding utilities with a defined public purpose. |
+| [`@baldim/cli`](apps/cli) | The `baldim` command: configuration, resources, migrations, schemas, seeds, type generation, and an interactive console. |
+| [`@baldim/mcp`](apps/mcp) | Stdio or Streamable HTTP MCP server with bundled documentation and database tools. |
+| [`@baldim/typegen`](packages/typegen) | Generates typed resource maps for applications. |
+| [`@baldim/testing`](packages/testing) | Factories and seeders for application and plugin tests. |
+| [`@baldim/utils`](packages/utils) | Shared HTTP, error, memory, money, and encoding utilities with a defined public purpose. |
 
 ```sh
-baldin --help
-baldin configure
-baldin resources list --connection memory://demo
+baldim --help
+baldim configure
+baldim resources list --connection memory://demo
 
 # Run the MCP server over stdio
-npx @baldin/mcp
+npx @baldim/mcp
 ```
 
-Set `BALDIN_CONNECTION_STRING` to expose database tools through MCP. Documentation tools work without a database connection.
+Set `BALDIM_CONNECTION_STRING` to expose database tools through MCP. Documentation tools work without a database connection.
 
 <img src="docs/readme/architecture.svg" alt="Monorepo architecture — built to stay light" width="100%">
 
@@ -715,21 +718,21 @@ Set `BALDIN_CONNECTION_STRING` to expose database tools through MCP. Documentati
 The package boundary comes first. Each public package owns its `src/`, tests, `package.json`, build output, runtime dependencies, and release version.
 
 ```text
-baldin/
-├── core/                 @baldin/core
+baldim/
+├── core/                 @baldim/core
 ├── adapters/
-│   └── <adapter>/        @baldin/adapter-<adapter>
+│   └── <adapter>/        @baldim/adapter-<adapter>
 ├── plugins/
-│   └── <plugin>/         @baldin/plugin-<plugin>
+│   └── <plugin>/         @baldim/plugin-<plugin>
 ├── packages/
-│   └── <library>/        @baldin/<library>
+│   └── <library>/        @baldim/<library>
 └── apps/
     └── <application>/    executable products
 ```
 
 ```mermaid
 flowchart LR
-  apps["Apps: CLI · MCP"] --> core["@baldin/core"]
+  apps["Apps: CLI · MCP"] --> core["@baldim/core"]
   apps --> adapters["Storage adapters"]
   apps --> plugins["Capability plugins"]
   apps --> packages["Shared packages"]
@@ -737,7 +740,7 @@ flowchart LR
   plugins --> packages
   adapters --> contracts["Core adapter contract"]
   packages --> contracts
-  core --> memory["@baldin/adapter-memory"]
+  core --> memory["@baldim/adapter-memory"]
 ```
 
 Core owns the engine, resource model, generic storage contracts, adapter registry, multidatabase manager, and plugin SDK. Adapters own storage implementations. Plugins own optional capabilities. Shared packages exist when multiple consumers need a stable public abstraction; they are not a dumping ground.
@@ -748,12 +751,12 @@ Read the complete [repository structure and dependency rules](docs/repository-st
 
 ## Migrate from s3db.js without rewriting data
 
-Baldin grew from the s3db.js engine and preserves the storage contract while the package surface becomes modular.
+Baldim grew from the s3db.js engine and preserves the storage contract while the package surface becomes modular.
 
 - Existing buckets keep the `s3db.json` manifest and `s3dbVersion` metadata.
-- Existing `S3DB_*` environment variables remain fallbacks; new configuration uses `BALDIN_*`.
+- Existing `S3DB_*` environment variables remain fallbacks; new configuration uses `BALDIM_*`.
 - Storage defaults remain stable, so changing an import cannot silently select another bucket, directory, or database file.
-- `S3db` and `BuckieDB` remain deprecated class aliases while applications move to `Baldin`.
+- `S3db` and `BuckieDB` remain deprecated class aliases while applications move to `Baldim`.
 - Read-only fixtures generated by s3db.js 21.6.2 cover manifests, schemas, documents, indexes, and partitions on filesystem, SQLite, and S3-compatible storage.
 
 ```ts
@@ -761,7 +764,7 @@ Baldin grew from the s3db.js engine and preserves the storage contract while the
 import S3db from 's3db.js';
 
 // During migration — persisted data stays in place
-import { Baldin } from '@baldin/core';
+import { Baldim } from '@baldim/core';
 ```
 
 The [migration ledger](docs/migration.md), [parity audit](docs/parity-audit.md), and [compatibility boundaries](docs/compatibility-boundaries.md) record what is covered and what still requires provider credentials.

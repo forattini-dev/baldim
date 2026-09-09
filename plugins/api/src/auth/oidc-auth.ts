@@ -15,7 +15,7 @@ import type { Context, Next, HttpApp, MiddlewareHandler } from '../http/http-run
 import type { ContentfulStatusCode } from '../http/http-runtime.js';
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { getCookie, getCookies, setCookie, deleteCookie } from '../http/http-runtime.js';
-import { createLogger, type Logger, type LogLevel } from '@baldin/core/plugin';
+import { createLogger, type Logger, type LogLevel } from '@baldim/core/plugin';
 import { createHttpClient, type HttpClient } from '../concerns/http-client.js';
 import { unauthorized } from '../utils/response-formatter.js';
 import { applyProviderPreset, applyProviderQuirks } from './providers.js';
@@ -41,11 +41,11 @@ import {
   generateErrorJSON
 } from '../concerns/oidc-errors.js';
 import { createHookExecutor, createCookieHelpers, type HookExecutor } from '../concerns/oidc-hooks.js';
-import { idGenerator } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
 
 const logger: Logger = createLogger({
   name: 'OidcAuth',
-  level: (process.env.BALDIN_LOG_LEVEL || 'info') as LogLevel
+  level: (process.env.BALDIM_LOG_LEVEL || 'info') as LogLevel
 });
 
 if (!logger || typeof logger.info !== 'function') {

@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url));
 
-describe('@baldin/plugin-cookie-farm package contract', () => {
+describe('@baldim/plugin-cookie-farm package contract', () => {
   it('owns its Puppeteer plugin dependency while keeping core as a peer', async () => {
     const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
-    expect(manifest.dependencies).toEqual({ '@baldin/plugin-puppeteer': 'workspace:*' });
+    expect(manifest.dependencies).toEqual({ '@baldim/plugin-puppeteer': 'workspace:*' });
     expect(manifest.peerDependencies).toEqual({
-      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+      '@baldim/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
     });
   });
 

@@ -1,7 +1,7 @@
 import { SessionStore } from './session-store.js';
 import type { SessionData, StoreStats } from './session-store.js';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger, LogLevel } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger, LogLevel } from '@baldim/core/plugin';
 
 export interface ResourceLike {
   name: string;

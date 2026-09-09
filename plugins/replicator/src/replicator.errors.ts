@@ -1,4 +1,4 @@
-import { BaseError } from '@baldin/core';
+import { BaseError } from '@baldim/core';
 
 export interface ReplicationErrorDetails {
   replicatorClass?: string;
@@ -31,7 +31,7 @@ Common causes:
 Solution:
 Check replicator configuration and ensure target system is accessible.
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/plugins/replicator/README.md
+Docs: https://github.com/forattini-dev/baldim/blob/main/plugins/replicator/README.md
 `.trim();
     }
 

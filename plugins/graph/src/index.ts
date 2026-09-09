@@ -4,7 +4,7 @@ import {
   type PluginOptions,
   type ResourceLike,
   type Resource,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 import {
   GraphConfigurationError,
   PathNotFoundError,
@@ -160,7 +160,7 @@ export interface GraphResourceNamespace {
   remove?(sourceId: string, targetId: string, options?: { label?: string | null }): Promise<{ deleted: number }>;
 }
 
-declare module '@baldin/core' {
+declare module '@baldim/core' {
   interface Resource {
     graph?: GraphResourceNamespace;
   }

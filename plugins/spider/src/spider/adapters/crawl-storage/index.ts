@@ -8,7 +8,7 @@
  * - sqlite: Persistent local storage (peer: better-sqlite3)
  * - redis: Redis hash storage (peer: ioredis)
  * - bullmq: BullMQ job storage (peer: bullmq)
- * - s3: baldin resource-backed results/errors storage
+ * - s3: baldim resource-backed results/errors storage
  * - filesystem: Local FS JSON/JSONL storage
  */
 

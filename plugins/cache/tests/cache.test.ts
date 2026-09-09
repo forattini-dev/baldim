@@ -1,8 +1,8 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import {
   CachePlugin,
   FilesystemCache,
@@ -12,13 +12,13 @@ import {
   S3Cache,
 } from '../src/index.js';
 
-describe('@baldin/plugin-cache', () => {
+describe('@baldim/plugin-cache', () => {
   beforeEach(() => {
     MemoryClient.clearAllStorage();
   });
 
   test('caches reads and invalidates them after a write', async () => {
-    const database = new Baldin({ connectionString: 'memory://cache-plugin', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://cache-plugin', logLevel: 'silent' });
     await database.connect();
     const plugin = new CachePlugin({ driver: 'memory', logLevel: 'silent', maxMemoryBytes: 1024 * 1024 });
 
@@ -46,7 +46,7 @@ describe('@baldin/plugin-cache', () => {
   });
 
   test('isolates named cache plugin instances on one resource', async () => {
-    const database = new Baldin({ connectionString: 'memory://cache-namespaces', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://cache-namespaces', logLevel: 'silent' });
     await database.connect();
     const primary = new CachePlugin({ driver: 'memory', instanceName: 'primary', logLevel: 'silent', maxMemoryBytes: 1024 * 1024 });
     const secondary = new CachePlugin({ driver: 'memory', instanceName: 'secondary', logLevel: 'silent', maxMemoryBytes: 1024 * 1024 });
@@ -69,7 +69,7 @@ describe('@baldin/plugin-cache', () => {
   });
 
   test('removes database hooks, middleware, and resource extensions on stop', async () => {
-    const database = new Baldin({ connectionString: 'memory://cache-stop', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://cache-stop', logLevel: 'silent' });
     await database.connect();
     const plugin = new CachePlugin({ driver: 'memory', logLevel: 'silent', maxMemoryBytes: 1024 * 1024 });
     await plugin.install(database);
@@ -92,7 +92,7 @@ describe('@baldin/plugin-cache', () => {
   });
 
   test('applies per-method TTL and reads the legacy cache envelope', async () => {
-    const database = new Baldin({ connectionString: 'memory://cache-method-policy', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://cache-method-policy', logLevel: 'silent' });
     await database.connect();
     const plugin = new CachePlugin({
       driver: 'memory',
@@ -142,7 +142,7 @@ describe('@baldin/plugin-cache', () => {
   });
 
   test('persists filesystem entries and clears a prefix', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'baldin-cache-'));
+    const directory = await mkdtemp(join(tmpdir(), 'baldim-cache-'));
     const cache = new FilesystemCache({ directory, prefix: 'test', enableCleanup: false });
 
     try {
@@ -158,8 +158,8 @@ describe('@baldin/plugin-cache', () => {
     }
   });
 
-  test('uses a Baldin storage client through the object-storage cache contract', async () => {
-    const database = new Baldin({ connectionString: 'memory://cache-object-storage', logLevel: 'silent' });
+  test('uses a Baldim storage client through the object-storage cache contract', async () => {
+    const database = new Baldim({ connectionString: 'memory://cache-object-storage', logLevel: 'silent' });
     await database.connect();
     const cache = new S3Cache({ client: database.client, keyPrefix: 'contract', ttl: 1000 });
 

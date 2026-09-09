@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Client, RaffelClient } from 'recker';
 import { WebSocketPlugin } from '../src/index.js';
-import { ApiPlugin } from '@baldin/plugin-api';
+import { ApiPlugin } from '@baldim/plugin-api';
 import { createMemoryDatabaseForTest } from './helpers/database.js';
 
 async function waitForServer(port: number, maxAttempts = 200): Promise<void> {

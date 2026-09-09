@@ -2,7 +2,7 @@ import type { StateMachinePluginContext, Resource, TransitionHistoryOptions, Tra
 import { TRANSITION_HISTORY_PAGE_SIZE } from './types.js';
 import { StateMachineError } from './errors.js';
 import { parseDuration } from './helpers.js';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 
 export async function attachStateMachinesToResources(plugin: StateMachinePluginContext): Promise<void> {
   const resourceStateMachineBindingMap = new Map<string, string>();

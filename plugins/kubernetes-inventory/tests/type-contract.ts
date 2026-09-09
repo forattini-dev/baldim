@@ -6,7 +6,7 @@ import {
   type KubernetesInventoryDriver,
   type KubernetesInventoryPluginOptions,
   type KubernetesResource,
-} from '@baldin/plugin-kubernetes-inventory';
+} from '@baldim/plugin-kubernetes-inventory';
 
 const options: KubernetesInventoryPluginOptions = {
   clusters: [{ id: 'production', context: 'production' }],

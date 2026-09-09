@@ -1,7 +1,7 @@
 /**
  * S3 CrawlStorage Driver
  *
- * baldin resource-backed storage for crawl results and errors.
+ * baldim resource-backed storage for crawl results and errors.
  */
 
 import type { CrawlStorageAdapter } from 'recker/scrape';

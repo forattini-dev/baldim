@@ -1,4 +1,4 @@
-# @baldin/plugin-state-machine
+# @baldim/plugin-state-machine
 
 ## 0.1.1
 
@@ -9,8 +9,8 @@
 - Updated dependencies [6ed3bd3]
 - Updated dependencies [f686e95]
 - Updated dependencies [e150c2f]
-  - @baldin/core@0.2.0
-  - @baldin/plugin-scheduler@0.1.1
+  - @baldim/core@0.2.0
+  - @baldim/plugin-scheduler@0.1.1
 
 ## 0.1.0
 
@@ -28,5 +28,5 @@
 ### Patch Changes
 
 - Updated dependencies [7662680]
-  - @baldin/core@0.1.0
-  - @baldin/plugin-scheduler@0.1.0
+  - @baldim/core@0.1.0
+  - @baldim/plugin-scheduler@0.1.0

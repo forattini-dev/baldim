@@ -5,7 +5,7 @@
  * Fetches and caches JWKS (public keys) from the issuer's /.well-known/jwks.json endpoint.
  *
  * @example
- * import { OIDCClient } from '@baldin/core';
+ * import { OIDCClient } from '@baldim/core';
  *
  * const oidcClient = new OIDCClient({
  *   issuer: 'https://sso.example.com',
@@ -31,8 +31,8 @@
  */
 
 import { createVerify, createPublicKey } from 'crypto';
-import { getCronManager, type CronManager } from '@baldin/core/plugin';
-import { createLogger, type Logger } from '@baldin/core/plugin';
+import { getCronManager, type CronManager } from '@baldim/core/plugin';
+import { createLogger, type Logger } from '@baldim/core/plugin';
 import { createHttpClient, type HttpClient } from '../concerns/http-client.js';
 
 export interface ClaimsValidationOptions {

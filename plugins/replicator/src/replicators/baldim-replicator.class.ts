@@ -1,5 +1,5 @@
-import { tryFn } from '@baldin/core/plugin';
-import { Baldin } from '@baldin/core';
+import { tryFn } from '@baldim/core/plugin';
+import { Baldim } from '@baldim/core';
 import BaseReplicator from './base-replicator.class.js';
 import { ReplicationError } from '../replicator.errors.js';
 
@@ -17,7 +17,7 @@ export interface ResourceTransformConfig {
 
 export type ResourceMapEntry = string | ResourceTransformConfig | Array<string | ResourceTransformConfig> | ((data: Record<string, unknown>) => Record<string, unknown>);
 
-export interface BaldinReplicatorConfig extends BaseReplicatorConfig {
+export interface BaldimReplicatorConfig extends BaseReplicatorConfig {
   connectionString?: string;
   region?: string;
   keyPrefix?: string;
@@ -56,7 +56,7 @@ interface DatabaseLike {
 
 type ResourcesInput = string | string[] | Record<string, ResourceMapEntry>;
 
-class BaldinReplicator extends BaseReplicator {
+class BaldimReplicator extends BaseReplicator {
   instanceId: string;
   client: DatabaseLike | null;
   connectionString: string | undefined;
@@ -65,7 +65,7 @@ class BaldinReplicator extends BaseReplicator {
   resourcesMap: Record<string, ResourceMapEntry> | ((data: Record<string, unknown>) => Record<string, unknown>);
   targetDatabase: DatabaseLike | null;
 
-  constructor(config: BaldinReplicatorConfig = {}, resources: ResourcesInput = [], client: DatabaseLike | null = null) {
+  constructor(config: BaldimReplicatorConfig = {}, resources: ResourcesInput = [], client: DatabaseLike | null = null) {
     super(config);
     this.instanceId = Math.random().toString(36).slice(2, 10);
     this.client = client;
@@ -150,14 +150,14 @@ class BaldinReplicator extends BaseReplicator {
           connectionString: this.connectionString,
           region: this.region,
           keyPrefix: this.keyPrefix,
-          logLevel: (this.config.logLevel || 'info') as import('@baldin/core/plugin').LogLevel
+          logLevel: (this.config.logLevel || 'info') as import('@baldim/core/plugin').LogLevel
         };
-        this.targetDatabase = new Baldin(targetConfig) as unknown as DatabaseLike;
+        this.targetDatabase = new Baldim(targetConfig) as unknown as DatabaseLike;
         await this.targetDatabase.connect();
       } else {
-        throw new ReplicationError('BaldinReplicator requires client or connectionString', {
+        throw new ReplicationError('BaldimReplicator requires client or connectionString', {
           operation: 'initialize',
-          replicatorClass: 'BaldinReplicator',
+          replicatorClass: 'BaldimReplicator',
           suggestion: 'Provide either a client instance or connectionString in config: { client: db } or { connectionString: "s3://..." }'
         });
       }
@@ -199,7 +199,7 @@ class BaldinReplicator extends BaseReplicator {
     if (!entry) {
       throw new ReplicationError('Resource not configured for replication', {
         operation: 'replicate',
-        replicatorClass: 'BaldinReplicator',
+        replicatorClass: 'BaldimReplicator',
         resourceName: resource,
         configuredResources: Object.keys(resourcesMap),
         suggestion: 'Add resource to replicator resources map: { resources: { [resourceName]: "destination" } }'
@@ -279,7 +279,7 @@ class BaldinReplicator extends BaseReplicator {
     } else {
       throw new ReplicationError(`Invalid replication operation: ${operation}`, {
         operation: 'replicate',
-        replicatorClass: 'BaldinReplicator',
+        replicatorClass: 'BaldimReplicator',
         invalidOperation: operation,
         supportedOperations: ['insert', 'update', 'delete'],
         resourceName: sourceResource,
@@ -363,7 +363,7 @@ class BaldinReplicator extends BaseReplicator {
     if (!found) {
       throw new ReplicationError('Destination resource not found in target database', {
         operation: '_getDestResourceObj',
-        replicatorClass: 'BaldinReplicator',
+        replicatorClass: 'BaldimReplicator',
         destinationResource: resource,
         availableResources: available,
         suggestion: 'Create the resource in target database or check resource name spelling'
@@ -437,7 +437,7 @@ class BaldinReplicator extends BaseReplicator {
       if (!this.targetDatabase) {
         throw new ReplicationError('No target database configured for connection test', {
           operation: 'testConnection',
-          replicatorClass: 'BaldinReplicator',
+          replicatorClass: 'BaldimReplicator',
           suggestion: 'Initialize replicator with client or connectionString before testing connection'
         });
       }
@@ -520,4 +520,4 @@ class BaldinReplicator extends BaseReplicator {
   }
 }
 
-export default BaldinReplicator;
+export default BaldimReplicator;

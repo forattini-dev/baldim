@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/plugin-state-machine",
+  "name": "@baldim/plugin-state-machine",
   "version": "0.1.1",
   "type": "module",
-  "description": "Persistent state machines with guards, hooks, triggers, TTL, and transition history for Baldin.",
+  "description": "Persistent state machines with guards, hooks, triggers, TTL, and transition history for Baldim.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "plugins/state-machine"
   },
   "main": "./dist/index.js",
@@ -41,18 +41,18 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.2.0",
-    "@baldin/plugin-scheduler": "^0.1.1"
+    "@baldim/core": "^0.2.0",
+    "@baldim/plugin-scheduler": "^0.1.1"
   },
   "peerDependenciesMeta": {
-    "@baldin/plugin-scheduler": {
+    "@baldim/plugin-scheduler": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@baldin/adapter-memory": "workspace:*",
-    "@baldin/core": "workspace:*",
-    "@baldin/plugin-scheduler": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
+    "@baldim/core": "workspace:*",
+    "@baldim/plugin-scheduler": "workspace:*",
     "@types/node": "25.5.2",
     "typescript": "6.0.2"
   }

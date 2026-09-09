@@ -1,5 +1,5 @@
 import type { Context, MiddlewareHandler, Next } from '../http/http-runtime.js';
-import { idGenerator } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
 
 export type IdGeneratorFn = () => string;
 

@@ -1,5 +1,5 @@
 import type { Context, Next } from '../http/http-runtime.js';
-import type { Logger } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 import { matchPath } from '../utils/path-matcher.js';
 import { formatPrettyHttpLog, colorizeStatus } from '../utils/http-logger.js';
 

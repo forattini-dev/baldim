@@ -1,9 +1,9 @@
-import { Baldin } from '@baldin/core';
+import { Baldim } from '@baldim/core';
 import { IdentityPlugin } from '../src/index.js';
 
 describe('IdentityServer Raffel runtime', () => {
-  it('serves health, OIDC discovery, and Baldin integration metadata', async () => {
-    const database = new Baldin({
+  it('serves health, OIDC discovery, and Baldim integration metadata', async () => {
+    const database = new Baldim({
       connectionString: `memory://identity-raffel-${Date.now()}`,
       logLevel: 'silent',
     });
@@ -36,7 +36,7 @@ describe('IdentityServer Raffel runtime', () => {
       const [health, discovery, integration] = await Promise.all([
         fetch(`${origin}/health`),
         fetch(`${origin}/.well-known/openid-configuration`),
-        fetch(`${origin}/.well-known/baldin-identity.json`),
+        fetch(`${origin}/.well-known/baldim-identity.json`),
       ]);
 
       expect(health.status).toBe(200);

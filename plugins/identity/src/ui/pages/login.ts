@@ -21,8 +21,8 @@ export interface LoginPageProps {
 export function LoginPage(props: LoginPageProps = {}): HtmlEscapedString {
   const { error = null, success = null, email = '', config = {} } = props;
 
-  const companyName = config.companyName || 'Baldin';
-  const legalName = config.legalName || config.companyName || 'Baldin';
+  const companyName = config.companyName || 'Baldim';
+  const legalName = config.legalName || config.companyName || 'Baldim';
   const heroTitle = config.heroTitle || companyName;
   const heroSubtitle = config.welcomeMessage || config.heroSubtitle || 'Welcome back!';
   const currentYear = new Date().getFullYear();

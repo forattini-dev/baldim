@@ -1,5 +1,5 @@
 import type { Readable } from 'node:stream';
-import type { Logger, TaskExecutorConfig } from '@baldin/core/adapter';
+import type { Logger, TaskExecutorConfig } from '@baldim/core/adapter';
 
 export interface S3ClientConfig {
   logLevel?: string;
@@ -207,7 +207,7 @@ export interface HandleOptions {
 
 
 
-/** Compatibility options accepted by Baldin when this adapter is imported. */
+/** Compatibility options accepted by Baldim when this adapter is imported. */
 export interface LegacyS3DatabaseOptions {
   bucket?: string;
   region?: string;

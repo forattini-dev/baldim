@@ -1,4 +1,4 @@
-# @baldin/adapter-memory
+# @baldim/adapter-memory
 
 ## 0.1.0
 

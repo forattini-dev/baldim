@@ -15,7 +15,7 @@ async function sourceText(directory: string): Promise<string> {
   return chunks.join('\n');
 }
 
-describe('@baldin/plugin-replicator package contract', () => {
+describe('@baldim/plugin-replicator package contract', () => {
   it('owns every target client and keeps core as a peer', async () => {
     const manifest = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
     expect(Object.keys(manifest.dependencies).sort()).toEqual([
@@ -24,7 +24,7 @@ describe('@baldin/plugin-replicator package contract', () => {
       'mongodb', 'mysql2', 'pg',
     ]);
     expect(manifest.peerDependencies).toEqual({
-      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+      '@baldim/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
     });
   });
 

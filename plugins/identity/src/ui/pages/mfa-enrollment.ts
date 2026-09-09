@@ -153,7 +153,7 @@ export function MFAEnrollmentPage(props: MFAEnrollmentPageProps = {}): HtmlEscap
     <script>
       function downloadBackupCodes() {
         const codes = ${JSON.stringify(backupCodes)};
-        const title = '${config.title || 'Baldin Identity'}';
+        const title = '${config.title || 'Baldim Identity'}';
         const text = 'MFA Backup Codes - ' + title + '\\n\\n' +
                      'Generated: ' + new Date().toISOString() + '\\n\\n' +
                      codes.join('\\n') + '\\n\\n' +

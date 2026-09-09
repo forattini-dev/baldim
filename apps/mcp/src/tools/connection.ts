@@ -1,16 +1,16 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
 import type { DbConnectArgs } from '../types/index.js';
-import type { Baldin } from '@baldin/core';
-import type { CachePlugin } from '@baldin/plugin-cache';
-import type { CostsPlugin } from '@baldin/plugin-costs';
-import type { FilesystemCache } from '@baldin/plugin-cache/drivers';
+import type { Baldim } from '@baldim/core';
+import type { CachePlugin } from '@baldim/plugin-cache';
+import type { CostsPlugin } from '@baldim/plugin-costs';
+import type { FilesystemCache } from '@baldim/plugin-cache/drivers';
 import { resolveConfig } from '../config.js';
 import { loadOfficialAdapter } from '../load-adapter.js';
 
 export const connectionTools = [
   {
     name: 'dbConnect',
-    description: `Connect to Baldin database. Usually auto-connected via BALDIN_CONNECTION_STRING env var.
+    description: `Connect to Baldim database. Usually auto-connected via BALDIM_CONNECTION_STRING env var.
 
 Connection string formats:
 • s3://KEY:SECRET@bucket?region=us-east-1 — AWS S3
@@ -30,7 +30,7 @@ On EC2/ECS/Lambda, omit credentials for IAM role: s3://bucket?region=us-east-1`,
       properties: {
         connectionString: {
           type: 'string',
-          description: 'Baldin connection string (e.g., s3://key:secret@bucket/path, sqlite:///tmp/baldin.sqlite, memory://bucket)'
+          description: 'Baldim connection string (e.g., s3://key:secret@bucket/path, sqlite:///tmp/baldim.sqlite, memory://bucket)'
         },
         verbose: {
           type: 'boolean',
@@ -44,7 +44,7 @@ On EC2/ECS/Lambda, omit credentials for IAM role: s3://bucket?region=us-east-1`,
         },
         security: {
           type: 'object',
-          description: 'Security config. Also configurable via env vars: BALDIN_PASSPHRASE, BALDIN_PEPPER, BALDIN_BCRYPT_ROUNDS, BALDIN_ARGON2=true, BALDIN_ARGON2_MEMORY_COST, BALDIN_ARGON2_TIME_COST, BALDIN_ARGON2_PARALLELISM.',
+          description: 'Security config. Also configurable via env vars: BALDIM_PASSPHRASE, BALDIM_PEPPER, BALDIM_BCRYPT_ROUNDS, BALDIM_ARGON2=true, BALDIM_ARGON2_MEMORY_COST, BALDIM_ARGON2_TIME_COST, BALDIM_ARGON2_PARALLELISM.',
           properties: {
             passphrase: {
               type: 'string',
@@ -132,7 +132,7 @@ On EC2/ECS/Lambda, omit credentials for IAM role: s3://bucket?region=us-east-1`,
   },
   {
     name: 'dbDisconnect',
-    description: 'Disconnect from the Baldin database',
+    description: 'Disconnect from the Baldim database',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -150,9 +150,9 @@ On EC2/ECS/Lambda, omit credentials for IAM role: s3://bucket?region=us-east-1`,
   }
 ];
 
-export function createConnectionHandlers(server: BaldinMCPServer) {
+export function createConnectionHandlers(server: BaldimMCPServer) {
   return {
-    async dbConnect(args: DbConnectArgs, database: Baldin | null, injected: { Baldin: typeof Baldin; CachePlugin: typeof CachePlugin; CostsPlugin: typeof CostsPlugin; FilesystemCache: typeof FilesystemCache }): Promise<any> {
+    async dbConnect(args: DbConnectArgs, database: Baldim | null, injected: { Baldim: typeof Baldim; CachePlugin: typeof CachePlugin; CostsPlugin: typeof CostsPlugin; FilesystemCache: typeof FilesystemCache }): Promise<any> {
       if (database && database.isConnected()) {
         return { success: false, message: 'Database is already connected' };
       }
@@ -192,7 +192,7 @@ export function createConnectionHandlers(server: BaldinMCPServer) {
             includePartitions: true,
             driver: new injected.FilesystemCache({
               directory: cacheConf.directory || './cache',
-              prefix: cacheConf.prefix || 'baldin',
+              prefix: cacheConf.prefix || 'baldim',
               ttl: cacheConf.ttl || 300000,
               enableCompression: true,
               enableStats: config.verbose,
@@ -215,7 +215,7 @@ export function createConnectionHandlers(server: BaldinMCPServer) {
       }
 
       await loadOfficialAdapter(config.connectionString);
-      const newDatabase = new injected.Baldin({
+      const newDatabase = new injected.Baldim({
         connectionString: config.connectionString,
         verbose: config.verbose,
         parallelism: config.parallelism,
@@ -228,7 +228,7 @@ export function createConnectionHandlers(server: BaldinMCPServer) {
 
       return {
         success: true,
-        message: 'Connected to Baldin database',
+        message: 'Connected to Baldim database',
         database: newDatabase,
         status: {
           connected: newDatabase.isConnected(),
@@ -245,7 +245,7 @@ export function createConnectionHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async dbDisconnect(args: any, database: Baldin): Promise<any> {
+    async dbDisconnect(args: any, database: Baldim): Promise<any> {
       if (!database || !database.isConnected()) {
         return { success: false, message: 'No database connection to disconnect' };
       }
@@ -254,12 +254,12 @@ export function createConnectionHandlers(server: BaldinMCPServer) {
 
       return {
         success: true,
-        message: 'Disconnected from Baldin database',
+        message: 'Disconnected from Baldim database',
         clearDatabase: true
       };
     },
 
-    async dbStatus(args: any, database: Baldin): Promise<any> {
+    async dbStatus(args: any, database: Baldim): Promise<any> {
       if (!database) {
         return {
           connected: false,

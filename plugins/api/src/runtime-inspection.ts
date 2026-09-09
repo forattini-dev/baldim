@@ -115,7 +115,7 @@ function firstJsonSchema(content: unknown): Record<string, unknown> | null {
 }
 
 function isPlaceholderSchema(schema: Record<string, unknown> | null): boolean {
-  return !!schema && schema['x-baldin-schema-placeholder'] === true;
+  return !!schema && schema['x-baldim-schema-placeholder'] === true;
 }
 
 function normalizeDescriptor(schema: Record<string, unknown> | null): SchemaDescriptor | null {

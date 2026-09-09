@@ -8,7 +8,7 @@
  * - sqlite: Persistent local queue (peer: better-sqlite3)
  * - redis: Redis list + set (peer: ioredis)
  * - bullmq: BullMQ jobs (peer: bullmq)
- * - s3: baldin resource-backed queue with visited set
+ * - s3: baldim resource-backed queue with visited set
  * - sqs: AWS SQS (peer: @aws-sdk/client-sqs)
  * - rabbitmq: RabbitMQ (peer: amqplib)
  */

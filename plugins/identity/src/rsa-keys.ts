@@ -6,7 +6,7 @@
  */
 
 import { generateKeyPairSync, createSign, createVerify, createHash, createPublicKey } from 'crypto';
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface KeyPairResult {
   publicKey: string;

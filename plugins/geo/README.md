@@ -1,12 +1,12 @@
-# @baldin/plugin-geo
+# @baldim/plugin-geo
 
-Geohash fields, optional geohash partitions, distance calculation, and spatial queries for Baldin resources.
+Geohash fields, optional geohash partitions, distance calculation, and spatial queries for Baldim resources.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { GeoPlugin } from '@baldin/plugin-geo';
+import { Baldim } from '@baldim/core';
+import { GeoPlugin } from '@baldim/plugin-geo';
 
-const db = new Baldin({ connectionString: 'memory://locations' });
+const db = new Baldim({ connectionString: 'memory://locations' });
 await db.connect();
 const stores = await db.createResource({
   name: 'stores',

@@ -1,7 +1,7 @@
-import { getCronManager } from '@baldin/core/plugin';
-import type { CronManager } from '@baldin/core/plugin';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger } from '@baldin/core/plugin';
+import { getCronManager } from '@baldim/core/plugin';
+import type { CronManager } from '@baldim/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 
 const logger: Logger = createLogger({ name: 'MetricsCollector', level: 'info' });
 
@@ -379,63 +379,63 @@ export class MetricsCollector {
     const users = this.metrics.users;
     const errors = this.metrics.errors;
 
-    lines.push('# HELP baldin_uptime_seconds API uptime in seconds');
-    lines.push('# TYPE baldin_uptime_seconds gauge');
-    lines.push(`baldin_uptime_seconds ${uptimeSeconds}`);
+    lines.push('# HELP baldim_uptime_seconds API uptime in seconds');
+    lines.push('# TYPE baldim_uptime_seconds gauge');
+    lines.push(`baldim_uptime_seconds ${uptimeSeconds}`);
 
-    lines.push('# HELP baldin_requests_total Total HTTP requests processed');
-    lines.push('# TYPE baldin_requests_total counter');
-    lines.push(`baldin_requests_total ${requests.total}`);
+    lines.push('# HELP baldim_requests_total Total HTTP requests processed');
+    lines.push('# TYPE baldim_requests_total counter');
+    lines.push(`baldim_requests_total ${requests.total}`);
     Object.entries(requests.byMethod).forEach(([method, count]) => {
-      lines.push(`baldin_requests_method_total{method="${escapeLabel(method)}"} ${count}`);
+      lines.push(`baldim_requests_method_total{method="${escapeLabel(method)}"} ${count}`);
     });
     Object.entries(requests.byStatus).forEach(([status, count]) => {
-      lines.push(`baldin_requests_status_total{status="${escapeLabel(status)}"} ${count}`);
+      lines.push(`baldim_requests_status_total{status="${escapeLabel(status)}"} ${count}`);
     });
 
-    lines.push('# HELP baldin_request_duration_ms Request duration percentiles in milliseconds');
-    lines.push('# TYPE baldin_request_duration_ms summary');
+    lines.push('# HELP baldim_request_duration_ms Request duration percentiles in milliseconds');
+    lines.push('# TYPE baldim_request_duration_ms summary');
     [
       { quantile: '0.5', value: this._percentile(requests.durations, 50) },
       { quantile: '0.95', value: this._percentile(requests.durations, 95) },
       { quantile: '0.99', value: this._percentile(requests.durations, 99) }
     ].forEach(({ quantile, value }) => {
-      lines.push(`baldin_request_duration_ms{quantile="${quantile}"} ${Number(value || 0).toFixed(3)}`);
+      lines.push(`baldim_request_duration_ms{quantile="${quantile}"} ${Number(value || 0).toFixed(3)}`);
     });
-    lines.push(`baldin_request_duration_ms_sum ${Number(requests.totalDuration || 0).toFixed(3)}`);
-    lines.push(`baldin_request_duration_ms_count ${requests.total}`);
+    lines.push(`baldim_request_duration_ms_sum ${Number(requests.totalDuration || 0).toFixed(3)}`);
+    lines.push(`baldim_request_duration_ms_count ${requests.total}`);
 
-    lines.push('# HELP baldin_auth_events_total Authentication events');
-    lines.push('# TYPE baldin_auth_events_total counter');
-    lines.push(`baldin_auth_events_total{result="success"} ${auth.success}`);
-    lines.push(`baldin_auth_events_total{result="failure"} ${auth.failure}`);
+    lines.push('# HELP baldim_auth_events_total Authentication events');
+    lines.push('# TYPE baldim_auth_events_total counter');
+    lines.push(`baldim_auth_events_total{result="success"} ${auth.success}`);
+    lines.push(`baldim_auth_events_total{result="failure"} ${auth.failure}`);
     Object.entries(auth.byMethod).forEach(([method, stats]) => {
-      lines.push(`baldin_auth_events_total{method="${escapeLabel(method)}",result="success"} ${stats.success}`);
-      lines.push(`baldin_auth_events_total{method="${escapeLabel(method)}",result="failure"} ${stats.failure}`);
+      lines.push(`baldim_auth_events_total{method="${escapeLabel(method)}",result="success"} ${stats.success}`);
+      lines.push(`baldim_auth_events_total{method="${escapeLabel(method)}",result="failure"} ${stats.failure}`);
     });
 
-    lines.push('# HELP baldin_resource_operations_total Resource operations by action');
-    lines.push('# TYPE baldin_resource_operations_total counter');
-    lines.push(`baldin_resource_operations_total{action="created"} ${resources.created}`);
-    lines.push(`baldin_resource_operations_total{action="updated"} ${resources.updated}`);
-    lines.push(`baldin_resource_operations_total{action="deleted"} ${resources.deleted}`);
+    lines.push('# HELP baldim_resource_operations_total Resource operations by action');
+    lines.push('# TYPE baldim_resource_operations_total counter');
+    lines.push(`baldim_resource_operations_total{action="created"} ${resources.created}`);
+    lines.push(`baldim_resource_operations_total{action="updated"} ${resources.updated}`);
+    lines.push(`baldim_resource_operations_total{action="deleted"} ${resources.deleted}`);
     Object.entries(resources.byResource).forEach(([resourceName, stats]) => {
-      lines.push(`baldin_resource_operations_resource_total{resource="${escapeLabel(resourceName)}",action="created"} ${stats.created}`);
-      lines.push(`baldin_resource_operations_resource_total{resource="${escapeLabel(resourceName)}",action="updated"} ${stats.updated}`);
-      lines.push(`baldin_resource_operations_resource_total{resource="${escapeLabel(resourceName)}",action="deleted"} ${stats.deleted}`);
+      lines.push(`baldim_resource_operations_resource_total{resource="${escapeLabel(resourceName)}",action="created"} ${stats.created}`);
+      lines.push(`baldim_resource_operations_resource_total{resource="${escapeLabel(resourceName)}",action="updated"} ${stats.updated}`);
+      lines.push(`baldim_resource_operations_resource_total{resource="${escapeLabel(resourceName)}",action="deleted"} ${stats.deleted}`);
     });
 
-    lines.push('# HELP baldin_user_events_total User events');
-    lines.push('# TYPE baldin_user_events_total counter');
+    lines.push('# HELP baldim_user_events_total User events');
+    lines.push('# TYPE baldim_user_events_total counter');
     Object.entries(users).forEach(([event, value]) => {
-      lines.push(`baldin_user_events_total{event="${escapeLabel(event)}"} ${value}`);
+      lines.push(`baldim_user_events_total{event="${escapeLabel(event)}"} ${value}`);
     });
 
-    lines.push('# HELP baldin_errors_total Total errors recorded');
-    lines.push('# TYPE baldin_errors_total counter');
-    lines.push(`baldin_errors_total ${errors.total}`);
+    lines.push('# HELP baldim_errors_total Total errors recorded');
+    lines.push('# TYPE baldim_errors_total counter');
+    lines.push(`baldim_errors_total ${errors.total}`);
     Object.entries(errors.byType).forEach(([type, count]) => {
-      lines.push(`baldin_errors_by_type_total{type="${escapeLabel(type)}"} ${count}`);
+      lines.push(`baldim_errors_by_type_total{type="${escapeLabel(type)}"} ${count}`);
     });
 
     return lines.join('\n') + '\n';

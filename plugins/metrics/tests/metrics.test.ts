@@ -1,5 +1,5 @@
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { MetricsPlugin } from '../src/index.js';
 
 describe('MetricsPlugin Coverage Tests', () => {
@@ -8,7 +8,7 @@ describe('MetricsPlugin Coverage Tests', () => {
 
   beforeEach(async () => {
     MemoryClient.clearAllStorage();
-    database = new Baldin({ connectionString: 'memory://plugin-metrics', logLevel: 'silent' });
+    database = new Baldim({ connectionString: 'memory://plugin-metrics', logLevel: 'silent' });
     await database.connect();
     
     metricsPlugin = new MetricsPlugin({

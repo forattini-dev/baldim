@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/adapter-sqlite",
+  "name": "@baldim/adapter-sqlite",
   "version": "0.2.0",
   "type": "module",
-  "description": "SQLite, libSQL, and Cloudflare D1 storage adapters for Baldin.",
+  "description": "SQLite, libSQL, and Cloudflare D1 storage adapters for Baldim.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "adapters/sqlite"
   },
   "main": "./dist/index.js",
@@ -37,7 +37,7 @@
     "prepack": "pnpm run build"
   },
   "dependencies": {
-    "@baldin/core": "workspace:*",
+    "@baldim/core": "workspace:*",
     "lodash-es": "^4.18.1"
   },
   "optionalDependencies": {

@@ -1,6 +1,6 @@
-import { idGenerator } from '@baldin/core';
-import { CoordinatorPlugin, type CoordinatorConfig } from '@baldin/core/coordinator';
-import { createLogger, tryFn, type Database, type Logger } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core';
+import { CoordinatorPlugin, type CoordinatorConfig } from '@baldim/core/coordinator';
+import { createLogger, tryFn, type Database, type Logger } from '@baldim/core/plugin';
 import { SchedulerError } from './errors.js';
 
 export { SchedulerError } from './errors.js';

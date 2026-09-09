@@ -1,4 +1,4 @@
-import { Plugin, type PluginOptions } from '@baldin/core/plugin';
+import { Plugin, type PluginOptions } from '@baldim/core/plugin';
 import { TournamentManager } from './tournament/tournament-manager.js';
 import { MatchManager } from './tournament/match-manager.js';
 import { RegistrationManager } from './tournament/registration-manager.js';

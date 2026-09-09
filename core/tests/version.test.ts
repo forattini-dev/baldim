@@ -1,4 +1,4 @@
-import { Baldin } from '../src/index.js';
+import { Baldim } from '../src/index.js';
 import { readFileSync } from 'node:fs';
 
 const packageVersion = JSON.parse(
@@ -7,7 +7,7 @@ const packageVersion = JSON.parse(
 
 describe('runtime version', () => {
   it('reports the published package version', () => {
-    const database = new Baldin({ connectionString: 'memory://version-test', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://version-test', logLevel: 'silent' });
 
     expect(database.s3dbVersion).toBe(packageVersion);
   });

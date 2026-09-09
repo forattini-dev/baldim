@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from '../../http/http-runtime.js';
-import type { Logger } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 import type { ResourceLike, DatabaseLike } from '../resource-manager.js';
 import type { DriverDefinition, BaseAuthStrategy } from './base-strategy.class.js';
 import type { AuthRule } from '../path-rules-middleware.js';

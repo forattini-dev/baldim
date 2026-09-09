@@ -2,7 +2,7 @@ import { readFile, watch, readdir } from 'fs/promises';
 import { existsSync, writeFileSync } from 'fs';
 import { join, sep } from 'path';
 import { createHash } from 'crypto';
-import { Plugin, createLogger, idGenerator, resolveResourceNames, tryFn } from '@baldin/core/plugin';
+import { Plugin, createLogger, idGenerator, resolveResourceNames, tryFn } from '@baldim/core/plugin';
 import {
   TfStateError,
   InvalidStateFileError,
@@ -2013,7 +2013,7 @@ export class TfStatePlugin extends Plugin {
     const terraformResources = Array.from(resourceMap.values());
 
     // Generate or use provided lineage
-    const stateLineage = lineage || `baldin-export-${Date.now()}`;
+    const stateLineage = lineage || `baldim-export-${Date.now()}`;
 
     // Construct state object
     const state = {

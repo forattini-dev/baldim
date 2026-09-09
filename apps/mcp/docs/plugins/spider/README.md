@@ -1,11 +1,11 @@
-# @baldin/plugin-spider
+# @baldim/plugin-spider
 
-Web crawling and discovery for Baldin. Spider combines Recker-based HTTP crawling with optional browser automation, queue processing, TTL cleanup, persistence, proxy rotation, SEO analysis, security analysis, and technology detection.
+Web crawling and discovery for Baldim. Spider combines Recker-based HTTP crawling with optional browser automation, queue processing, TTL cleanup, persistence, proxy rotation, SEO analysis, security analysis, and technology detection.
 
 ```ts
-import { Database } from '@baldin/core';
-import { MemoryAdapter } from '@baldin/adapter-memory';
-import { SpiderPlugin } from '@baldin/plugin-spider';
+import { Database } from '@baldim/core';
+import { MemoryAdapter } from '@baldim/adapter-memory';
+import { SpiderPlugin } from '@baldim/plugin-spider';
 
 const db = new Database({ adapter: new MemoryAdapter() });
 

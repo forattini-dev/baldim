@@ -10,7 +10,7 @@ import {
   type LogLevel,
   type PluginOptions,
   type ResourceLike,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 
 export interface AuditPluginOptions {
   resourceNames?: {

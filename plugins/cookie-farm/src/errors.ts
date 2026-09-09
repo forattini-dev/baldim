@@ -1,4 +1,4 @@
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface CookieFarmErrorDetails {
   pluginName?: string;
@@ -34,7 +34,7 @@ export class PersonaNotFoundError extends CookieFarmError {
       statusCode: 404,
       retriable: false,
       suggestion: 'Ensure the persona exists or create it before running CookieFarm operations.',
-      docs: details.docs || 'https://github.com/forattini-dev/baldin/tree/main/plugins/cookie-farm',
+      docs: details.docs || 'https://github.com/forattini-dev/baldim/tree/main/plugins/cookie-farm',
       ...details
     });
     this.name = 'PersonaNotFoundError';

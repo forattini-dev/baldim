@@ -14,7 +14,7 @@ async function sourceText(directory: string): Promise<string> {
   }))).join('\n');
 }
 
-describe('@baldin/plugin-spider package contract', () => {
+describe('@baldim/plugin-spider package contract', () => {
   it('owns every directly imported runtime and composes plugins through package dependencies', async () => {
     const manifest = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
     const runtime = {
@@ -23,13 +23,13 @@ describe('@baldin/plugin-spider package contract', () => {
     };
 
     expect(manifest.peerDependencies).toEqual({
-      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+      '@baldim/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
     });
     expect(runtime).toMatchObject({
-      '@baldin/plugin-puppeteer': 'workspace:*',
-      '@baldin/plugin-queue-consumer': 'workspace:*',
-      '@baldin/plugin-s3-queue': 'workspace:*',
-      '@baldin/plugin-ttl': 'workspace:*',
+      '@baldim/plugin-puppeteer': 'workspace:*',
+      '@baldim/plugin-queue-consumer': 'workspace:*',
+      '@baldim/plugin-s3-queue': 'workspace:*',
+      '@baldim/plugin-ttl': 'workspace:*',
       '@aws-sdk/client-sqs': '^3.0.0',
       amqplib: '^0.10.8',
       bullmq: '>=5.0.0',

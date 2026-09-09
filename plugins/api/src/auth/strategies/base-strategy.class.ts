@@ -1,7 +1,7 @@
 import type { Context, Next, MiddlewareHandler } from '../../http/http-runtime.js';
-import type { Logger, LogLevel } from '@baldin/core/plugin';
+import type { Logger, LogLevel } from '@baldim/core/plugin';
 import type { ResourceLike, DatabaseLike } from '../resource-manager.js';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 
 export interface DriverDefinition {
   driver: string;

@@ -1,4 +1,4 @@
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 import { SqsConsumer } from './sqs-consumer.js';
 import { RabbitMqConsumer } from './rabbitmq-consumer.js';
 import { RedisListConsumer } from './redis-list-consumer.js';

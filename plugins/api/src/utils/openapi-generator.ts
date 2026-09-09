@@ -355,7 +355,7 @@ function createPlaceholderSchema(description: string): OpenAPISchemaObject {
     type: 'object',
     additionalProperties: true,
     description,
-    'x-baldin-schema-placeholder': true
+    'x-baldim-schema-placeholder': true
   } as OpenAPISchemaObject;
 }
 
@@ -1589,9 +1589,9 @@ function generateRelationalPaths(
 
 export function generateOpenAPISpec(database: DatabaseLike, config: OpenAPIGeneratorConfig = {}): OpenAPISpec {
   const {
-    title = 'Baldin API',
+    title = 'Baldim API',
     version = '1.0.0',
-    description = 'Auto-generated REST API documentation for Baldin resources',
+    description = 'Auto-generated REST API documentation for Baldim resources',
     serverUrl = 'http://localhost:3000',
     auth = {},
     resources: resourceConfigs = {},
@@ -1666,8 +1666,8 @@ For detailed information about each endpoint, see the sections below.`;
       version,
       description: enhancedDescription,
       contact: {
-        name: 'Baldin',
-        url: 'https://github.com/forattini-dev/baldin'
+        name: 'Baldim',
+        url: 'https://github.com/forattini-dev/baldim'
       }
     },
     servers: [
@@ -2352,16 +2352,16 @@ For detailed information about each endpoint, see the sections below.`;
                 'text/plain': {
                   schema: {
                     type: 'string',
-                    example: '# HELP baldin_operations_total Total number of operations by type and resource\n' +
-                             '# TYPE baldin_operations_total counter\n' +
-                             'baldin_operations_total{operation="insert",resource="cars"} 1523\n' +
-                             'baldin_operations_total{operation="update",resource="cars"} 342\n\n' +
-                             '# HELP baldin_operation_duration_seconds Average operation duration in seconds\n' +
-                             '# TYPE baldin_operation_duration_seconds gauge\n' +
-                             'baldin_operation_duration_seconds{operation="insert",resource="cars"} 0.045\n\n' +
-                             '# HELP baldin_operation_errors_total Total number of operation errors\n' +
-                             '# TYPE baldin_operation_errors_total counter\n' +
-                             'baldin_operation_errors_total{operation="insert",resource="cars"} 12\n'
+                    example: '# HELP baldim_operations_total Total number of operations by type and resource\n' +
+                             '# TYPE baldim_operations_total counter\n' +
+                             'baldim_operations_total{operation="insert",resource="cars"} 1523\n' +
+                             'baldim_operations_total{operation="update",resource="cars"} 342\n\n' +
+                             '# HELP baldim_operation_duration_seconds Average operation duration in seconds\n' +
+                             '# TYPE baldim_operation_duration_seconds gauge\n' +
+                             'baldim_operation_duration_seconds{operation="insert",resource="cars"} 0.045\n\n' +
+                             '# HELP baldim_operation_errors_total Total number of operation errors\n' +
+                             '# TYPE baldim_operation_errors_total counter\n' +
+                             'baldim_operation_errors_total{operation="insert",resource="cars"} 12\n'
                   }
                 }
               }

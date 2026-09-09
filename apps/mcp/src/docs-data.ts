@@ -129,7 +129,7 @@ export const plugins: PluginDoc[] = [
     category: 'utility',
     description: 'Prometheus-compatible metrics, latency percentiles, operation counts. Observability for production.',
     configOptions: [
-      { name: 'prefix', type: 'string', required: false, default: 'baldin', description: 'Metrics prefix' },
+      { name: 'prefix', type: 'string', required: false, default: 'baldim', description: 'Metrics prefix' },
       { name: 'labels', type: 'Record<string, string>', required: false, description: 'Default labels' },
     ],
     methods: [
@@ -209,7 +209,7 @@ export const plugins: PluginDoc[] = [
   {
     name: 'QueueConsumerPlugin',
     category: 'integration',
-    description: 'Consume from external queues (SQS, RabbitMQ, Redis List/Stream/PubSub, BullMQ) and route to Baldin resources or custom handlers.',
+    description: 'Consume from external queues (SQS, RabbitMQ, Redis List/Stream/PubSub, BullMQ) and route to Baldim resources or custom handlers.',
     configOptions: [
       { name: 'drivers', type: 'DriverDefinition[]', required: false, description: 'Array of driver configurations with queues' },
       { name: 'startConcurrency', type: 'number', required: false, default: '5', description: 'Concurrent driver startup' },
@@ -513,7 +513,7 @@ export const fieldTypes: FieldTypeDoc[] = [
     name: 'email',
     syntax: "'email' | 'email|required'",
     compression: 'None',
-    description: 'Email address field with RFC-compliant validation. Supports normalize option to lowercase and trim. Mode "precise" enables stricter validation. Great for user IDs (baldin uses email as O(1) lookup key by convention).',
+    description: 'Email address field with RFC-compliant validation. Supports normalize option to lowercase and trim. Mode "precise" enables stricter validation. Great for user IDs (baldim uses email as O(1) lookup key by convention).',
     examples: ["email: 'email|required'", "contactEmail: 'email|optional|normalize:true'"],
     validators: ['required', 'optional', 'normalize', 'mode', 'min', 'max', 'default'],
   },
@@ -887,7 +887,7 @@ export const clients: ClientDoc[] = [
 export const guides: GuideDoc[] = [
   {
     topic: 'getting-started',
-    title: 'Getting Started with Baldin',
+    title: 'Getting Started with Baldim',
     description: 'Quick start guide covering installation, connection, and basic CRUD operations',
     sections: ['Installation', 'Connection', 'Creating Resources', 'CRUD Operations', 'Next Steps'],
   },
@@ -900,31 +900,31 @@ export const guides: GuideDoc[] = [
   {
     topic: 'performance-tuning',
     title: 'Performance Tuning Guide',
-    description: 'Optimize Baldin for your workload with partitions, caching, and batch operations',
+    description: 'Optimize Baldim for your workload with partitions, caching, and batch operations',
     sections: ['Partitioning Strategy', 'Caching', 'Batch Operations', 'Connection Pooling', 'Compression'],
   },
   {
     topic: 'typescript',
     title: 'TypeScript Integration',
-    description: 'Full TypeScript support and type generation for Baldin resources',
+    description: 'Full TypeScript support and type generation for Baldim resources',
     sections: ['Setup', 'Type Generation', 'Generic Resources', 'Type-safe Queries'],
   },
   {
     topic: 'testing',
     title: 'Testing Strategies',
-    description: 'Best practices for testing Baldin applications',
+    description: 'Best practices for testing Baldim applications',
     sections: ['MemoryClient', 'FilesystemClient', 'Mocking', 'Fixtures', 'Parallel Tests'],
   },
   {
     topic: 'multi-tenancy',
     title: 'Multi-Tenancy Patterns',
-    description: 'Strategies for multi-tenant applications with Baldin',
+    description: 'Strategies for multi-tenant applications with Baldim',
     sections: ['Database per Tenant', 'Prefix per Tenant', 'Partitions', 'Security'],
   },
   {
     topic: 'security',
     title: 'Security Best Practices',
-    description: 'Security considerations for Baldin applications',
+    description: 'Security considerations for Baldim applications',
     sections: ['Encryption', 'Access Control', 'Secrets Management', 'Audit Logging'],
   },
 ];

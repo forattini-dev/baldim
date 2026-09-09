@@ -1,4 +1,4 @@
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import requirePluginDependency from '../load-dependency.js';
 import BaseReplicator from './base-replicator.class.js';
 
@@ -382,7 +382,7 @@ class SqsReplicator extends BaseReplicator {
       resource: resource,
       action: operation,
       timestamp: new Date().toISOString(),
-      source: 'baldin-replicator'
+      source: 'baldim-replicator'
     };
 
     switch (operation) {

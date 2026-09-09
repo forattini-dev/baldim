@@ -34,61 +34,61 @@ const DOCS_ROOT = join(PROJECT_ROOT, 'docs');
 
 export const resourceTemplates: MCPResourceTemplate[] = [
   {
-    uriTemplate: 'baldin://core/{topic}',
+    uriTemplate: 'baldim://core/{topic}',
     name: 'Core Documentation',
-    description: 'Core Baldin concepts: database, schema, resource, behaviors, partitions, encryption, security, streaming, events',
+    description: 'Core Baldim concepts: database, schema, resource, behaviors, partitions, encryption, security, streaming, events',
     mimeType: 'text/markdown',
   },
   {
-    uriTemplate: 'baldin://client/{name}',
+    uriTemplate: 'baldim://client/{name}',
     name: 'Storage Client',
     description: 'Storage client documentation: s3, sqlite, memory, filesystem',
     mimeType: 'text/markdown',
   },
   {
-    uriTemplate: 'baldin://plugin/{name}',
+    uriTemplate: 'baldim://plugin/{name}',
     name: 'Plugin Documentation',
     description: 'Plugin documentation: cache, api, audit, ttl, vector, geo, replicator, metrics, backup, queue, etc.',
     mimeType: 'text/markdown',
   },
   {
-    uriTemplate: 'baldin://plugin/{name}/{sub-doc}',
+    uriTemplate: 'baldim://plugin/{name}/{sub-doc}',
     name: 'Plugin Sub-Document',
     description: 'Plugin sub-documentation: triggers, guards, states, actions, guides/api-reference, guides/configuration, etc.',
     mimeType: 'text/markdown',
   },
   {
-    uriTemplate: 'baldin://guide/{topic}',
+    uriTemplate: 'baldim://guide/{topic}',
     name: 'Guide',
     description: 'Usage guides: getting-started, performance, typescript, testing, multi-tenancy, security',
     mimeType: 'text/markdown',
   },
   {
-    uriTemplate: 'baldin://example/{category}',
+    uriTemplate: 'baldim://example/{category}',
     name: 'Examples',
     description: 'Example code by category: crud, bulk, partitioning, caching, vector-rag, auth, streaming, hooks',
     mimeType: 'text/markdown',
   },
   {
-    uriTemplate: 'baldin://reference/{topic}',
+    uriTemplate: 'baldim://reference/{topic}',
     name: 'Reference',
     description: 'Reference documentation: cli, mcp, errors, connection-strings',
     mimeType: 'text/markdown',
   },
   {
-    uriTemplate: 'baldin://field-type/{type}',
+    uriTemplate: 'baldim://field-type/{type}',
     name: 'Field Type',
     description: 'Field type documentation: string, number, secret, embedding, ip4, object, array, etc.',
     mimeType: 'text/markdown',
   },
   {
-    uriTemplate: 'baldin://behavior/{name}',
+    uriTemplate: 'baldim://behavior/{name}',
     name: 'Behavior',
     description: 'Behavior documentation: body-overflow, body-only, truncate-data, enforce-limits, user-managed',
     mimeType: 'text/markdown',
   },
   {
-    uriTemplate: 'baldin://resource/{name}',
+    uriTemplate: 'baldim://resource/{name}',
     name: 'Database Resource',
     description: 'Live resource inspection: schema, attributes, partitions, behavior, configuration, and S3 paths. Requires active database connection.',
     mimeType: 'text/markdown',
@@ -101,25 +101,25 @@ export const resourceTemplates: MCPResourceTemplate[] = [
 
 export const staticResources: MCPResource[] = [
   {
-    uri: 'baldin://overview',
-    name: 'Baldin Overview',
-    description: 'Complete overview of Baldin capabilities and architecture',
+    uri: 'baldim://overview',
+    name: 'Baldim Overview',
+    description: 'Complete overview of Baldim capabilities and architecture',
     mimeType: 'text/markdown',
   },
   {
-    uri: 'baldin://quick-reference',
+    uri: 'baldim://quick-reference',
     name: 'Quick Reference',
     description: 'Quick reference card for common operations',
     mimeType: 'text/markdown',
   },
   {
-    uri: 'baldin://api-summary',
+    uri: 'baldim://api-summary',
     name: 'API Summary',
     description: 'Summary of all available methods and their signatures',
     mimeType: 'text/markdown',
   },
   {
-    uri: 'baldin://best-practices',
+    uri: 'baldim://best-practices',
     name: 'Best Practices',
     description: 'Best practices for behaviors, partitions, update methods, pagination, caching, and cost optimization',
     mimeType: 'text/markdown',
@@ -156,7 +156,7 @@ export function readResource(uri: string, database?: any): MCPResourceContent | 
   if (!parsed) return null;
 
   const { scheme, type, name } = parsed;
-  if (scheme !== 'baldin') return null;
+  if (scheme !== 'baldim') return null;
 
   try {
     let text: string;
@@ -233,7 +233,7 @@ export function readResource(uri: string, database?: any): MCPResourceContent | 
 // =============================================================================
 
 function generateOverview(): string {
-  return `# Baldin.js Overview
+  return `# Baldim.js Overview
 
 Transform AWS S3 into a powerful document database with ORM-like interface.
 
@@ -264,15 +264,15 @@ Transform AWS S3 into a powerful document database with ORM-like interface.
 \`\`\`
 s3://KEY:SECRET@bucket?region=us-east-1     # AWS S3
 http://KEY:SECRET@localhost:9000/bucket      # MinIO
-sqlite:///tmp/baldin.sqlite                      # SQLite (persistent local file)
+sqlite:///tmp/baldim.sqlite                      # SQLite (persistent local file)
 memory://bucket/path                         # MemoryClient (testing)
-file:///tmp/baldin                             # FileSystemClient (testing)
+file:///tmp/baldim                             # FileSystemClient (testing)
 \`\`\`
 
 ## Quick Example
 
 \`\`\`javascript
-import { Database } from '@baldin/core';
+import { Database } from '@baldim/core';
 
 const db = new Database({
   connectionString: 's3://KEY:SECRET@my-bucket?region=us-east-1',
@@ -306,15 +306,15 @@ const user = await users.get('user-id');
 
 | What you need | Resource |
 |---------------|----------|
-| Security config (encryption, passwords, bcrypt, argon2) | \`baldin://core/security\` |
-| Best practices & decision guides | \`baldin://best-practices\` |
-| Plugin documentation (full README) | \`baldin://plugin/{name}\` (e.g., \`baldin://plugin/cache\`) |
-| Usage guides | \`baldin://guide/{topic}\` (getting-started, performance, testing, security) |
-| Field type reference | \`baldin://field-type/{type}\` (string, secret, embedding, ip4, etc.) |
-| Behavior reference | \`baldin://behavior/{name}\` (body-overflow, body-only, enforce-limits) |
-| Quick reference card | \`baldin://quick-reference\` |
-| API signatures | \`baldin://api-summary\` |
-| Search docs | \`baldinSearchDocs\` tool |
+| Security config (encryption, passwords, bcrypt, argon2) | \`baldim://core/security\` |
+| Best practices & decision guides | \`baldim://best-practices\` |
+| Plugin documentation (full README) | \`baldim://plugin/{name}\` (e.g., \`baldim://plugin/cache\`) |
+| Usage guides | \`baldim://guide/{topic}\` (getting-started, performance, testing, security) |
+| Field type reference | \`baldim://field-type/{type}\` (string, secret, embedding, ip4, etc.) |
+| Behavior reference | \`baldim://behavior/{name}\` (body-overflow, body-only, enforce-limits) |
+| Quick reference card | \`baldim://quick-reference\` |
+| API signatures | \`baldim://api-summary\` |
+| Search docs | \`baldimSearchDocs\` tool |
 
 ## Decision Guide
 
@@ -369,12 +369,12 @@ const user = await users.get('user-id');
 }
 
 function generateQuickReference(): string {
-  return `# Baldin Quick Reference
+  return `# Baldim Quick Reference
 
 ## Connection
 
 \`\`\`javascript
-import { Database } from '@baldin/core';
+import { Database } from '@baldim/core';
 
 const db = new Database({
   connectionString: 's3://KEY:SECRET@bucket?region=us-east-1',
@@ -388,7 +388,7 @@ const db = new Database({
 await db.connect();
 \`\`\`
 
-## Security (see \`baldin://core/security\` for full reference)
+## Security (see \`baldim://core/security\` for full reference)
 
 | Config | Purpose | Used By |
 |--------|---------|---------|
@@ -484,7 +484,7 @@ const active = await users.listPartition('byStatus', { status: 'active' }); // F
 }
 
 function generateApiSummary(): string {
-  return `# Baldin API Summary
+  return `# Baldim API Summary
 
 ## Database Class
 
@@ -604,7 +604,7 @@ interface PartitionConfig {
 }
 
 function generateBestPractices(): string {
-  return `# Baldin Best Practices
+  return `# Baldim Best Practices
 
 ## 1. Behavior Selection
 
@@ -701,7 +701,7 @@ await users.get('daniel@tetis.io'); // O(1) direct lookup
 
 Use \`CachePlugin\` in production to reduce S3 API calls and costs:
 \`\`\`javascript
-import { CachePlugin } from '@baldin/core';
+import { CachePlugin } from '@baldim/core';
 
 db.use(new CachePlugin({
   driver: 'memory',         // or FilesystemCache for persistence
@@ -803,19 +803,19 @@ function generateCoreFallback(topic: string): string {
   const fallbacks: Record<string, string> = {
     database: `# Database
 
-The Database class is the main entry point for Baldin.
+The Database class is the main entry point for Baldim.
 
 ## Constructor Options
 
 \`\`\`javascript
-import { Database } from '@baldin/core';
+import { Database } from '@baldim/core';
 
 const db = new Database({
   connectionString: 's3://KEY:SECRET@bucket?region=us-east-1',
   verbose: false,              // Enable debug logging
   parallelism: 10,             // Max parallel S3 operations
   versioningEnabled: false,    // Enable resource versioning
-  security: {                  // See baldin://core/security for full reference
+  security: {                  // See baldim://core/security for full reference
     passphrase: 'string',      // AES-256-GCM key for \`secret\` fields
     pepper: 'string',          // Extra entropy for password hashing
     bcrypt: { rounds: 12 },    // Bcrypt cost factor (min 12, max 31)
@@ -852,19 +852,19 @@ const users = await db.createResource({
 ## Using Plugins
 
 \`\`\`javascript
-import { CachePlugin } from '@baldin/core';
+import { CachePlugin } from '@baldim/core';
 
 db.use(new CachePlugin({ driver: 'memory' }));
 \`\`\`
 
 ## Related
 
-- \`baldin://core/security\` — Full security configuration reference
-- \`baldin://best-practices\` — Behaviors, partitions, performance guide
+- \`baldim://core/security\` — Full security configuration reference
+- \`baldim://best-practices\` — Behaviors, partitions, performance guide
 `,
     behaviors: `# Behaviors
 
-S3 has a hard 2KB limit for user-defined metadata. Behaviors define how Baldin handles this limit.
+S3 has a hard 2KB limit for user-defined metadata. Behaviors define how Baldim handles this limit.
 
 ## Available Behaviors
 
@@ -943,7 +943,7 @@ interface SecurityConfig {
 ## Usage in Database Constructor
 
 \`\`\`javascript
-import { Database } from '@baldin/core';
+import { Database } from '@baldim/core';
 
 const db = new Database({
   connectionString: 's3://KEY:SECRET@bucket',
@@ -1017,7 +1017,7 @@ Controls argon2id hashing for \`password:argon2id\` fields. Memory-hard, GPU-res
 ## Verifying Passwords
 
 \`\`\`javascript
-import { verifyPassword } from '@baldin/core';
+import { verifyPassword } from '@baldim/core';
 
 const user = await users.get(userId);
 const isValid = await verifyPassword('user-input', user.password);
@@ -1027,16 +1027,16 @@ const isValid = await verifyPassword('user-input', user.password);
 
 Via environment variables:
 \`\`\`
-BALDIN_SECURITY_PASSPHRASE=your-encryption-key
-BALDIN_SECURITY_PEPPER=your-pepper
-BALDIN_SECURITY_BCRYPT_ROUNDS=12
-BALDIN_SECURITY_ARGON2=true
-BALDIN_SECURITY_ARGON2_MEMORY_COST=65536
-BALDIN_SECURITY_ARGON2_TIME_COST=3
-BALDIN_SECURITY_ARGON2_PARALLELISM=4
+BALDIM_SECURITY_PASSPHRASE=your-encryption-key
+BALDIM_SECURITY_PEPPER=your-pepper
+BALDIM_SECURITY_BCRYPT_ROUNDS=12
+BALDIM_SECURITY_ARGON2=true
+BALDIM_SECURITY_ARGON2_MEMORY_COST=65536
+BALDIM_SECURITY_ARGON2_TIME_COST=3
+BALDIM_SECURITY_ARGON2_PARALLELISM=4
 \`\`\`
 
-Or via config file (\`baldin.config.json\`):
+Or via config file (\`baldim.config.json\`):
 \`\`\`json
 {
   "security": {
@@ -1050,10 +1050,10 @@ Or via config file (\`baldin.config.json\`):
 
 ## Related Resources
 
-- \`baldin://core/encryption\` — AES-256-GCM encryption details for \`secret\` fields
-- \`baldin://field-type/password\` — Password field type reference
-- \`baldin://field-type/secret\` — Secret field type reference
-- \`baldin://guide/security\` — Security best practices guide
+- \`baldim://core/encryption\` — AES-256-GCM encryption details for \`secret\` fields
+- \`baldim://field-type/password\` — Password field type reference
+- \`baldim://field-type/secret\` — Secret field type reference
+- \`baldim://guide/security\` — Security best practices guide
 `,
   };
 
@@ -1102,7 +1102,7 @@ ${client.dependencies.length > 0 ? client.dependencies.map(d => `- \`${d}\``).jo
 ## Example
 
 \`\`\`javascript
-import { Database } from '@baldin/core';
+import { Database } from '@baldim/core';
 
 const db = new Database({
   connectionString: '${client.connectionString}'
@@ -1181,7 +1181,7 @@ function generatePluginDoc(name: string): string {
           return `# ${pluginName} / ${subDoc}\n\nFailed to read sub-document.`;
         }
       }
-      return `# ${pluginName} / ${subDoc}\n\nSub-document not found. Try \`baldin://plugin/${pluginName}\` for the main plugin documentation.`;
+      return `# ${pluginName} / ${subDoc}\n\nSub-document not found. Try \`baldim://plugin/${pluginName}\` for the main plugin documentation.`;
     }
 
     const readmePath = join(DOCS_ROOT, 'plugins', dirName, 'README.md');
@@ -1228,8 +1228,8 @@ ${configTable}
 ## Basic Usage
 
 \`\`\`javascript
-import { Database } from '@baldin/core';
-import { ${plugin.name} } from '@baldin/core';
+import { Database } from '@baldim/core';
+import { ${plugin.name} } from '@baldim/core';
 
 const db = new Database({ connectionString: 's3://...' });
 db.use(new ${plugin.name}({
@@ -1439,7 +1439,7 @@ ${behaviors.filter(b => b.name !== behavior.name).map(b => `- **${b.name}**: ${b
 
 function generateResourceDoc(name: string, database?: any): string {
   if (!database || !database.isConnected()) {
-    return `# Resource: ${name}\n\nDatabase not connected. Set BALDIN_CONNECTION_STRING env var for auto-connect, or use \`dbConnect\` tool.`;
+    return `# Resource: ${name}\n\nDatabase not connected. Set BALDIM_CONNECTION_STRING env var for auto-connect, or use \`dbConnect\` tool.`;
   }
 
   const resource = database.resources?.[name];
@@ -1532,7 +1532,7 @@ export function listResources(): MCPResource[] {
   // Add all plugins as resources
   plugins.forEach((plugin) => {
     dynamicResources.push({
-      uri: `baldin://plugin/${plugin.name.replace('Plugin', '').toLowerCase()}`,
+      uri: `baldim://plugin/${plugin.name.replace('Plugin', '').toLowerCase()}`,
       name: plugin.name,
       description: plugin.description,
       mimeType: 'text/markdown',
@@ -1542,7 +1542,7 @@ export function listResources(): MCPResource[] {
   // Add all field types as resources
   fieldTypes.forEach((ft) => {
     dynamicResources.push({
-      uri: `baldin://field-type/${ft.name}`,
+      uri: `baldim://field-type/${ft.name}`,
       name: `Field Type: ${ft.name}`,
       description: ft.description,
       mimeType: 'text/markdown',
@@ -1552,7 +1552,7 @@ export function listResources(): MCPResource[] {
   // Add all behaviors as resources
   behaviors.forEach((b) => {
     dynamicResources.push({
-      uri: `baldin://behavior/${b.name}`,
+      uri: `baldim://behavior/${b.name}`,
       name: `Behavior: ${b.name}`,
       description: b.useCase,
       mimeType: 'text/markdown',
@@ -1562,7 +1562,7 @@ export function listResources(): MCPResource[] {
   // Add all clients as resources
   clients.forEach((c) => {
     dynamicResources.push({
-      uri: `baldin://client/${c.name.replace('Client', '').toLowerCase()}`,
+      uri: `baldim://client/${c.name.replace('Client', '').toLowerCase()}`,
       name: c.name,
       description: c.description,
       mimeType: 'text/markdown',
@@ -1572,7 +1572,7 @@ export function listResources(): MCPResource[] {
   // Add all guides as resources
   guides.forEach((g) => {
     dynamicResources.push({
-      uri: `baldin://guide/${g.topic}`,
+      uri: `baldim://guide/${g.topic}`,
       name: g.title,
       description: g.description,
       mimeType: 'text/markdown',

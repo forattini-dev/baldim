@@ -1,4 +1,4 @@
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface PuppeteerErrorDetails {
   pluginName?: string;
@@ -32,7 +32,7 @@ export class BrowserPoolError extends PuppeteerError {
       code: 'BROWSER_POOL_ERROR',
       retriable: details.retriable ?? true,
       suggestion: details.suggestion ?? 'Verify browser instances are healthy and increase pool size or restart browsers.',
-      docs: details.docs || 'https://github.com/forattini-dev/baldin/tree/main/plugins/puppeteer',
+      docs: details.docs || 'https://github.com/forattini-dev/baldim/tree/main/plugins/puppeteer',
       ...details
     });
     this.name = 'BrowserPoolError';

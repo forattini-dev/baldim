@@ -6,5 +6,5 @@
 record, and partition index cases as the filesystem fixture.
 
 The compatibility test copies the database, records its SHA-256 digest, opens and
-reads it through Baldin, disconnects, and checks the digest again. The fixture is
+reads it through Baldim, disconnects, and checks the digest again. The fixture is
 therefore proof of a read-compatible open without an implicit migration.

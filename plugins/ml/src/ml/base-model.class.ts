@@ -14,7 +14,7 @@ import {
   InsufficientDataError,
   TensorFlowDependencyError
 } from '../ml.errors.js';
-import { PluginError, createLogger, type LogLevel } from '@baldin/core/plugin';
+import { PluginError, createLogger, type LogLevel } from '@baldim/core/plugin';
 
 const require = createRequire(import.meta.url);
 

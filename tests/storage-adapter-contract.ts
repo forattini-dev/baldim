@@ -58,7 +58,7 @@ export function runStorageAdapterContract(
       const storage = await client();
       const result = await storage.putObject({
         key: 'contract/one.txt',
-        body: 'hello Baldin',
+        body: 'hello Baldim',
         metadata: { kind: 'contract', count: 2 },
         contentType: 'text/plain',
       });
@@ -66,11 +66,11 @@ export function runStorageAdapterContract(
       expect(result.ETag).toBeTruthy();
       expect(await storage.exists('contract/one.txt')).toBe(true);
       const object = await storage.getObject('contract/one.txt');
-      expect(await object.Body?.transformToString?.()).toBe('hello Baldin');
+      expect(await object.Body?.transformToString?.()).toBe('hello Baldim');
       expect(object.Metadata).toEqual({ kind: 'contract', count: '2' });
       expect(object.ContentType).toBe('text/plain');
       const head = await storage.headObject('contract/one.txt');
-      expect(head.ContentLength).toBe(Buffer.byteLength('hello Baldin'));
+      expect(head.ContentLength).toBe(Buffer.byteLength('hello Baldim'));
       expect(head.ETag).toBe(result.ETag);
     });
 

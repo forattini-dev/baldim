@@ -1,11 +1,11 @@
 /**
- * Schema Sync Helper - Convert Baldin resource schemas to SQL DDL
+ * Schema Sync Helper - Convert Baldim resource schemas to SQL DDL
  *
  * This module provides utilities to automatically create and sync database tables
- * based on Baldin resource schemas.
+ * based on Baldim resource schemas.
  */
 
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 
 export interface FieldParseResult {
   type: string;
@@ -105,7 +105,7 @@ export function parseFieldType(typeNotation: string | unknown): FieldParseResult
   return { type: baseType ?? 'string', required, maxLength, options };
 }
 
-export function baldinTypeToPostgres(fieldType: string, fieldOptions: Record<string, unknown> = {}): string {
+export function baldimTypeToPostgres(fieldType: string, fieldOptions: Record<string, unknown> = {}): string {
   const { type, maxLength, options } = parseFieldType(fieldType);
 
   switch (type) {
@@ -151,7 +151,7 @@ export function baldinTypeToPostgres(fieldType: string, fieldOptions: Record<str
   }
 }
 
-export function baldinTypeToBigQuery(fieldType: string, fieldOptions: Record<string, unknown> = {}): string {
+export function baldimTypeToBigQuery(fieldType: string, fieldOptions: Record<string, unknown> = {}): string {
   const { type, maxLength, options } = parseFieldType(fieldType);
 
   switch (type) {
@@ -198,7 +198,7 @@ export function baldinTypeToBigQuery(fieldType: string, fieldOptions: Record<str
   }
 }
 
-export function baldinTypeToMySQL(fieldType: string, fieldOptions: Record<string, unknown> = {}): string {
+export function baldimTypeToMySQL(fieldType: string, fieldOptions: Record<string, unknown> = {}): string {
   const { type, maxLength, options } = parseFieldType(fieldType);
 
   switch (type) {
@@ -255,7 +255,7 @@ export function generatePostgresCreateTable(tableName: string, attributes: Recor
     const fieldType = typeof fieldConfig === 'string' ? fieldConfig : (fieldConfig as { type?: string }).type || 'string';
     const { required } = parseFieldType(fieldType);
 
-    const sqlType = baldinTypeToPostgres(fieldType);
+    const sqlType = baldimTypeToPostgres(fieldType);
     const nullConstraint = required ? 'NOT NULL' : 'NULL';
 
     columns.push(`"${fieldName}" ${sqlType} ${nullConstraint}`);
@@ -282,7 +282,7 @@ export function generateMySQLCreateTable(tableName: string, attributes: Record<s
     const fieldType = typeof fieldConfig === 'string' ? fieldConfig : (fieldConfig as { type?: string }).type || 'string';
     const { required } = parseFieldType(fieldType);
 
-    const sqlType = baldinTypeToMySQL(fieldType);
+    const sqlType = baldimTypeToMySQL(fieldType);
     const nullConstraint = required ? 'NOT NULL' : 'NULL';
 
     columns.push(`\`${fieldName}\` ${sqlType} ${nullConstraint}`);
@@ -391,7 +391,7 @@ export function generatePostgresAlterTable(tableName: string, attributes: Record
 
     const fieldType = typeof fieldConfig === 'string' ? fieldConfig : (fieldConfig as { type?: string }).type || 'string';
     const { required } = parseFieldType(fieldType);
-    const sqlType = baldinTypeToPostgres(fieldType);
+    const sqlType = baldimTypeToPostgres(fieldType);
     const nullConstraint = required ? 'NOT NULL' : 'NULL';
 
     alterStatements.push(`ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS "${fieldName}" ${sqlType} ${nullConstraint}`);
@@ -409,7 +409,7 @@ export function generateMySQLAlterTable(tableName: string, attributes: Record<st
 
     const fieldType = typeof fieldConfig === 'string' ? fieldConfig : (fieldConfig as { type?: string }).type || 'string';
     const { required } = parseFieldType(fieldType);
-    const sqlType = baldinTypeToMySQL(fieldType);
+    const sqlType = baldimTypeToMySQL(fieldType);
     const nullConstraint = required ? 'NOT NULL' : 'NULL';
 
     alterStatements.push(`ALTER TABLE ${tableName} ADD COLUMN \`${fieldName}\` ${sqlType} ${nullConstraint}`);
@@ -433,7 +433,7 @@ export function generateBigQuerySchema(attributes: Record<string, unknown>, muta
     const fieldType = typeof fieldConfig === 'string' ? fieldConfig : (fieldConfig as { type?: string }).type || 'string';
     const { required } = parseFieldType(fieldType);
 
-    const bqType = baldinTypeToBigQuery(fieldType);
+    const bqType = baldimTypeToBigQuery(fieldType);
 
     fields.push({
       name: fieldName,
@@ -494,7 +494,7 @@ export function generateBigQuerySchemaUpdate(attributes: Record<string, unknown>
 
     const fieldType = typeof fieldConfig === 'string' ? fieldConfig : (fieldConfig as { type?: string }).type || 'string';
     const { required } = parseFieldType(fieldType);
-    const bqType = baldinTypeToBigQuery(fieldType);
+    const bqType = baldimTypeToBigQuery(fieldType);
 
     newFields.push({
       name: fieldName,
@@ -524,7 +524,7 @@ export function generateBigQuerySchemaUpdate(attributes: Record<string, unknown>
   return newFields;
 }
 
-export function baldinTypeToSQLite(fieldType: string, fieldOptions: Record<string, unknown> = {}): string {
+export function baldimTypeToSQLite(fieldType: string, fieldOptions: Record<string, unknown> = {}): string {
   const { type, maxLength, options } = parseFieldType(fieldType);
 
   switch (type) {
@@ -578,7 +578,7 @@ export function generateSQLiteCreateTable(tableName: string, attributes: Record<
     const fieldType = typeof fieldConfig === 'string' ? fieldConfig : (fieldConfig as { type?: string }).type || 'string';
     const { required } = parseFieldType(fieldType);
 
-    const sqlType = baldinTypeToSQLite(fieldType);
+    const sqlType = baldimTypeToSQLite(fieldType);
     const nullConstraint = required ? 'NOT NULL' : 'NULL';
 
     columns.push(`${fieldName} ${sqlType} ${nullConstraint}`);
@@ -603,7 +603,7 @@ export function generateSQLiteAlterTable(tableName: string, attributes: Record<s
 
     const fieldType = typeof fieldConfig === 'string' ? fieldConfig : (fieldConfig as { type?: string }).type || 'string';
     const { required } = parseFieldType(fieldType);
-    const sqlType = baldinTypeToSQLite(fieldType);
+    const sqlType = baldimTypeToSQLite(fieldType);
     const nullConstraint = required ? 'NOT NULL' : 'NULL';
 
     alterStatements.push(`ALTER TABLE ${tableName} ADD COLUMN ${fieldName} ${sqlType} ${nullConstraint}`);
@@ -614,10 +614,10 @@ export function generateSQLiteAlterTable(tableName: string, attributes: Record<s
 
 export default {
   parseFieldType,
-  baldinTypeToPostgres,
-  baldinTypeToMySQL,
-  baldinTypeToBigQuery,
-  baldinTypeToSQLite,
+  baldimTypeToPostgres,
+  baldimTypeToMySQL,
+  baldimTypeToBigQuery,
+  baldimTypeToSQLite,
   generatePostgresCreateTable,
   generateMySQLCreateTable,
   generateBigQuerySchema,

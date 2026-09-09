@@ -1,10 +1,10 @@
 import { setCookie, getCookie, deleteCookie } from '../http/http-runtime.js';
 import type { Context } from '../http/http-runtime.js';
 import type { CookieOptions as HttpCookieOptions } from '../http/http-runtime.js';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger, LogLevel } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger, LogLevel } from '@baldim/core/plugin';
 
-const logger: Logger = createLogger({ name: 'OidcHooks', level: (process.env.BALDIN_LOG_LEVEL || 'info') as LogLevel });
+const logger: Logger = createLogger({ name: 'OidcHooks', level: (process.env.BALDIM_LOG_LEVEL || 'info') as LogLevel });
 
 export interface HookDefinition {
   phase: string;

@@ -1,4 +1,4 @@
-import { CoordinatorPlugin, type CoordinatorConfig } from '@baldin/core/coordinator';
+import { CoordinatorPlugin, type CoordinatorConfig } from '@baldim/core/coordinator';
 import {
   PluginError,
   forEachWithConcurrency,
@@ -6,7 +6,7 @@ import {
   tryFn,
   type Database,
   type Resource,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 
 const ONE_HOUR_SEC = 3600;
 const ONE_DAY_SEC = 86400;

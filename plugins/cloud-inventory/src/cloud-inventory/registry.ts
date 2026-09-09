@@ -1,5 +1,5 @@
 import { BaseCloudDriver, BaseCloudDriverOptions, type CloudResource } from './drivers/base-driver.js';
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 type DriverFactory = (options: BaseCloudDriverOptions) => BaseCloudDriver;
 type DriverClass = new (options: BaseCloudDriverOptions) => BaseCloudDriver;

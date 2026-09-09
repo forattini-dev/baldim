@@ -5,7 +5,7 @@
  * exported to users. Users should only interact with IdentityPluginOptions.
  */
 
-import type { Argon2Config } from '@baldin/core/password';
+import type { Argon2Config } from '@baldim/core/password';
 
 export interface IdentityCorsConfig {
   enabled: boolean;

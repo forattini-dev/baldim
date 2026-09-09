@@ -11,7 +11,7 @@
  * - Timeout after 5 minutes
  */
 
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface InteractiveWizardOptions {
   logger?: Logger;

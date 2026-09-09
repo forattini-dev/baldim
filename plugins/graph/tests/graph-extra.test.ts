@@ -1,4 +1,4 @@
-import { Baldin, MemoryClient, StorageError, type Database } from '@baldin/core';
+import { Baldim, MemoryClient, StorageError, type Database } from '@baldim/core';
 import { afterEach, describe, expect, test } from 'vitest';
 import {
   GraphConfigurationError,
@@ -10,7 +10,7 @@ let sequence = 0;
 const databases: Database[] = [];
 
 function database(label: string): Database {
-  const db = new Baldin({
+  const db = new Baldim({
     connectionString: `memory://plugin-graph-extra-${label}-${++sequence}`,
     logLevel: 'silent',
   });
@@ -48,7 +48,7 @@ afterEach(async () => {
   MemoryClient.clearAllStorage();
 });
 
-describe('@baldin/plugin-graph contracts', () => {
+describe('@baldim/plugin-graph contracts', () => {
   test('removes resource namespaces and its database hook on stop', async () => {
     const db = database('stop');
     await db.connect();

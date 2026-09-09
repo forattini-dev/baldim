@@ -3,7 +3,7 @@ import jsonStableStringify from 'json-stable-stringify';
 import isEqual from 'lodash-es/isEqual.js';
 import * as cron from 'node-cron';
 
-import { Plugin, PluginError, createLogger, resolveResourceNames, tryFn } from '@baldin/core/plugin';
+import { Plugin, PluginError, createLogger, resolveResourceNames, tryFn } from '@baldim/core/plugin';
 import { KubernetesDriver } from './kubernetes-inventory/k8s-driver.js';
 import type { KubernetesDriverOptions } from './kubernetes-inventory/k8s-driver.js';
 

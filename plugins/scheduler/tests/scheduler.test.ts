@@ -1,11 +1,11 @@
-import { Baldin, MemoryClient, type Database } from '@baldin/core';
+import { Baldim, MemoryClient, type Database } from '@baldim/core';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SchedulerPlugin, type JobConfig } from '../src/index.js';
 
 let sequence = 0;
 
 function createDatabase(label: string): Database {
-  return new Baldin({
+  return new Baldim({
     connectionString: `memory://plugin-scheduler-${label}-${++sequence}`,
     logLevel: 'silent',
   });
@@ -24,7 +24,7 @@ beforeEach(() => {
   MemoryClient.clearAllStorage();
 });
 
-describe('@baldin/plugin-scheduler', () => {
+describe('@baldim/plugin-scheduler', () => {
   test('validates required jobs, actions, and cron expressions', () => {
     expect(() => new SchedulerPlugin({ jobs: {} })).toThrow('At least one job must be defined');
     expect(() => new SchedulerPlugin({

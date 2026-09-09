@@ -1,9 +1,9 @@
 /**
- * MCP Prompts for Baldin
+ * MCP Prompts for Baldim
  *
  * 16 pre-defined prompt templates organized in categories:
  * - Creation: Resource, plugin, partition, API setup
- * - Migration: MongoDB, DynamoDB, Prisma to baldin
+ * - Migration: MongoDB, DynamoDB, Prisma to baldim
  * - Debug & Optimization: Connection, query, costs
  * - Learning: Behaviors, partitions, clients, plugins
  * - Integration: Vector RAG, replication
@@ -22,7 +22,7 @@ export const prompts: MCPPrompt[] = [
   // ---------------------------------------------------------------------------
   {
     name: 'create_resource',
-    description: 'Generate a complete baldin resource definition with schema, partitions, and behaviors',
+    description: 'Generate a complete baldim resource definition with schema, partitions, and behaviors',
     arguments: [
       { name: 'name', description: 'Resource name (e.g., users, orders, products)', required: true },
       { name: 'fields', description: 'Comma-separated field definitions (e.g., "name:string, email:string|email, age:number")', required: true },
@@ -33,7 +33,7 @@ export const prompts: MCPPrompt[] = [
   },
   {
     name: 'setup_plugin',
-    description: 'Configure a specific baldin plugin with best practices and examples',
+    description: 'Configure a specific baldim plugin with best practices and examples',
     arguments: [
       { name: 'plugin', description: 'Plugin name (e.g., cache, api, audit, ttl, vector)', required: true },
       { name: 'useCase', description: 'Your specific use case to optimize configuration', required: false },
@@ -63,7 +63,7 @@ export const prompts: MCPPrompt[] = [
   // ---------------------------------------------------------------------------
   {
     name: 'migrate_from_mongodb',
-    description: 'Convert MongoDB/Mongoose schemas and queries to baldin equivalents',
+    description: 'Convert MongoDB/Mongoose schemas and queries to baldim equivalents',
     arguments: [
       { name: 'schema', description: 'MongoDB/Mongoose schema definition to convert', required: true },
       { name: 'queries', description: 'Sample MongoDB queries to translate', required: false },
@@ -71,7 +71,7 @@ export const prompts: MCPPrompt[] = [
   },
   {
     name: 'migrate_from_dynamodb',
-    description: 'Convert DynamoDB table definitions and access patterns to baldin',
+    description: 'Convert DynamoDB table definitions and access patterns to baldim',
     arguments: [
       { name: 'tableDefinition', description: 'DynamoDB table definition (JSON or description)', required: true },
       { name: 'accessPatterns', description: 'GSI/LSI access patterns to preserve', required: false },
@@ -79,7 +79,7 @@ export const prompts: MCPPrompt[] = [
   },
   {
     name: 'migrate_from_prisma',
-    description: 'Convert Prisma schema models to baldin resource definitions',
+    description: 'Convert Prisma schema models to baldim resource definitions',
     arguments: [
       { name: 'schema', description: 'Prisma schema model definition', required: true },
       { name: 'relations', description: 'Include relation handling strategy (true/false)', required: false },
@@ -120,7 +120,7 @@ export const prompts: MCPPrompt[] = [
   // ---------------------------------------------------------------------------
   {
     name: 'explain_behavior',
-    description: 'Understand baldin behaviors and the 2KB S3 metadata limit',
+    description: 'Understand baldim behaviors and the 2KB S3 metadata limit',
     arguments: [
       { name: 'behavior', description: 'Specific behavior to explain (body-overflow, body-only, enforce-limits, truncate-data, user-managed)', required: false },
       { name: 'scenario', description: 'Your specific scenario to get tailored advice', required: false },
@@ -236,7 +236,7 @@ function generateCreateResourcePrompt(args: Record<string, string>): MCPPromptRe
         role: 'user',
         content: {
           type: 'text',
-          text: `Create an baldin resource definition for "${name}" with these requirements:
+          text: `Create an baldim resource definition for "${name}" with these requirements:
 
 **Fields:** ${fields}
 **Behavior:** ${behavior}
@@ -244,7 +244,7 @@ function generateCreateResourcePrompt(args: Record<string, string>): MCPPromptRe
 **Timestamps:** ${timestamps}
 ${behaviorInfo}
 
-## baldin Resource Guidelines
+## baldim Resource Guidelines
 
 ### Field Type Syntax
 - Basic: \`fieldName: 'type'\`
@@ -297,13 +297,13 @@ ${pluginDoc.relatedPlugins?.join(', ') || 'None'}`;
   }
 
   return {
-    description: `Configure the ${plugin} plugin for baldin`,
+    description: `Configure the ${plugin} plugin for baldim`,
     messages: [
       {
         role: 'user',
         content: {
           type: 'text',
-          text: `Help me configure the **${plugin}** plugin for baldin.
+          text: `Help me configure the **${plugin}** plugin for baldim.
 ${useCase ? `\n**My use case:** ${useCase}` : ''}
 ${pluginInfo}
 
@@ -334,7 +334,7 @@ function generatePartitionStrategyPrompt(args: Record<string, string>): MCPPromp
 **Query Patterns:** ${queryPatterns}
 **Data Volume:** ${dataVolume}
 
-## baldin Partitioning Concepts
+## baldim Partitioning Concepts
 
 ### Why Partition?
 - Without partitions: O(n) scan of all objects
@@ -395,7 +395,7 @@ function generateApiServerPrompt(args: Record<string, string>): MCPPromptResult 
         role: 'user',
         content: {
           type: 'text',
-          text: `Generate a complete REST API server with baldin for these resources: **${resourceList.join(', ')}**
+          text: `Generate a complete REST API server with baldim for these resources: **${resourceList.join(', ')}**
 
 **Authentication:** ${authType}
 **Additional Features:** ${featureList.length > 0 ? featureList.join(', ') : 'none'}
@@ -440,13 +440,13 @@ function generateMongoMigrationPrompt(args: Record<string, string>): MCPPromptRe
   const { schema, queries } = args;
 
   return {
-    description: 'Migrate MongoDB schema to baldin',
+    description: 'Migrate MongoDB schema to baldim',
     messages: [
       {
         role: 'user',
         content: {
           type: 'text',
-          text: `Help me migrate from MongoDB/Mongoose to baldin.
+          text: `Help me migrate from MongoDB/Mongoose to baldim.
 
 **MongoDB Schema:**
 \`\`\`javascript
@@ -454,10 +454,10 @@ ${schema}
 \`\`\`
 ${queries ? `\n**Queries to translate:**\n\`\`\`javascript\n${queries}\n\`\`\`` : ''}
 
-## Migration Guide: MongoDB → baldin
+## Migration Guide: MongoDB → baldim
 
 ### Schema Mapping
-| MongoDB | baldin |
+| MongoDB | baldim |
 |---------|------|
 | \`String\` | \`'string'\` |
 | \`Number\` | \`'number'\` |
@@ -469,7 +469,7 @@ ${queries ? `\n**Queries to translate:**\n\`\`\`javascript\n${queries}\n\`\`\`` 
 | \`Buffer\` | \`'binary'\` |
 
 ### Validator Mapping
-| Mongoose | baldin |
+| Mongoose | baldim |
 |----------|------|
 | \`required: true\` | \`'type\\|required'\` |
 | \`unique: true\` | Use partitions + uniqueness checks |
@@ -478,7 +478,7 @@ ${queries ? `\n**Queries to translate:**\n\`\`\`javascript\n${queries}\n\`\`\`` 
 | \`match: regex\` | \`'string\\|pattern:regex'\` |
 
 ### Query Mapping
-| MongoDB | baldin |
+| MongoDB | baldim |
 |---------|------|
 | \`find()\` | \`query()\` or \`list()\` |
 | \`findOne()\` | \`get()\` or \`query({}, { limit: 1 })\` |
@@ -494,8 +494,8 @@ ${queries ? `\n**Queries to translate:**\n\`\`\`javascript\n${queries}\n\`\`\`` 
 4. 2KB metadata limit - choose appropriate behavior
 
 Please provide:
-1. Equivalent baldin resource definition
-2. Translated queries with baldin syntax
+1. Equivalent baldim resource definition
+2. Translated queries with baldim syntax
 3. Partition recommendations based on query patterns
 4. Data migration script
 5. Breaking changes and workarounds`,
@@ -509,13 +509,13 @@ function generateDynamoMigrationPrompt(args: Record<string, string>): MCPPromptR
   const { tableDefinition, accessPatterns } = args;
 
   return {
-    description: 'Migrate DynamoDB table to baldin',
+    description: 'Migrate DynamoDB table to baldim',
     messages: [
       {
         role: 'user',
         content: {
           type: 'text',
-          text: `Help me migrate from DynamoDB to baldin.
+          text: `Help me migrate from DynamoDB to baldim.
 
 **DynamoDB Table Definition:**
 \`\`\`json
@@ -523,10 +523,10 @@ ${tableDefinition}
 \`\`\`
 ${accessPatterns ? `\n**Access Patterns (GSI/LSI):**\n${accessPatterns}` : ''}
 
-## Migration Guide: DynamoDB → baldin
+## Migration Guide: DynamoDB → baldim
 
 ### Key Mapping
-| DynamoDB | baldin |
+| DynamoDB | baldim |
 |----------|------|
 | Partition Key (PK) | Partition definition |
 | Sort Key (SK) | Composite partition or field |
@@ -534,7 +534,7 @@ ${accessPatterns ? `\n**Access Patterns (GSI/LSI):**\n${accessPatterns}` : ''}
 | LSI | Query with sorting |
 
 ### Type Mapping
-| DynamoDB | baldin |
+| DynamoDB | baldim |
 |----------|------|
 | \`S\` (String) | \`'string'\` |
 | \`N\` (Number) | \`'number'\` |
@@ -544,17 +544,17 @@ ${accessPatterns ? `\n**Access Patterns (GSI/LSI):**\n${accessPatterns}` : ''}
 | \`M\` (Map) | \`'object'\` |
 | \`SS/NS/BS\` (Sets) | \`'array'\` |
 
-### Single-Table Design → baldin
+### Single-Table Design → baldim
 DynamoDB single-table patterns can be split into:
 1. Multiple resources (cleaner)
 2. Single resource with type field (preserve pattern)
 
 ### Cost Comparison
 - DynamoDB: Pay per request (RCU/WCU)
-- baldin: Pay per S3 operation (~$0.0004/1000 requests)
+- baldim: Pay per S3 operation (~$0.0004/1000 requests)
 
 Please provide:
-1. Equivalent baldin resource definition(s)
+1. Equivalent baldim resource definition(s)
 2. Partition strategy matching access patterns
 3. Query translations for each GSI/LSI pattern
 4. Data migration approach
@@ -569,13 +569,13 @@ function generatePrismaMigrationPrompt(args: Record<string, string>): MCPPromptR
   const { schema, relations } = args;
 
   return {
-    description: 'Migrate Prisma schema to baldin',
+    description: 'Migrate Prisma schema to baldim',
     messages: [
       {
         role: 'user',
         content: {
           type: 'text',
-          text: `Help me migrate from Prisma to baldin.
+          text: `Help me migrate from Prisma to baldim.
 
 **Prisma Schema:**
 \`\`\`prisma
@@ -583,10 +583,10 @@ ${schema}
 \`\`\`
 ${relations === 'true' ? '\n**Include relation handling strategy**' : ''}
 
-## Migration Guide: Prisma → baldin
+## Migration Guide: Prisma → baldim
 
 ### Type Mapping
-| Prisma | baldin |
+| Prisma | baldim |
 |--------|------|
 | \`String\` | \`'string'\` |
 | \`Int\` | \`'number\\|integer'\` |
@@ -599,7 +599,7 @@ ${relations === 'true' ? '\n**Include relation handling strategy**' : ''}
 | \`Decimal\` | \`'decimal'\` |
 
 ### Attribute Mapping
-| Prisma | baldin |
+| Prisma | baldim |
 |--------|------|
 | \`@id\` | Auto-generated id field |
 | \`@unique\` | Partition + unique check |
@@ -609,13 +609,13 @@ ${relations === 'true' ? '\n**Include relation handling strategy**' : ''}
 | \`@@unique()\` | Composite partition |
 
 ### Relation Handling
-baldin doesn't have native relations like Prisma. Options:
+baldim doesn't have native relations like Prisma. Options:
 1. **Denormalization**: Embed related data
 2. **RelationsPlugin**: Manage foreign keys
 3. **Manual joins**: Query and merge in application
 
 Please provide:
-1. Equivalent baldin resource definition(s)
+1. Equivalent baldim resource definition(s)
 2. Relation handling strategy ${relations === 'true' ? 'with RelationsPlugin setup' : ''}
 3. Query translations (findUnique, findMany, include, select)
 4. Migration script from existing PostgreSQL data
@@ -642,7 +642,7 @@ function generateDebugConnectionPrompt(args: Record<string, string>): MCPPromptR
         role: 'user',
         content: {
           type: 'text',
-          text: `Help me debug my baldin connection issue.
+          text: `Help me debug my baldim connection issue.
 
 **Connection String (redacted):** \`${redactedString}\`
 ${errorMessage ? `**Error Message:** ${errorMessage}` : ''}
@@ -661,7 +661,7 @@ http://ACCESS_KEY:SECRET_KEY@localhost:9000/bucket-name
 memory://bucket/path
 
 # FileSystem (testing)
-file:///tmp/baldin
+file:///tmp/baldim
 \`\`\`
 
 ### Common Issues
@@ -724,7 +724,7 @@ ${dataSize ? `**Approximate Record Count:** ${dataSize}` : ''}
 
 ## Query Performance Guide
 
-### Understanding baldin Query Performance
+### Understanding baldim Query Performance
 
 #### Without Partitions (O(n))
 - Lists ALL objects in bucket prefix
@@ -797,13 +797,13 @@ function generateOptimizeCostsPrompt(args: Record<string, string>): MCPPromptRes
         role: 'user',
         content: {
           type: 'text',
-          text: `Help me optimize my baldin AWS costs.
+          text: `Help me optimize my baldim AWS costs.
 ${currentUsage ? `\n**Current Usage:** ${currentUsage}` : ''}
 ${accessPatterns ? `\n**Access Patterns:** ${accessPatterns}` : ''}
 
 ## AWS S3 Cost Optimization Guide
 
-### baldin Cost Structure
+### baldim Cost Structure
 | Operation | S3 Cost | Frequency |
 |-----------|---------|-----------|
 | PUT (insert/update) | $0.005/1000 | Writes |
@@ -881,25 +881,25 @@ function generateExplainBehaviorPrompt(args: Record<string, string>): MCPPromptR
     : behaviors;
 
   return {
-    description: 'Explain baldin behaviors and 2KB limit',
+    description: 'Explain baldim behaviors and 2KB limit',
     messages: [
       {
         role: 'user',
         content: {
           type: 'text',
-          text: `Explain baldin behaviors${behavior ? ` (specifically "${behavior}")` : ''}.
+          text: `Explain baldim behaviors${behavior ? ` (specifically "${behavior}")` : ''}.
 ${scenario ? `\n**My scenario:** ${scenario}` : ''}
 
 ## The 2KB S3 Metadata Limit
 
 ### Why It Exists
-AWS S3 limits object metadata to 2KB. baldin stores document data in metadata for:
+AWS S3 limits object metadata to 2KB. baldim stores document data in metadata for:
 - Single-request reads (no body download)
 - Atomic updates via COPY operation
 - Better performance for small documents
 
 ### What Happens When Data Exceeds 2KB
-This is where **behaviors** come in - they define how baldin handles overflow.
+This is where **behaviors** come in - they define how baldim handles overflow.
 
 ## Available Behaviors
 
@@ -949,16 +949,16 @@ function generateExplainPartitionsPrompt(args: Record<string, string>): MCPPromp
   const { useCase } = args;
 
   return {
-    description: 'Explain baldin partitions',
+    description: 'Explain baldim partitions',
     messages: [
       {
         role: 'user',
         content: {
           type: 'text',
-          text: `Explain baldin partitions and when to use them.
+          text: `Explain baldim partitions and when to use them.
 ${useCase ? `\n**My use case:** ${useCase}` : ''}
 
-## Partitioning in baldin
+## Partitioning in baldim
 
 ### The Problem: O(n) Queries
 Without partitions, every query must:
@@ -1050,13 +1050,13 @@ function generateCompareClientsPrompt(args: Record<string, string>): MCPPromptRe
   const { environment = 'all' } = args;
 
   return {
-    description: 'Compare baldin storage clients',
+    description: 'Compare baldim storage clients',
     messages: [
       {
         role: 'user',
         content: {
           type: 'text',
-          text: `Compare baldin storage clients${environment !== 'all' ? ` for ${environment} environment` : ''}.
+          text: `Compare baldim storage clients${environment !== 'all' ? ` for ${environment} environment` : ''}.
 
 ## Storage Clients Comparison
 
@@ -1097,7 +1097,7 @@ const db = createDatabase('s3://KEY:SECRET@bucket?region=us-east-1');
 const db = createDatabase('http://minioadmin:minioadmin@localhost:9000/dev');
 
 // Or FileSystem for simplicity
-const db = createDatabase('file:///tmp/baldin-dev');
+const db = createDatabase('file:///tmp/baldim-dev');
 \`\`\`
 
 ### Local SQLite
@@ -1114,7 +1114,7 @@ const db = createDatabase('memory://test');
 ### Testing (Integration)
 \`\`\`javascript
 // FileSystem for realistic behavior
-const db = createDatabase('file:///tmp/baldin-test-' + Date.now());
+const db = createDatabase('file:///tmp/baldim-test-' + Date.now());
 \`\`\`
 
 ### CI/CD
@@ -1220,7 +1220,7 @@ function generateVectorRagPrompt(args: Record<string, string>): MCPPromptResult 
         role: 'user',
         content: {
           type: 'text',
-          text: `Help me set up vector embeddings and RAG with baldin.
+          text: `Help me set up vector embeddings and RAG with baldim.
 
 **Embedding Provider:** ${embeddingProvider}
 **Dimensions:** ${dimensions}
@@ -1373,7 +1373,7 @@ function generateReplicationPrompt(args: Record<string, string>): MCPPromptResul
         role: 'user',
         content: {
           type: 'text',
-          text: `Help me set up data replication from baldin to ${target}.
+          text: `Help me set up data replication from baldim to ${target}.
 
 **Target:** ${target}
 **Resources:** ${resources}
@@ -1401,7 +1401,7 @@ database.use(new ReplicatorPlugin({
 database.use(new ReplicatorPlugin({
   driver: 'bigquery',
   projectId: process.env.GCP_PROJECT,
-  dataset: 'baldin_replica',
+  dataset: 'baldim_replica',
   resources: ${resources === 'all' ? "'*'" : `['${resources.split(',').join("', '")}']`},
   mode: '${mode}',
 }));
@@ -1443,8 +1443,8 @@ database.use(new ReplicatorPlugin({
 
 ## Schema Mapping
 
-baldin types map to target schemas:
-| baldin | PostgreSQL | BigQuery |
+baldim types map to target schemas:
+| baldim | PostgreSQL | BigQuery |
 |------|------------|----------|
 | string | TEXT | STRING |
 | number | NUMERIC | FLOAT64 |

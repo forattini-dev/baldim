@@ -1,5 +1,5 @@
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { CostsPlugin } from '../src/index.js';
 import { detectProvider, getPricingForProvider } from '../src/pricing.js';
 
@@ -7,7 +7,7 @@ describe('CostsPlugin lifecycle', () => {
   beforeEach(() => MemoryClient.clearAllStorage());
 
   it('detects the active adapter and records real client operations', async () => {
-    const database = new Baldin({ connectionString: 'memory://costs-lifecycle', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://costs-lifecycle', logLevel: 'silent' });
     await database.connect();
     const plugin = new CostsPlugin();
 
@@ -28,7 +28,7 @@ describe('CostsPlugin lifecycle', () => {
   });
 
   it('starts idempotently and removes client instrumentation when uninstalled', async () => {
-    const database = new Baldin({ connectionString: 'memory://costs-cleanup', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://costs-cleanup', logLevel: 'silent' });
     await database.connect();
     const plugin = new CostsPlugin({ provider: 'aws-s3' });
 

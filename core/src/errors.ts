@@ -1,12 +1,12 @@
 /**
- * Baldin Error Classes
+ * Baldim Error Classes
  *
- * Typed error hierarchy for Baldin operations.
+ * Typed error hierarchy for Baldim operations.
  */
 
 import type { StringRecord } from './types/common.types.js';
 
-/** Base error context for all Baldin errors */
+/** Base error context for all Baldim errors */
 export interface BaseErrorContext {
   verbose?: boolean;
   bucket?: string;
@@ -818,7 +818,7 @@ ${
   • Use strictValidation: false to skip this check during testing`
 }
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/docs/README.md#partitions
+Docs: https://github.com/forattini-dev/baldim/blob/main/docs/README.md#partitions
 `.trim();
     }
 
@@ -860,7 +860,7 @@ Possible causes:
 Solution:
 Ensure plugin is added to database and connect() is called before usage.
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/docs/plugins/README.md
+Docs: https://github.com/forattini-dev/baldim/blob/main/docs/plugins/README.md
 `.trim();
     }
 
@@ -908,7 +908,7 @@ Possible causes:
 Solution:
 Ensure plugin has access to storage and key is valid.
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/docs/plugins/reference/plugin-storage.md
+Docs: https://github.com/forattini-dev/baldim/blob/main/docs/plugins/reference/plugin-storage.md
 `.trim();
     }
 
@@ -1000,7 +1000,7 @@ Possible causes:
 Solution:
 Use one of the available behaviors or register custom behavior.
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/docs/README.md#behaviors
+Docs: https://github.com/forattini-dev/baldim/blob/main/docs/README.md#behaviors
 `.trim();
     }
 
@@ -1040,7 +1040,7 @@ Possible causes:
 Solution:
 Check stream configuration and resource availability.
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/docs/README.md#streaming
+Docs: https://github.com/forattini-dev/baldim/blob/main/docs/README.md#streaming
 `.trim();
     }
 
@@ -1104,7 +1104,7 @@ Example:
     attributes: { ... }
   });
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/docs/README.md#metadata-size-limits
+Docs: https://github.com/forattini-dev/baldim/blob/main/docs/README.md#metadata-size-limits
 `.trim();
     }
 
@@ -1174,7 +1174,7 @@ Correct initialization order:
   3. Create resources: await db.createResource({ name: '${resourceName}', ... })
   4. Analytics resources are auto-created by plugin
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/docs/plugins/eventual-consistency.md
+Docs: https://github.com/forattini-dev/baldim/blob/main/docs/plugins/eventual-consistency.md
 `.trim();
 
     super(message, {

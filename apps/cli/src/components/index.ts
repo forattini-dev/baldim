@@ -1,5 +1,5 @@
 /**
- * Baldin CLI Components
+ * Baldim CLI Components
  *
  * Re-exports all CLI UI components using tuiuiu.js
  */

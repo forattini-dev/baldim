@@ -6,8 +6,8 @@
  */
 
 import { AuthDriver, AuthDriverContext, AuthenticateRequest, AuthenticateResult } from './auth-driver.interface.js';
-import { PluginError } from '@baldin/core/plugin';
-import { tryFn } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 
 export interface ClientCredentialsAuthDriverOptions {
   // Reserved for future options

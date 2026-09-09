@@ -7,7 +7,7 @@ import {
   type Logger,
   type PluginOptions,
   type SupportedMethod,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 import type { Server, IncomingMessage, ServerResponse } from 'http';
 
 interface Resource {

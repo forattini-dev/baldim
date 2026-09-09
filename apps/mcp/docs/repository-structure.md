@@ -1,25 +1,25 @@
 # Repository structure
 
-Baldin is organized around packages that can be built, tested, versioned, and
+Baldim is organized around packages that can be built, tested, versioned, and
 published independently. The package boundary comes before the source-code
 boundary, so every package owns its own `src/`, `package.json`, tests, and
 dependencies.
 
 ```text
-baldin/
-|-- core/                 @baldin/core
+baldim/
+|-- core/                 @baldim/core
 |   |-- src/
 |   `-- tests/
 |-- adapters/
-|   `-- <adapter>/        @baldin/adapter-<adapter>
+|   `-- <adapter>/        @baldim/adapter-<adapter>
 |       |-- src/
 |       `-- tests/
 |-- plugins/
-|   `-- <plugin>/         @baldin/plugin-<plugin>
+|   `-- <plugin>/         @baldim/plugin-<plugin>
 |       |-- src/
 |       `-- tests/
 |-- packages/
-|   `-- <library>/        @baldin/<library>
+|   `-- <library>/        @baldim/<library>
 |       |-- src/
 |       `-- tests/
 `-- apps/

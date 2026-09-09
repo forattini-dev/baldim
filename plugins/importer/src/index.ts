@@ -1,4 +1,4 @@
-import { Plugin, PluginError, tryFn, type PluginOptions } from '@baldin/core/plugin';
+import { Plugin, PluginError, tryFn, type PluginOptions } from '@baldim/core/plugin';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as readline from 'readline';

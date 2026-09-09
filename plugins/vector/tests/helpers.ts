@@ -3,5 +3,5 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 export function createTemporaryPathForTest(scope: string): Promise<string> {
-  return mkdtemp(join(tmpdir(), `baldin-vector-${scope}-`));
+  return mkdtemp(join(tmpdir(), `baldim-vector-${scope}-`));
 }

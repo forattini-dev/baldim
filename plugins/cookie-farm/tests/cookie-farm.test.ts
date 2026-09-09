@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 import { CookieFarmPlugin } from '../src/index.js';
-import { PuppeteerPlugin as BasePuppeteerPlugin } from '@baldin/plugin-puppeteer';
+import { PuppeteerPlugin as BasePuppeteerPlugin } from '@baldim/plugin-puppeteer';
 import { createMemoryDatabaseForTest } from './helpers.js';
 
 class PuppeteerPluginStub extends BasePuppeteerPlugin {

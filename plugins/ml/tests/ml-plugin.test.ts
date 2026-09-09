@@ -1,14 +1,14 @@
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MLPlugin } from '../src/index.js';
 
-const databases: Baldin[] = [];
+const databases: Baldim[] = [];
 
-async function createDatabase(label: string): Promise<Baldin> {
-  const database = new Baldin({
+async function createDatabase(label: string): Promise<Baldim> {
+  const database = new Baldim({
     client: new MemoryClient({
-      bucket: `baldin-ml-${label}-${Date.now()}-${Math.random()}`,
+      bucket: `baldim-ml-${label}-${Date.now()}-${Math.random()}`,
       keyPrefix: 'tests/',
       logLevel: 'silent',
     }),

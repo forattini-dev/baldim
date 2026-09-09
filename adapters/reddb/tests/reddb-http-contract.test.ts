@@ -110,9 +110,9 @@ afterAll(async () => {
   await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
 });
 
-runStorageAdapterContract('@baldin/adapter-reddb HTTP', () => new RedDbClient({
+runStorageAdapterContract('@baldim/adapter-reddb HTTP', () => new RedDbClient({
   baseUrl,
-  collection: 'baldin_contract',
+  collection: 'baldim_contract',
   keyPrefix: `case-${++prefixSequence}`,
   logLevel: 'silent'
 }));
@@ -138,18 +138,18 @@ it('sends read and write credentials through the HTTP transport', async () => {
   await client.destroy();
 });
 
-const configuredRedDbUrl = process.env.BALDIN_REDDB_CONTRACT_URL;
+const configuredRedDbUrl = process.env.BALDIM_REDDB_CONTRACT_URL;
 if (configuredRedDbUrl) {
-  runStorageAdapterContract('@baldin/adapter-reddb configured service', () => new RedDbClient({
+  runStorageAdapterContract('@baldim/adapter-reddb configured service', () => new RedDbClient({
     baseUrl: configuredRedDbUrl,
-    collection: process.env.BALDIN_REDDB_COLLECTION || 'baldin_contract',
+    collection: process.env.BALDIM_REDDB_COLLECTION || 'baldim_contract',
     keyPrefix: `run-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    authToken: process.env.BALDIN_REDDB_AUTH_TOKEN,
-    writeToken: process.env.BALDIN_REDDB_WRITE_TOKEN,
+    authToken: process.env.BALDIM_REDDB_AUTH_TOKEN,
+    writeToken: process.env.BALDIM_REDDB_WRITE_TOKEN,
     logLevel: 'silent'
   }));
 } else {
-  describe.skip('@baldin/adapter-reddb configured service', () => {
-    it('runs when BALDIN_REDDB_CONTRACT_URL is configured', () => undefined);
+  describe.skip('@baldim/adapter-reddb configured service', () => {
+    it('runs when BALDIM_REDDB_CONTRACT_URL is configured', () => undefined);
   });
 }

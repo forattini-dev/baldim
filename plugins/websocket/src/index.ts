@@ -1,5 +1,5 @@
 /**
- * WebSocket Plugin - Real-time communication for Baldin resources
+ * WebSocket Plugin - Real-time communication for Baldim resources
  *
  * Provides WebSocket server with real-time subscriptions, broadcasts, and CRUD operations.
  * Uses raffel's WebSocket adapter for connection management, heartbeat, channels,
@@ -37,7 +37,7 @@
  * await database.usePlugin(wsPlugin);
  */
 
-import { Plugin } from '@baldin/core/plugin';
+import { Plugin } from '@baldim/core/plugin';
 import {
   WebSocketServer,
   WebSocketOptions,

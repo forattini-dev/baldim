@@ -1,6 +1,6 @@
 import pino, { Logger as PinoLogger, LoggerOptions as PinoLoggerOptions, TransportSingleOptions, DestinationStream } from 'pino';
 import { createRedactRules } from './logger-redact.js';
-import { getBaldinEnvironment } from './environment.js';
+import { getBaldimEnvironment } from './environment.js';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'silent';
 export type LogFormat = 'json' | 'pretty';
@@ -14,16 +14,16 @@ export interface LoggerOptions {
   redactPatterns?: RegExp[];
 }
 
-export interface BaldinLogger extends PinoLogger {}
-/** @deprecated Use BaldinLogger. */
-export type S3DBLogger = BaldinLogger;
+export interface BaldimLogger extends PinoLogger {}
+/** @deprecated Use BaldimLogger. */
+export type S3DBLogger = BaldimLogger;
 
-export type Logger = BaldinLogger;
+export type Logger = BaldimLogger;
 
-let globalLogger: BaldinLogger | null = null;
+let globalLogger: BaldimLogger | null = null;
 let sharedPrettyTransport: ReturnType<typeof pino.transport> | null = null;
 let sharedDestination: DestinationStream | null = null;
-const namedLoggers: Map<string, BaldinLogger> = new Map();
+const namedLoggers: Map<string, BaldimLogger> = new Map();
 
 function serializeError(err: unknown): Record<string, unknown> | unknown {
   if (!err || typeof err !== 'object') {
@@ -63,7 +63,7 @@ function getSharedPrettyTransport(): ReturnType<typeof pino.transport> {
 }
 
 function getSharedDestination(format?: LogFormat): DestinationStream | undefined {
-  const envFormat = getBaldinEnvironment('LOG_FORMAT')?.toLowerCase();
+  const envFormat = getBaldimEnvironment('LOG_FORMAT')?.toLowerCase();
   const effectiveFormat = format ?? (envFormat === 'json' ? 'json' : 'pretty');
 
   if (effectiveFormat === 'json') {
@@ -77,7 +77,7 @@ function getSharedDestination(format?: LogFormat): DestinationStream | undefined
 }
 
 function createDefaultTransport(): TransportSingleOptions | undefined {
-  const envFormat = getBaldinEnvironment('LOG_FORMAT')?.toLowerCase();
+  const envFormat = getBaldimEnvironment('LOG_FORMAT')?.toLowerCase();
 
   if (envFormat === 'json') {
     return undefined;
@@ -86,7 +86,7 @@ function createDefaultTransport(): TransportSingleOptions | undefined {
   return createPrettyTransport();
 }
 
-export function createLogger(options: LoggerOptions = {}): BaldinLogger {
+export function createLogger(options: LoggerOptions = {}): BaldimLogger {
   const {
     level = 'info',
     name,
@@ -119,22 +119,22 @@ export function createLogger(options: LoggerOptions = {}): BaldinLogger {
     config.transport = createDefaultTransport();
   }
 
-  let logger: BaldinLogger;
+  let logger: BaldimLogger;
   if (destination) {
-    logger = pino({ ...config, name }, destination) as BaldinLogger;
+    logger = pino({ ...config, name }, destination) as BaldimLogger;
   } else {
-    logger = pino({ ...config, name }) as BaldinLogger;
+    logger = pino({ ...config, name }) as BaldimLogger;
   }
 
   const baseBindings = name ? { ...normalizedBindings, name } : normalizedBindings;
   if (baseBindings && Object.keys(baseBindings).length > 0) {
-    logger = logger.child(baseBindings) as BaldinLogger;
+    logger = logger.child(baseBindings) as BaldimLogger;
   }
 
   return logger;
 }
 
-export function getLogger(name: string, options: Omit<LoggerOptions, 'name'> = {}): BaldinLogger {
+export function getLogger(name: string, options: Omit<LoggerOptions, 'name'> = {}): BaldimLogger {
   const cached = namedLoggers.get(name);
   if (cached) {
     return cached;
@@ -145,7 +145,7 @@ export function getLogger(name: string, options: Omit<LoggerOptions, 'name'> = {
   return logger;
 }
 
-export function getGlobalLogger(options: LoggerOptions = {}): BaldinLogger {
+export function getGlobalLogger(options: LoggerOptions = {}): BaldimLogger {
   if (!globalLogger) {
     globalLogger = createLogger(options);
   }
@@ -162,11 +162,11 @@ export function resetGlobalLogger(): void {
 export function getLoggerOptionsFromEnv(configOptions: LoggerOptions = {}): LoggerOptions {
   const options: LoggerOptions = { ...configOptions };
 
-  const level = getBaldinEnvironment('LOG_LEVEL');
+  const level = getBaldimEnvironment('LOG_LEVEL');
   if (level) options.level = level as LogLevel;
 
-  const configuredFormat = getBaldinEnvironment('LOG_FORMAT');
-  const pretty = getBaldinEnvironment('LOG_PRETTY');
+  const configuredFormat = getBaldimEnvironment('LOG_FORMAT');
+  const pretty = getBaldimEnvironment('LOG_PRETTY');
   if (configuredFormat) {
     const format = configuredFormat.toLowerCase();
     if (format === 'json' || format === 'pretty') {

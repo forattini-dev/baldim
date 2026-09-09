@@ -1,14 +1,14 @@
-import { MemoryClient } from '@baldin/adapter-memory';
-import { Baldin } from '@baldin/core';
+import { MemoryClient } from '@baldim/adapter-memory';
+import { Baldim } from '@baldim/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SpiderPlugin } from '../src/index.js';
 
-const databases: Baldin[] = [];
+const databases: Baldim[] = [];
 
-async function createDatabase(): Promise<Baldin> {
-  const database = new Baldin({
+async function createDatabase(): Promise<Baldim> {
+  const database = new Baldim({
     client: new MemoryClient({
-      bucket: `baldin-spider-${Date.now()}-${Math.random()}`,
+      bucket: `baldim-spider-${Date.now()}-${Math.random()}`,
       keyPrefix: 'tests/',
       logLevel: 'silent',
     }),
@@ -23,7 +23,7 @@ afterEach(async () => {
   while (databases.length > 0) await databases.pop()!.disconnect();
 });
 
-describe('SpiderPlugin with Baldin', () => {
+describe('SpiderPlugin with Baldim', () => {
   it('installs its composed plugins and memory crawl backends', async () => {
     const database = await createDatabase();
     const spider = new SpiderPlugin({

@@ -25,7 +25,7 @@ import {
   metadataDecode,
   metadataEncode,
   tryFn,
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 import { normalizeHttpClientRetryConfig } from './client-compat.js';
 import { parseS3ConnectionString, type S3ConnectionConfig } from './connection-string.js';
 import type {
@@ -38,7 +38,7 @@ import type {
   StorageListObjectsParams,
   GetKeysPageParams,
   QueueStats,
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 import { HTTP_CLIENT_PROFILES } from './types.js';
 import type { HttpClientOptions, HttpClientProfile, ReckerHttpHandlerOptions, S3ClientConfig } from './types.js';
 

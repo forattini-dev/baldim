@@ -1,7 +1,7 @@
 /**
  * Tournament Plugin Tests
  */
-import { Baldin as Database } from '@baldin/core';
+import { Baldim as Database } from '@baldim/core';
 import { TournamentPlugin } from '../src/index.js';
 
 describe('TournamentPlugin', () => {

@@ -1,12 +1,12 @@
-# @baldin/plugin-metrics
+# @baldim/plugin-metrics
 
-Operation metrics, persistent telemetry, error and performance logs, and Prometheus output for Baldin.
+Operation metrics, persistent telemetry, error and performance logs, and Prometheus output for Baldim.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { MetricsPlugin } from '@baldin/plugin-metrics';
+import { Baldim } from '@baldim/core';
+import { MetricsPlugin } from '@baldim/plugin-metrics';
 
-const db = new Baldin({ connectionString: 'memory://metrics' });
+const db = new Baldim({ connectionString: 'memory://metrics' });
 await db.connect();
 
 const metrics = new MetricsPlugin({

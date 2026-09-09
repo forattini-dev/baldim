@@ -1,14 +1,14 @@
-# @baldin/plugin-importer
+# @baldim/plugin-importer
 
-Streaming file imports for Baldin resources. The plugin supports JSON arrays,
+Streaming file imports for Baldim resources. The plugin supports JSON arrays,
 JSONL/NDJSON, CSV, TSV, and gzip-compressed variants, with field mapping,
 transformations, validation, deduplication, batching, and progress events.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { ImporterPlugin, Transformers } from '@baldin/plugin-importer';
+import { Baldim } from '@baldim/core';
+import { ImporterPlugin, Transformers } from '@baldim/plugin-importer';
 
-const database = new Baldin({ connectionString: 'memory://imports' });
+const database = new Baldim({ connectionString: 'memory://imports' });
 await database.connect();
 
 await database.createResource({

@@ -127,7 +127,7 @@ export function MFABackupCodesPage(props: MFABackupCodesPageProps = {}): HtmlEsc
 
     <script>
       const codes = ${JSON.stringify(backupCodes)};
-      const title = '${config.title || 'Baldin Identity'}';
+      const title = '${config.title || 'Baldim Identity'}';
 
       function downloadBackupCodes() {
         const text = 'MFA Backup Codes - ' + title + '\\n\\n' +

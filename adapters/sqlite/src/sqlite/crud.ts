@@ -1,7 +1,7 @@
 import { chunk } from 'lodash-es';
 
-import { normalizeEtagHeader } from '@baldin/core/adapter';
-import { mapStorageError, DatabaseError, ResourceError, BaseError, NoSuchKey } from '@baldin/core/adapter';
+import { normalizeEtagHeader } from '@baldim/core/adapter';
+import { mapStorageError, DatabaseError, ResourceError, BaseError, NoSuchKey } from '@baldim/core/adapter';
 import type {
   StoragePutObjectParams,
   StorageCopyObjectParams,
@@ -9,7 +9,7 @@ import type {
   StoragePutObjectResponse,
   StorageCopyObjectResponse,
   StorageDeleteObjectResponse
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 import type { DbRow } from './types.js';
 import { SqliteClientPartitions } from './partitions.js';
 

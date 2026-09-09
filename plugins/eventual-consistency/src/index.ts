@@ -3,8 +3,8 @@
  * @module eventual-consistency
  */
 
-import { CoordinatorPlugin, type IntervalHandle } from '@baldin/core/coordinator';
-import { PluginError, PluginStorage } from '@baldin/core/plugin';
+import { CoordinatorPlugin, type IntervalHandle } from '@baldim/core/coordinator';
+import { PluginError, PluginStorage } from '@baldim/core/plugin';
 
 import {
   createConfig,

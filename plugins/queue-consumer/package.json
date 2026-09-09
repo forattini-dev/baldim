@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/plugin-queue-consumer",
+  "name": "@baldim/plugin-queue-consumer",
   "version": "0.1.1",
   "type": "module",
-  "description": "Queue consumers and publishers for Baldin with optional SQS, RabbitMQ, Redis, and BullMQ drivers.",
+  "description": "Queue consumers and publishers for Baldim with optional SQS, RabbitMQ, Redis, and BullMQ drivers.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "plugins/queue-consumer"
   },
   "main": "./dist/index.js",
@@ -42,7 +42,7 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-sqs": ">=3",
-    "@baldin/core": "^0.2.0",
+    "@baldim/core": "^0.2.0",
     "amqplib": ">=0.10",
     "bullmq": ">=5",
     "ioredis": ">=5"
@@ -62,8 +62,8 @@
     }
   },
   "devDependencies": {
-    "@baldin/core": "workspace:*",
-    "@baldin/adapter-memory": "workspace:*",
+    "@baldim/core": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
     "@types/node": "25.5.2",
     "typescript": "6.0.2"
   }

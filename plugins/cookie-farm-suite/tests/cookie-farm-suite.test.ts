@@ -1,5 +1,5 @@
 import { CookieFarmSuitePlugin } from '../src/index.js';
-import { PuppeteerPlugin as BasePuppeteerPlugin } from '@baldin/plugin-puppeteer';
+import { PuppeteerPlugin as BasePuppeteerPlugin } from '@baldim/plugin-puppeteer';
 import { createMemoryDatabaseForTest } from './helpers.js';
 
 class PuppeteerPluginStub extends BasePuppeteerPlugin {

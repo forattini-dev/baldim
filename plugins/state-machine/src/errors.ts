@@ -1,4 +1,4 @@
-import { StorageError } from '@baldin/core';
+import { StorageError } from '@baldim/core';
 
 export interface StateMachineErrorDetails {
   currentState?: string;
@@ -35,7 +35,7 @@ Common causes:
 Solution:
 Check state machine configuration and valid transitions.
 
-Docs: https://github.com/forattini-dev/baldin/tree/main/plugins/state-machine
+Docs: https://github.com/forattini-dev/baldim/tree/main/plugins/state-machine
 `.trim();
     }
 

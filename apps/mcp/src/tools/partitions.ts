@@ -1,5 +1,5 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
-import type { Baldin } from '@baldin/core';
+import type { BaldimMCPServer } from '../entrypoint.js';
+import type { Baldim } from '@baldim/core';
 import type {
   ResourceListPartitionsArgs,
   ResourceListPartitionValuesArgs,
@@ -80,9 +80,9 @@ export const partitionTools = [
   }
 ];
 
-export function createPartitionHandlers(server: BaldinMCPServer) {
+export function createPartitionHandlers(server: BaldimMCPServer) {
   return {
-    async resourceListPartitions(args: ResourceListPartitionsArgs, database: Baldin): Promise<any> {
+    async resourceListPartitions(args: ResourceListPartitionsArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName } = args;
       const resource = server.getResource(database, resourceName);
@@ -98,7 +98,7 @@ export function createPartitionHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async resourceListPartitionValues(args: ResourceListPartitionValuesArgs, database: Baldin): Promise<any> {
+    async resourceListPartitionValues(args: ResourceListPartitionValuesArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, partitionName, limit = 1000 } = args;
       const resource = server.getResource(database, resourceName);
@@ -148,7 +148,7 @@ export function createPartitionHandlers(server: BaldinMCPServer) {
       }
     },
 
-    async dbFindOrphanedPartitions(args: DbFindOrphanedPartitionsArgs, database: Baldin): Promise<any> {
+    async dbFindOrphanedPartitions(args: DbFindOrphanedPartitionsArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName } = args;
 
@@ -176,7 +176,7 @@ export function createPartitionHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async dbRemoveOrphanedPartitions(args: DbRemoveOrphanedPartitionsArgs, database: Baldin): Promise<any> {
+    async dbRemoveOrphanedPartitions(args: DbRemoveOrphanedPartitionsArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, dryRun = true } = args;
       const resource = server.getResource(database, resourceName);

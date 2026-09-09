@@ -1,4 +1,4 @@
-import type { S3Client } from '@baldin/adapter-s3';
+import type { S3Client } from '@baldim/adapter-s3';
 import type { ObjectStorageClient } from '../src/index.js';
 
 declare const client: S3Client;

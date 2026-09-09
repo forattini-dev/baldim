@@ -1,4 +1,4 @@
-import { mapStorageError, DatabaseError, BaseError } from '@baldin/core/adapter';
+import { mapStorageError, DatabaseError, BaseError } from '@baldim/core/adapter';
 import type {
   StoragePutObjectParams,
   StorageCopyObjectParams,
@@ -10,7 +10,7 @@ import type {
   StorageListObjectsParams,
   StorageListObjectsResponse,
   QueueStats
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 import type { CommandInput, Command } from './sqlite/types.js';
 import { SqliteClientVec } from './sqlite/vec.js';
 

@@ -1,5 +1,5 @@
-import { isBcryptHash, verifyPassword as verifyBcryptPassword } from '@baldin/core/password';
-import { decode as decodeBase62 } from '@baldin/core/encoding';
+import { isBcryptHash, verifyPassword as verifyBcryptPassword } from '@baldim/core/password';
+import { decode as decodeBase62 } from '@baldim/core/encoding';
 
 interface PasswordThreadPool {
   enabled: boolean;

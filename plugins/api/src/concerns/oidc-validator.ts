@@ -1,9 +1,9 @@
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger, LogLevel } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger, LogLevel } from '@baldim/core/plugin';
 
 const logger: Logger = createLogger({
   name: 'OidcValidator',
-  level: (process.env.BALDIN_LOG_LEVEL || 'info') as LogLevel
+  level: (process.env.BALDIM_LOG_LEVEL || 'info') as LogLevel
 });
 
 export interface IdTokenClaims {

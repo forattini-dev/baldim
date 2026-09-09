@@ -1,4 +1,4 @@
-import { registerStorageAdapter, type StorageAdapterContext } from '@baldin/core/adapter';
+import { registerStorageAdapter, type StorageAdapterContext } from '@baldim/core/adapter';
 import { RedDbClient } from './reddb-client.class.js';
 import type { RedDbClientConfig } from './reddb-types.js';
 export { RedDbClient } from './reddb-client.class.js';
@@ -21,4 +21,4 @@ export function createRedDbStorageClient(context: StorageAdapterContext): RedDbC
     logger: context.logger as RedDbClientConfig['logger'],
   });
 }
-export const unregisterRedDbAdapter = registerStorageAdapter('reddb', (context) => createRedDbStorageClient(context) as unknown as import('@baldin/core/adapter').Client);
+export const unregisterRedDbAdapter = registerStorageAdapter('reddb', (context) => createRedDbStorageClient(context) as unknown as import('@baldim/core/adapter').Client);

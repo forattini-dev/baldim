@@ -1,3 +1,3 @@
-# @baldin/adapter-filesystem
+# @baldim/adapter-filesystem
 
-Import this package to register the ile: protocol with Baldin.
+Import this package to register the ile: protocol with Baldim.

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Baldin } from '@baldin/core';
+import { Baldim } from '@baldim/core';
 import { FileSystemClient } from '../src/index.js';
 
 const fixture = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 's3db-v21-filesystem');
@@ -33,7 +33,7 @@ afterEach(async () => {
 
 describe('s3db.js persisted-data compatibility', () => {
   it('opens v21 metadata, bodies, and partitions without rewriting the fixture', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'baldin-legacy-fixture-'));
+    const directory = await mkdtemp(join(tmpdir(), 'baldim-legacy-fixture-'));
     paths.push(directory);
     await cp(fixture, directory, { recursive: true });
     const before = await digestTree(directory);
@@ -44,7 +44,7 @@ describe('s3db.js persisted-data compatibility', () => {
       keyPrefix: 'compat',
       logLevel: 'silent',
     });
-    const database = new Baldin({ client, logLevel: 'silent', exitOnSignal: false });
+    const database = new Baldim({ client, logLevel: 'silent', exitOnSignal: false });
     await database.connect();
 
     expect(Object.keys(database.resources).sort()).toEqual(['articles', 'users']);

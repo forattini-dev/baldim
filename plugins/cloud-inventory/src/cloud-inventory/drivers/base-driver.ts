@@ -1,4 +1,4 @@
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type LoggerFunction = (level: LogLevel, message: string, meta?: Record<string, unknown>) => void;

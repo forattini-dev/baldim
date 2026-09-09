@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 
 export interface ApiEventEmitterOptions {
   enabled?: boolean;

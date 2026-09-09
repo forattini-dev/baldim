@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import jsonStableStringify from 'json-stable-stringify';
 import crypto from 'node:crypto';
-import { Plugin, tryFn, createLogger, type ResourceLike, type Logger, type LogLevel } from '@baldin/core/plugin';
+import { Plugin, tryFn, createLogger, type ResourceLike, type Logger, type LogLevel } from '@baldim/core/plugin';
 
 import S3Cache from './cache/s3-cache.class.js';
 import MemoryCache from './cache/memory-cache.class.js';
@@ -471,7 +471,7 @@ export class CachePlugin extends Plugin {
     }
 
     return {
-      __baldinCacheV: 1,
+      __baldimCacheV: 1,
       method,
       storedAt: Date.now(),
       ttlMs: policy.ttlMs,
@@ -489,7 +489,7 @@ export class CachePlugin extends Plugin {
     }
 
     const envelope = cachedValue as Record<string, unknown>;
-    if (envelope.__baldinCacheV !== 1 && envelope.__s3dbCacheV !== 1) {
+    if (envelope.__baldimCacheV !== 1 && envelope.__s3dbCacheV !== 1) {
       return { present: true, expired: false, value: cachedValue };
     }
     if (!Object.prototype.hasOwnProperty.call(envelope, 'payload')) {

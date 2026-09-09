@@ -1,4 +1,4 @@
-import { registerStorageAdapter, type StorageAdapterContext } from '@baldin/core/adapter';
+import { registerStorageAdapter, type StorageAdapterContext } from '@baldim/core/adapter';
 import type { FileSystemClientConfig } from './types.js';
 import path from 'node:path';
 import { FileSystemClient } from './filesystem-client.class.js';
@@ -31,5 +31,5 @@ export function createFileSystemClient(context: StorageAdapterContext): FileSyst
 
 export const unregisterFileSystemAdapter = registerStorageAdapter(
   'file',
-  (context) => createFileSystemClient(context) as unknown as import('@baldin/core/adapter').Client
+  (context) => createFileSystemClient(context) as unknown as import('@baldim/core/adapter').Client
 );

@@ -4,8 +4,8 @@ import {
   tryFn,
   type PluginOptions,
   type ResourceLike,
-} from '@baldin/core/plugin';
-import type { Resource as CoreResource } from '@baldin/core';
+} from '@baldim/core/plugin';
+import type { Resource as CoreResource } from '@baldim/core';
 import { GeoError } from './errors.js';
 
 export { GeoError } from './errors.js';
@@ -105,7 +105,7 @@ interface GeoResource extends ResourceLike {
   }): Promise<GeoRecord[]>;
 }
 
-declare module '@baldin/core' {
+declare module '@baldim/core' {
   interface Resource {
     _geoConfig?: GeoResourceConfig;
     findNearby?(options: FindNearbyOptions): Promise<NearbyRecord[]>;

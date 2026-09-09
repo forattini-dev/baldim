@@ -1,6 +1,6 @@
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { loadOptionalDependency } from '../optional-dependency.js';
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 interface SQSCredentials {
   accessKeyId: string;

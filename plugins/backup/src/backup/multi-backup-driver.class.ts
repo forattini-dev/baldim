@@ -8,7 +8,7 @@ import BaseBackupDriver, {
   type StorageInfo
 } from './base-backup-driver.class.js';
 import { createBackupDriver } from './factory.js';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { BackupError } from '../errors.js';
 
 export interface DestinationConfig {

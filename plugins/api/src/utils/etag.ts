@@ -16,7 +16,7 @@ export interface ETagMatchOptions {
   weakComparison?: boolean;
 }
 
-export interface BaldinRecord {
+export interface BaldimRecord {
   _updatedAt?: string | Date;
   _createdAt?: string | Date;
   [key: string]: unknown;
@@ -101,7 +101,7 @@ export function validateIfNoneMatch(ifNoneMatchHeader: string | null | undefined
   return !requestedETags.some(reqETag => etagMatches(reqETag, currentETag));
 }
 
-export function generateRecordETag(record: BaldinRecord | null | undefined): string | null {
+export function generateRecordETag(record: BaldimRecord | null | undefined): string | null {
   if (!record) return null;
 
   const lastModified = record._updatedAt || record._createdAt;

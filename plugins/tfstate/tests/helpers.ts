@@ -3,20 +3,20 @@ import { join } from 'path';
 
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { Baldin } from '@baldin/core';
-import { CronManager } from '@baldin/core/plugin';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { CronManager } from '@baldim/core/plugin';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { TfStatePlugin } from '../src/index.js';
 
 export async function createTfstateContext(suffix = 'default') {
   const keyPrefix = `suite=plugins/terraform-state-${suffix}/${Date.now()}-${Math.random()}`;
-  const database = new Baldin({
-    client: new MemoryClient({ bucket: 'baldin-tests', keyPrefix, logLevel: 'silent' }),
+  const database = new Baldim({
+    client: new MemoryClient({ bucket: 'baldim-tests', keyPrefix, logLevel: 'silent' }),
     cronManager: new CronManager({ disabled: true, exitOnSignal: false, logLevel: 'silent' }),
     logLevel: 'silent',
   });
   await database.connect();
-  const tempDir = await mkdtemp(join(tmpdir(), `baldin-tfstate-${suffix}-`));
+  const tempDir = await mkdtemp(join(tmpdir(), `baldim-tfstate-${suffix}-`));
 
   return {
     database,

@@ -1,4 +1,4 @@
-import { encodeDecimal, decodeDecimal, encodeFixedPoint, decodeFixedPoint, encodeFixedPointBatch, decodeFixedPointBatch } from '@baldin/core/encoding';
+import { encodeDecimal, decodeDecimal, encodeFixedPoint, decodeFixedPoint, encodeFixedPointBatch, decodeFixedPointBatch } from '@baldim/core/encoding';
 
 // Shared test embedding - created once, reused in tests
 const TEST_EMBEDDING_1536 = Array.from({ length: 1536 }, (_, i) => ((i / 1536) * 2 - 1) * 0.9);

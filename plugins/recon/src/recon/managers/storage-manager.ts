@@ -13,7 +13,7 @@ import {
   getNamespacedResourceName,
   listPluginNamespaces
 } from '../namespace.js';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 import type { NormalizedTarget } from '../concerns/target-normalizer.js';
 
 export interface ReconPlugin {

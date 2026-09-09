@@ -1,14 +1,14 @@
-# @baldin/plugin-puppeteer
+# @baldim/plugin-puppeteer
 
-Browser automation for Baldin with proxy pools, persistent cookie sessions,
+Browser automation for Baldim with proxy pools, persistent cookie sessions,
 network and console monitoring, performance metrics, storage capture, and
 anti-bot inspection.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { PuppeteerPlugin } from '@baldin/plugin-puppeteer';
+import { Baldim } from '@baldim/core';
+import { PuppeteerPlugin } from '@baldim/plugin-puppeteer';
 
-const database = new Baldin({ connectionString: 'memory://browser-work' });
+const database = new Baldim({ connectionString: 'memory://browser-work' });
 await database.connect();
 
 const browser = await database.usePlugin(new PuppeteerPlugin({

@@ -1,4 +1,4 @@
-import { StorageError } from '@baldin/core';
+import { StorageError } from '@baldim/core';
 
 export interface GeoErrorDetails {
   resourceName?: string;
@@ -16,7 +16,7 @@ export class GeoError extends StorageError {
       resourceName,
       operation,
       description: details.description || [
-        'Baldin Geo Plugin Error',
+        'Baldim Geo Plugin Error',
         `Operation: ${operation}`,
         resourceName ? `Resource: ${resourceName}` : '',
         'Check coordinate ranges, configured fields, precision, and partition settings.',

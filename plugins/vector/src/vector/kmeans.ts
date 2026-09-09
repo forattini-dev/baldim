@@ -1,4 +1,4 @@
-import { ValidationError } from '@baldin/core';
+import { ValidationError } from '@baldim/core';
 import { euclideanDistance } from './distances.js';
 
 export type DistanceFunction = (a: number[], b: number[]) => number;

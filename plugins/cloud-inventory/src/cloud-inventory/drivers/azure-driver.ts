@@ -1,5 +1,5 @@
 import { BaseCloudDriver, CloudResource, ListResourcesOptions } from './base-driver.js';
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 interface AzureCredential {
   getToken: (scopes: string | string[]) => Promise<{ token: string }>;

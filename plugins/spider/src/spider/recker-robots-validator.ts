@@ -86,7 +86,7 @@ export class ReckerRobotsValidator {
 
   constructor(config: RobotsParserConfig = {}) {
     this.config = {
-      userAgent: config.userAgent || 'baldin-spider',
+      userAgent: config.userAgent || 'baldim-spider',
       defaultAllow: config.defaultAllow !== false,
       cacheTimeout: config.cacheTimeout || 3600000,
       fetchTimeout: config.fetchTimeout || 10000,

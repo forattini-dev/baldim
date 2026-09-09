@@ -9,8 +9,8 @@ import {
   RateLimitError,
   AttachmentError
 } from '../src/smtp/errors.js';
-import { Baldin as Database } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim as Database } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 
 describe('SMTPPlugin', () => {
   let db;

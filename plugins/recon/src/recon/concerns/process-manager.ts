@@ -20,7 +20,7 @@
 
 import type { ChildProcess } from 'node:child_process';
 import fs from 'node:fs/promises';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 
 export interface TrackOptions {
   name?: string;

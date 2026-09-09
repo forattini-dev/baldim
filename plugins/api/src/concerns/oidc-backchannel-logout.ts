@@ -1,8 +1,8 @@
 import { jwtVerify } from 'jose';
 import type { JWTPayload, CryptoKey, KeyObject } from 'jose';
 import type { Context } from '../http/http-runtime.js';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger, LogLevel } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger, LogLevel } from '@baldim/core/plugin';
 
 type KeyLike = CryptoKey | KeyObject;
 

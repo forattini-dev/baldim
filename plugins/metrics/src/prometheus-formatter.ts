@@ -112,7 +112,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
 
   if (operationsTotalValues.length > 0) {
     lines.push(formatMetric(
-      'baldin_operations_total',
+      'baldim_operations_total',
       'counter',
       'Total number of operations by type and resource',
       operationsTotalValues
@@ -146,7 +146,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
 
   if (durationValues.length > 0) {
     lines.push(formatMetric(
-      'baldin_operation_duration_seconds',
+      'baldim_operation_duration_seconds',
       'gauge',
       'Average operation duration in seconds',
       durationValues
@@ -178,7 +178,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
 
   if (errorsValues.length > 0) {
     lines.push(formatMetric(
-      'baldin_operation_errors_total',
+      'baldim_operation_errors_total',
       'counter',
       'Total number of operation errors',
       errorsValues
@@ -190,7 +190,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
   const uptimeSeconds = (Date.now() - startTime.getTime()) / 1000;
 
   lines.push(formatMetric(
-    'baldin_uptime_seconds',
+    'baldim_uptime_seconds',
     'gauge',
     'Process uptime in seconds',
     [{ labels: {}, value: uptimeSeconds.toFixed(2) }]
@@ -200,7 +200,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
   const resourcesCount = Object.keys(metrics.resources).length;
 
   lines.push(formatMetric(
-    'baldin_resources_total',
+    'baldim_resources_total',
     'gauge',
     'Total number of tracked resources',
     [{ labels: {}, value: resourcesCount }]
@@ -209,7 +209,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
 
   if (metrics.pool) {
     lines.push(formatMetric(
-      'baldin_pool_tasks_started_total',
+      'baldim_pool_tasks_started_total',
       'counter',
       'Total number of pool tasks started',
       [{ labels: {}, value: metrics.pool.tasksStarted }]
@@ -217,7 +217,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
     lines.push('');
 
     lines.push(formatMetric(
-      'baldin_pool_tasks_completed_total',
+      'baldim_pool_tasks_completed_total',
       'counter',
       'Total number of pool tasks completed successfully',
       [{ labels: {}, value: metrics.pool.tasksCompleted }]
@@ -225,7 +225,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
     lines.push('');
 
     lines.push(formatMetric(
-      'baldin_pool_tasks_failed_total',
+      'baldim_pool_tasks_failed_total',
       'counter',
       'Total number of pool tasks that failed',
       [{ labels: {}, value: metrics.pool.tasksFailed }]
@@ -233,7 +233,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
     lines.push('');
 
     lines.push(formatMetric(
-      'baldin_pool_tasks_retried_total',
+      'baldim_pool_tasks_retried_total',
       'counter',
       'Total number of pool task retry attempts',
       [{ labels: {}, value: metrics.pool.tasksRetried }]
@@ -241,7 +241,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
     lines.push('');
 
     lines.push(formatMetric(
-      'baldin_pool_task_execution_seconds',
+      'baldim_pool_task_execution_seconds',
       'gauge',
       'Average task execution time in seconds',
       [{ labels: {}, value: (metrics.pool.avgExecutionTime / 1000).toFixed(6) }]
@@ -249,7 +249,7 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
     lines.push('');
 
     lines.push(formatMetric(
-      'baldin_pool_task_execution_total_seconds',
+      'baldim_pool_task_execution_total_seconds',
       'counter',
       'Total cumulative task execution time in seconds',
       [{ labels: {}, value: (metrics.pool.totalExecutionTime / 1000).toFixed(6) }]
@@ -258,15 +258,15 @@ export function formatPrometheusMetrics(metricsPlugin: MetricsPlugin): string {
   }
 
   const nodeVersion = process.version || 'unknown';
-  const baldinVersion = '1.0.0';
+  const baldimVersion = '1.0.0';
 
   lines.push(formatMetric(
-    'baldin_info',
+    'baldim_info',
     'gauge',
     'Build and runtime information',
     [{
       labels: {
-        version: baldinVersion,
+        version: baldimVersion,
         node_version: nodeVersion
       },
       value: 1

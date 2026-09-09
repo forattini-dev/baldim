@@ -1,12 +1,12 @@
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { MetricsPlugin } from '../src/index.js';
 
 describe('MetricsPlugin integration', () => {
   beforeEach(() => MemoryClient.clearAllStorage());
 
   it('instruments existing and newly-created resources exactly once', async () => {
-    const database = new Baldin({ connectionString: 'memory://metrics-integration', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://metrics-integration', logLevel: 'silent' });
     await database.connect();
     const existing = await database.createResource({ name: 'existing', attributes: { value: 'string|required' } });
     const plugin = new MetricsPlugin({ flushInterval: 0, prometheus: { enabled: false }, logLevel: 'silent' });
@@ -24,7 +24,7 @@ describe('MetricsPlugin integration', () => {
   });
 
   it('removes resource and database instrumentation when uninstalled', async () => {
-    const database = new Baldin({ connectionString: 'memory://metrics-cleanup', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://metrics-cleanup', logLevel: 'silent' });
     await database.connect();
     const resource = await database.createResource({ name: 'items', attributes: { value: 'string|required' } });
     const plugin = new MetricsPlugin({ flushInterval: 0, prometheus: { enabled: false }, logLevel: 'silent' });
@@ -41,7 +41,7 @@ describe('MetricsPlugin integration', () => {
   });
 
   it('uses namespaced internal resources', async () => {
-    const database = new Baldin({ connectionString: 'memory://metrics-namespace', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://metrics-namespace', logLevel: 'silent' });
     await database.connect();
     const plugin = new MetricsPlugin({
       namespace: 'ops-west',
@@ -56,17 +56,17 @@ describe('MetricsPlugin integration', () => {
     await database.disconnect();
   });
 
-  it('exports Baldin Prometheus metric names', async () => {
+  it('exports Baldim Prometheus metric names', async () => {
     const plugin = new MetricsPlugin({ prometheus: { enabled: false }, logLevel: 'silent' });
     plugin.recordOperation('orders', 'insert', 25, false);
 
     const output = await plugin.getPrometheusMetrics();
-    expect(output).toContain('baldin_operations_total');
-    expect(output).toContain('baldin_info');
+    expect(output).toContain('baldim_operations_total');
+    expect(output).toContain('baldim_info');
   });
 
   it('serves the standalone Prometheus endpoint and releases its port', async () => {
-    const database = new Baldin({ connectionString: 'memory://metrics-http', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://metrics-http', logLevel: 'silent' });
     await database.connect();
     const plugin = new MetricsPlugin({
       flushInterval: 0,
@@ -79,7 +79,7 @@ describe('MetricsPlugin integration', () => {
 
     const response = await fetch(`http://127.0.0.1:${address.port}/metrics`);
     expect(response.status).toBe(200);
-    expect(await response.text()).toContain('baldin_info');
+    expect(await response.text()).toContain('baldim_info');
 
     await database.uninstallPlugin('metrics');
     expect(plugin.metricsServer).toBeNull();

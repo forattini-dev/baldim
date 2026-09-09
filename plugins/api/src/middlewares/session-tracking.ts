@@ -1,8 +1,8 @@
 import type { Context, MiddlewareHandler, Next } from '../http/http-runtime.js';
-import { encrypt, decrypt } from '@baldin/core';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger } from '@baldin/core/plugin';
-import { idGenerator } from '@baldin/core/plugin';
+import { encrypt, decrypt } from '@baldim/core';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
 import { getCookie, setCookie } from '../http/http-runtime.js';
 
 const logger: Logger = createLogger({ name: 'SessionTracking', level: 'info' });

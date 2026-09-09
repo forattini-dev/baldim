@@ -1,6 +1,6 @@
 import type { Context, MiddlewareHandler, Next } from '../http/http-runtime.js';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 
 const logger: Logger = createLogger({ name: 'FailbanMiddleware', level: 'info' });
 

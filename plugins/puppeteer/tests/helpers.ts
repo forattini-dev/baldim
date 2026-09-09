@@ -1,12 +1,12 @@
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 
 let sequence = 0;
 
-export function createDatabaseForTest(scope: string): Baldin {
-  return new Baldin({
+export function createDatabaseForTest(scope: string): Baldim {
+  return new Baldim({
     client: new MemoryClient({
-      bucket: 'baldin-tests',
+      bucket: 'baldim-tests',
       keyPrefix: `puppeteer/${scope}/${Date.now()}-${++sequence}`,
       logLevel: 'silent',
     }),

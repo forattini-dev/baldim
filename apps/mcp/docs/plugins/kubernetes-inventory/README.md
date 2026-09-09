@@ -1,12 +1,12 @@
-# @baldin/plugin-kubernetes-inventory
+# @baldim/plugin-kubernetes-inventory
 
-Kubernetes inventory for Baldin. The plugin discovers resources from one or more clusters and stores current snapshots, immutable versions, configuration diffs, and per-cluster sync state.
+Kubernetes inventory for Baldim. The plugin discovers resources from one or more clusters and stores current snapshots, immutable versions, configuration diffs, and per-cluster sync state.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { KubernetesInventoryPlugin } from '@baldin/plugin-kubernetes-inventory';
+import { Baldim } from '@baldim/core';
+import { KubernetesInventoryPlugin } from '@baldim/plugin-kubernetes-inventory';
 
-const db = new Baldin({ connectionString: 'memory://inventory' });
+const db = new Baldim({ connectionString: 'memory://inventory' });
 await db.connect();
 
 const inventory = new KubernetesInventoryPlugin({
@@ -19,7 +19,7 @@ await db.usePlugin(inventory, 'k8s');
 const snapshots = await inventory.getSnapshots({ clusterId: 'production' });
 ```
 
-The package owns `@kubernetes/client-node`, `node-cron`, and its data-processing dependencies. It only requires `@baldin/core` as a peer.
+The package owns `@kubernetes/client-node`, `node-cron`, and its data-processing dependencies. It only requires `@baldim/core` as a peer.
 
 ## License
 

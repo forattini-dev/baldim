@@ -8,7 +8,7 @@
  * - mysql: mysql2
  * - planetscale: @planetscale/database
  * - postgres: pg
- * - baldin: (none - uses core baldin.js)
+ * - baldim: (none - uses core baldim.js)
  * - sqs: @aws-sdk/client-sqs
  * - turso: @libsql/client
  * - webhook: (none - uses fetch)
@@ -28,7 +28,7 @@ export { default as BaseReplicator } from './base-replicator.class.js';
 export type { BaseReplicatorConfig, ReplicatorStatus, BatchProcessOptions, BatchProcessResult, ValidationResult, ErrorDetails } from './base-replicator.class.js';
 export { ReplicationError };
 
-export { default as BaldinReplicator } from './baldin-replicator.class.js';
+export { default as BaldimReplicator } from './baldim-replicator.class.js';
 export { default as WebhookReplicator } from './webhook-replicator.class.js';
 export { default as SqsReplicator } from './sqs-replicator.class.js';
 
@@ -37,7 +37,7 @@ type ReplicatorConstructor = new (config?: BaseReplicatorConfig, resources?: unk
 type ReplicatorLoader = () => Promise<ReplicatorConstructor>;
 
 const REPLICATOR_LOADERS: Record<string, ReplicatorLoader> = {
-  baldin: () => import('./baldin-replicator.class.js').then(m => m.default as unknown as ReplicatorConstructor),
+  baldim: () => import('./baldim-replicator.class.js').then(m => m.default as unknown as ReplicatorConstructor),
   sqs: () => import('./sqs-replicator.class.js').then(m => m.default as unknown as ReplicatorConstructor),
   bigquery: () => import('./bigquery-replicator.class.js').then(m => m.default as unknown as ReplicatorConstructor),
   postgres: () => import('./postgres-replicator.class.js').then(m => m.default as unknown as ReplicatorConstructor),

@@ -79,7 +79,7 @@ export async function createStorageClient(
 
   if (!registration) {
     throw new Error(
-      `No storage adapter is registered for ${normalized}:. Import the adapter package before creating this Baldin connection, or pass a client explicitly.`
+      `No storage adapter is registered for ${normalized}:. Import the adapter package before creating this Baldim connection, or pass a client explicitly.`
     );
   }
 

@@ -1,4 +1,4 @@
-import { Plugin, resolveResourceNames } from '@baldin/core/plugin';
+import { Plugin, resolveResourceNames } from '@baldim/core/plugin';
 import { StateMachineError } from './errors.js';
 
 import {

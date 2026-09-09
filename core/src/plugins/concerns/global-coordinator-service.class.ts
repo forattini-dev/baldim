@@ -3,8 +3,8 @@ import { PluginStorage } from './plugin-storage.js';
 import { tryFn } from '../../concerns/try-fn.js';
 import { LatencyBuffer, type LatencyStats } from '../../concerns/ring-buffer.js';
 import type { Database } from '../../database.class.js';
-import type { BaldinLogger } from '../../concerns/logger.js';
-import { getBaldinEnvironment } from '../../concerns/environment.js';
+import type { BaldimLogger } from '../../concerns/logger.js';
+import { getBaldimEnvironment } from '../../concerns/environment.js';
 import type { Client } from '../../clients/types.js';
 
 let serviceCounter = 0;
@@ -230,7 +230,7 @@ export class GlobalCoordinatorService extends EventEmitter {
   storage: CoordinatorPluginStorage | null;
   protected _pluginStorage: CoordinatorPluginStorage | null;
 
-  logger: BaldinLogger;
+  logger: BaldimLogger;
 
   constructor({ namespace, database, config = {} }: GlobalCoordinatorOptions) {
     super();
@@ -1310,7 +1310,7 @@ export class GlobalCoordinatorService extends EventEmitter {
   }
 
   private _getPerfThresholdMs(envName: string, fallback: number): number {
-    const value = getBaldinEnvironment(envName);
+    const value = getBaldimEnvironment(envName);
     if (!value) {
       return fallback;
     }
@@ -1324,7 +1324,7 @@ export class GlobalCoordinatorService extends EventEmitter {
   }
 
   private _getPerfBoolean(envName: string, fallback: boolean): boolean {
-    const raw = getBaldinEnvironment(envName);
+    const raw = getBaldimEnvironment(envName);
     if (!raw) {
       return fallback;
     }

@@ -4,7 +4,7 @@ import { MFAManager } from '../src/concerns/mfa-manager.js';
 describe('Identity MFA optional integrations', () => {
   it('generates and verifies TOTP, backup codes, and QR data', async () => {
     const manager = new MFAManager({
-      issuer: 'Baldin Test',
+      issuer: 'Baldim Test',
       digits: 6,
       period: 30,
       backupCodesCount: 4,
@@ -17,7 +17,7 @@ describe('Identity MFA optional integrations', () => {
     expect(enrollment.backupCodes.every(code => code.length === 10)).toBe(true);
 
     const totp = new OTPAuth.TOTP({
-      issuer: 'Baldin Test',
+      issuer: 'Baldim Test',
       label: 'user@example.com',
       algorithm: enrollment.algorithm,
       digits: enrollment.digits,

@@ -1,4 +1,4 @@
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import requirePluginDependency from '../load-dependency.js';
 import BaseReplicator from './base-replicator.class.js';
 import {
@@ -222,7 +222,7 @@ class PostgresReplicator extends BaseReplicator {
         record_id VARCHAR(255) NOT NULL,
         data JSONB,
         timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        source VARCHAR(100) DEFAULT 'baldin-replicator',
+        source VARCHAR(100) DEFAULT 'baldim-replicator',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS idx_${this.logTable}_resource_name ON ${this.logTable}(resource_name);
@@ -471,7 +471,7 @@ class PostgresReplicator extends BaseReplicator {
         await tryFn(async () => {
           await this.client!.query(
             `INSERT INTO ${this.logTable} (resource_name, operation, record_id, data, timestamp, source) VALUES ($1, $2, $3, $4, $5, $6)`,
-            [resourceName, operation, id, JSON.stringify(data), new Date().toISOString(), 'baldin-replicator']
+            [resourceName, operation, id, JSON.stringify(data), new Date().toISOString(), 'baldim-replicator']
           );
         });
       }

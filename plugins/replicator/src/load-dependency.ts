@@ -28,7 +28,7 @@ export default function loadDependency(name: string, replicatorClass = 'Replicat
       replicatorClass,
       packageName,
       original: error,
-      suggestion: `Reinstall @baldin/plugin-replicator to restore ${packageName}.`,
+      suggestion: `Reinstall @baldim/plugin-replicator to restore ${packageName}.`,
     });
   }
 }

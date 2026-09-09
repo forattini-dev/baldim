@@ -1,4 +1,4 @@
-# @baldin/plugin-cookie-farm-suite
+# @baldim/plugin-cookie-farm-suite
 
 ## 0.1.0
 
@@ -17,8 +17,8 @@
 - Updated dependencies [dfe0e73]
 - Updated dependencies [61b1e4e]
 - Updated dependencies [e150c2f]
-  - @baldin/core@0.2.0
-  - @baldin/plugin-puppeteer@0.1.0
-  - @baldin/plugin-cookie-farm@0.1.0
-  - @baldin/plugin-s3-queue@0.1.1
-  - @baldin/plugin-ttl@0.1.1
+  - @baldim/core@0.2.0
+  - @baldim/plugin-puppeteer@0.1.0
+  - @baldim/plugin-cookie-farm@0.1.0
+  - @baldim/plugin-s3-queue@0.1.1
+  - @baldim/plugin-ttl@0.1.1

@@ -1,5 +1,5 @@
-import { createLogger, BaldinLogger, LogLevel } from './logger.js';
-import { getBaldinEnvironment } from './environment.js';
+import { createLogger, BaldimLogger, LogLevel } from './logger.js';
+import { getBaldimEnvironment } from './environment.js';
 import { bumpProcessMaxListeners } from './process-max-listeners.js';
 
 export interface CronManagerOptions {
@@ -7,7 +7,7 @@ export interface CronManagerOptions {
   shutdownTimeout?: number;
   exitOnSignal?: boolean;
   disabled?: boolean;
-  logger?: BaldinLogger;
+  logger?: BaldimLogger;
 }
 
 export interface CronJobEntry {
@@ -123,8 +123,8 @@ export const CRON_PRESETS = {
 } as const;
 
 export class CronManager {
-  private options: Required<Omit<CronManagerOptions, 'logger'>> & { logger?: BaldinLogger };
-  private logger: BaldinLogger;
+  private options: Required<Omit<CronManagerOptions, 'logger'>> & { logger?: BaldimLogger };
+  private logger: BaldimLogger;
   private jobs: Map<string, CronJobEntry>;
   private _cron: NodeCronModule | null;
   private _destroyed: boolean;
@@ -133,7 +133,7 @@ export class CronManager {
   disabled: boolean;
 
   constructor(options: CronManagerOptions = {}) {
-    const envDisabled = typeof process !== 'undefined' && getBaldinEnvironment('DISABLE_CRON') === 'true';
+    const envDisabled = typeof process !== 'undefined' && getBaldimEnvironment('DISABLE_CRON') === 'true';
     const explicitDisabled = typeof options.disabled === 'boolean' ? options.disabled : undefined;
     const isDisabled = explicitDisabled !== undefined ? explicitDisabled : envDisabled;
 
@@ -387,7 +387,7 @@ export class CronManager {
     const jobName = typeof name === 'string' ? name : String(name);
 
     if (!this.jobs.has(name)) {
-      (this.logger as { trace?: BaldinLogger['debug'] }).trace?.({ name: jobName }, `Job '${jobName}' not found`);
+      (this.logger as { trace?: BaldimLogger['debug'] }).trace?.({ name: jobName }, `Job '${jobName}' not found`);
       return false;
     }
 

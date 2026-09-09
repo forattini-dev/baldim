@@ -1,5 +1,5 @@
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { IdentityPlugin } from '../src/index.js';
 import { OnboardingManager } from '../src/concerns/onboarding-manager.js';
 
@@ -17,7 +17,7 @@ describe('Identity Onboarding - Config Mode', () => {
 
   beforeEach(async () => {
     OnboardingManager.resetCache();
-    db = new Baldin({
+    db = new Baldim({
       client: new MemoryClient({
         bucket: `test-identity-onboarding-config-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
         keyPrefix: 'databases/test/'
@@ -290,7 +290,7 @@ describe('Identity Onboarding - Config Mode', () => {
     const adminsBefore = await usersResource.query({});
     expect(adminsBefore.length).toBe(1);
 
-    const db2 = new Baldin({
+    const db2 = new Baldim({
       client: db.client
     });
     await db2.connect();
@@ -348,7 +348,7 @@ describe('Identity Onboarding - Config Mode', () => {
     const adminsBefore = await usersResource.query({});
     expect(adminsBefore.length).toBe(1);
 
-    const db2 = new Baldin({
+    const db2 = new Baldim({
       client: db.client
     });
     await db2.connect();

@@ -1,4 +1,4 @@
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface BackupErrorDetails {
   driver?: string;
@@ -31,7 +31,7 @@ Common causes:
 Solution:
 Check driver configuration and ensure destination storage is accessible.
 
-Docs: https://github.com/forattini-dev/baldin/tree/main/plugins/backup
+Docs: https://github.com/forattini-dev/baldim/tree/main/plugins/backup
 `.trim();
     }
 

@@ -6,7 +6,7 @@
  */
 
 import crypto from 'crypto';
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface DiscoveryDocumentOptions {
   issuer: string;

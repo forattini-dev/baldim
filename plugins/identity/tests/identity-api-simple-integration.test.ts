@@ -1,5 +1,5 @@
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { IdentityPlugin } from '../src/index.js';
 
 // Set a longer timeout for this complex integration test
@@ -11,7 +11,7 @@ describe('Identity Plugin Integration Features', () => {
 
   beforeAll(async () => {
     const client = new MemoryClient({ bucket: 'identity-integration-test' });
-    db = new Baldin({ client });
+    db = new Baldim({ client });
     await db.connect();
 
     identityPlugin = new IdentityPlugin({

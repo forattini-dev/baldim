@@ -1,4 +1,4 @@
-import { registerStorageAdapter, type StorageAdapterContext } from '@baldin/core/adapter';
+import { registerStorageAdapter, type StorageAdapterContext } from '@baldim/core/adapter';
 import type { RemoteSqliteClientConfig, SqliteClientConfig } from './client-types.js';
 import path from 'node:path';
 import { SqliteClient } from './sqlite-client.class.js';
@@ -49,5 +49,5 @@ function createRemote(context: StorageAdapterContext): RemoteSqliteClient {
   });
 }
 
-export const unregisterSqliteAdapter = registerStorageAdapter('sqlite', (context) => createLocal(context) as unknown as import('@baldin/core/adapter').Client);
-export const unregisterRemoteSqliteAdapter = registerStorageAdapter(['sqlite+libsql', 'sqlite+d1'], (context) => createRemote(context) as unknown as import('@baldin/core/adapter').Client);
+export const unregisterSqliteAdapter = registerStorageAdapter('sqlite', (context) => createLocal(context) as unknown as import('@baldim/core/adapter').Client);
+export const unregisterRemoteSqliteAdapter = registerStorageAdapter(['sqlite+libsql', 'sqlite+d1'], (context) => createRemote(context) as unknown as import('@baldim/core/adapter').Client);

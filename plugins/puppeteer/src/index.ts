@@ -6,7 +6,7 @@ import {
   tryFn,
   type PluginOptions,
   type UninstallOptions,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 import type { CookieManager, CookieStats } from './puppeteer/cookie-manager.js';
 import type { ProxyManager, ProxyConfig, ProxyStatResult, SessionBinding, HealthCheckResult } from './puppeteer/proxy-manager.js';
 import type { PerformanceManager, PerformanceReport, ComparisonResult } from './puppeteer/performance-manager.js';

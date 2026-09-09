@@ -1,5 +1,5 @@
-import { TasksPool } from '@baldin/core';
-import { Plugin, tryFn, resolveResourceName, createLogger, type LogLevel, type Logger } from '@baldin/core/plugin';
+import { TasksPool } from '@baldim/core';
+import { Plugin, tryFn, resolveResourceName, createLogger, type LogLevel, type Logger } from '@baldim/core/plugin';
 import { createReplicator } from "./replicators/index.js";
 import { ReplicationError } from "./replicator.errors.js";
 
@@ -260,7 +260,7 @@ export class ReplicatorPlugin extends Plugin {
         operation: 'constructor',
         pluginName: 'ReplicatorPlugin',
         providedOptions: Object.keys(this.options),
-        suggestion: 'Provide replicators array: new ReplicatorPlugin({ replicators: [{ driver: "baldin", resources: [...] }] })'
+        suggestion: 'Provide replicators array: new ReplicatorPlugin({ replicators: [{ driver: "baldim", resources: [...] }] })'
       });
     }
 
@@ -270,7 +270,7 @@ export class ReplicatorPlugin extends Plugin {
           operation: 'constructor',
           pluginName: 'ReplicatorPlugin',
           replicatorConfig: rep,
-          suggestion: 'Each replicator entry must specify a driver: { driver: "baldin", resources: {...} }'
+          suggestion: 'Each replicator entry must specify a driver: { driver: "baldim", resources: {...} }'
         });
       }
       if (!rep.resources || typeof rep.resources !== 'object') {
@@ -279,7 +279,7 @@ export class ReplicatorPlugin extends Plugin {
           pluginName: 'ReplicatorPlugin',
           driver: rep.driver,
           replicatorConfig: rep,
-          suggestion: 'Provide resources as object or array: { driver: "baldin", resources: ["users"] } or { resources: { users: "people" } }'
+          suggestion: 'Provide resources as object or array: { driver: "baldim", resources: ["users"] } or { resources: { users: "people" } }'
         });
       }
       const resourceKeys = Array.isArray(rep.resources) ? rep.resources : Object.keys(rep.resources);
@@ -289,7 +289,7 @@ export class ReplicatorPlugin extends Plugin {
           pluginName: 'ReplicatorPlugin',
           driver: rep.driver,
           replicatorConfig: rep,
-          suggestion: 'Add at least one resource to replicate: { driver: "baldin", resources: ["users"] }'
+          suggestion: 'Add at least one resource to replicate: { driver: "baldim", resources: ["users"] }'
         });
       }
     }

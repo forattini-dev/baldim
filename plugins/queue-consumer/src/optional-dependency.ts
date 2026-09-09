@@ -1,4 +1,4 @@
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 const installNames: Record<string, string> = {
   '@aws-sdk/client-sqs': '@aws-sdk/client-sqs',

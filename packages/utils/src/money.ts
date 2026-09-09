@@ -5,7 +5,7 @@
  * Always store as integers in smallest currency unit (cents, satoshis, etc).
  */
 
-import { encode, decode, ValidationError } from '@baldin/core';
+import { encode, decode, ValidationError } from '@baldim/core';
 
 export const CURRENCY_DECIMALS: Record<string, number> = {
   // Fiat with cents (2 decimals)

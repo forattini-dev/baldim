@@ -1,14 +1,14 @@
 {
-  "name": "@baldin/mcp",
+  "name": "@baldim/mcp",
   "version": "0.1.0",
   "type": "module",
-  "description": "Model Context Protocol server for Baldin documentation and databases.",
+  "description": "Model Context Protocol server for Baldim documentation and databases.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
   },
   "bin": {
-    "baldin-mcp": "./dist/entrypoint.js"
+    "baldim-mcp": "./dist/entrypoint.js"
   },
   "main": "./dist/entrypoint.js",
   "types": "./dist/entrypoint.d.ts",
@@ -39,14 +39,14 @@
     "prepack": "pnpm run build"
   },
   "dependencies": {
-    "@baldin/adapter-filesystem": "workspace:*",
-    "@baldin/adapter-memory": "workspace:*",
-    "@baldin/adapter-reddb": "workspace:*",
-    "@baldin/adapter-s3": "workspace:*",
-    "@baldin/adapter-sqlite": "workspace:*",
-    "@baldin/core": "workspace:*",
-    "@baldin/plugin-cache": "workspace:*",
-    "@baldin/plugin-costs": "workspace:*",
+    "@baldim/adapter-filesystem": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
+    "@baldim/adapter-reddb": "workspace:*",
+    "@baldim/adapter-s3": "workspace:*",
+    "@baldim/adapter-sqlite": "workspace:*",
+    "@baldim/core": "workspace:*",
+    "@baldim/plugin-cache": "workspace:*",
+    "@baldim/plugin-costs": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "dotenv": "^17.4.1",
     "fuse.js": "^7.3.0"

@@ -1,7 +1,7 @@
 /**
- * API Plugin - RESTful HTTP API for Baldin resources
+ * API Plugin - RESTful HTTP API for Baldim resources
  *
- * Transforms Baldin resources into HTTP REST endpoints with:
+ * Transforms Baldim resources into HTTP REST endpoints with:
  * - Multiple authentication methods (JWT, API Key, Basic Auth, Public)
  * - Automatic versioning based on resource version
  * - Production features (CORS, Rate Limiting, Logging, Compression)
@@ -33,13 +33,13 @@
  */
 
 import type { Context, MiddlewareHandler } from './http/http-runtime.js';
-import { Plugin } from '@baldin/core/plugin';
+import { Plugin } from '@baldim/core/plugin';
 import * as raffel from 'raffel';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { ApiServer, type ApiPluginServerInfo } from './server.js';
 import { ApiRouteRegistry } from './route-registry.js';
-import { idGenerator } from '@baldin/core/plugin';
-import { resolveResourceName } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
+import { resolveResourceName } from '@baldim/core/plugin';
 import { normalizeBasePath } from './utils/base-path.js';
 import { normalizeApiListeners } from './config/normalize-listeners.js';
 import { normalizeAuthConfig } from './config/normalize-auth.js';
@@ -155,7 +155,7 @@ export interface ApiPluginOptions {
   logLevel?: string | false;
   /**
    * Low-level setup hook called with the bare Raffel `HttpApp` immediately
-   * after it is created — before any Baldin middleware, routes, or auth
+   * after it is created — before any Baldim middleware, routes, or auth
    * handlers are registered.
    *
    * Receives `{ app, raffel, listenerName, httpServer, addManagedServer }`.
@@ -169,7 +169,7 @@ export interface ApiPluginOptions {
    * coupled.
    *
    * @example
-   * import { ApiPlugin } from '@baldin/core';
+   * import { ApiPlugin } from '@baldim/core';
    *
    * new ApiPlugin({
    *   port: 3000,
@@ -319,9 +319,9 @@ export class ApiPlugin extends Plugin {
 
       docs: {
         enabled: options.docs?.enabled !== false,
-        title: options.docs?.title || 'Baldin API',
+        title: options.docs?.title || 'Baldim API',
         version: options.docs?.version || '1.0.0',
-        description: options.docs?.description || 'Auto-generated REST API for Baldin resources',
+        description: options.docs?.description || 'Auto-generated REST API for Baldim resources',
         uiTheme: options.docs?.uiTheme || 'auto',
         tryItOut: options.docs?.tryItOut !== false,
         codeGeneration: options.docs?.codeGeneration !== false,

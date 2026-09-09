@@ -1,14 +1,14 @@
 {
-  "name": "@baldin/plugin-replicator",
+  "name": "@baldim/plugin-replicator",
   "version": "0.1.0",
   "type": "module",
-  "description": "Baldin replication pipelines for databases, queues, and webhooks.",
+  "description": "Baldim replication pipelines for databases, queues, and webhooks.",
   "license": "MIT",
   "engines": { "node": ">=24" },
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "plugins/replicator"
   },
   "main": "./dist/index.js",
@@ -36,10 +36,10 @@
     "mysql2": "^3.0.0",
     "pg": "^8.0.0"
   },
-  "peerDependencies": { "@baldin/core": "^0.2.0" },
+  "peerDependencies": { "@baldim/core": "^0.2.0" },
   "devDependencies": {
-    "@baldin/adapter-memory": "workspace:*",
-    "@baldin/core": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
+    "@baldim/core": "workspace:*",
     "@types/node": "25.5.2",
     "@types/pg": "8.15.5",
     "typescript": "6.0.2"

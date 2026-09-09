@@ -307,7 +307,7 @@ export class Database extends SafeEventEmitter {
 
       if (parsedConnection.protocol === 'memory') {
         this._clientFactory = async () => {
-          const { createMemoryClient } = await import('@baldin/adapter-memory');
+          const { createMemoryClient } = await import('@baldim/adapter-memory');
           return createMemoryClient(context) as unknown as Client;
         };
       } else {
@@ -315,7 +315,7 @@ export class Database extends SafeEventEmitter {
       }
     } else {
       this._clientFactory = async () => {
-        throw new Error('Baldin requires a connectionString or an explicit storage client.');
+        throw new Error('Baldim requires a connectionString or an explicit storage client.');
       };
     }
 
@@ -624,21 +624,21 @@ export class Database extends SafeEventEmitter {
   }
 }
 
-/** The primary Baldin database class. */
-export class Baldin extends Database {}
+/** The primary Baldim database class. */
+export class Baldim extends Database {}
 
 /**
  * Compatibility alias for the project's earlier working name.
  *
- * @deprecated Import and instantiate `Baldin` instead.
+ * @deprecated Import and instantiate `Baldim` instead.
  */
-export class BuckieDB extends Baldin {}
+export class BuckieDB extends Baldim {}
 
 /**
  * Compatibility alias for applications migrating from s3db.js.
  *
- * @deprecated Import and instantiate `Baldin` instead.
+ * @deprecated Import and instantiate `Baldim` instead.
  */
-export class S3db extends Baldin {}
+export class S3db extends Baldim {}
 
-export default Baldin;
+export default Baldim;

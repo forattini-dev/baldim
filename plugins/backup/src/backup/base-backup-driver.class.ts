@@ -1,6 +1,6 @@
 import { BackupError, type BackupErrorDetails } from '../errors.js';
-import { createLogger, type Logger, type LogLevel } from '@baldin/core/plugin';
-import type { Database } from '@baldin/core/plugin';
+import { createLogger, type Logger, type LogLevel } from '@baldim/core/plugin';
+import type { Database } from '@baldim/core/plugin';
 
 export interface BackupDriverConfig {
   compression?: 'none' | 'gzip' | 'brotli' | 'deflate';

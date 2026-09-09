@@ -1,7 +1,7 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import type { S3Client } from '@baldin/adapter-s3';
+import type { S3Client } from '@baldim/adapter-s3';
 
 import {
   FilesystemTfStateDriver,
@@ -14,7 +14,7 @@ import { createTfstateContext } from './helpers.js';
 
 describe('TfState drivers', () => {
   test('filesystem driver lists and reads matching state files', async () => {
-    const directory = await mkdtemp(path.join(tmpdir(), 'baldin-tfstate-driver-'));
+    const directory = await mkdtemp(path.join(tmpdir(), 'baldim-tfstate-driver-'));
     try {
       await writeFile(path.join(directory, 'terraform.tfstate'), JSON.stringify({ version: 4, serial: 1 }));
       await writeFile(path.join(directory, 'ignored.json'), '{}');
@@ -33,7 +33,7 @@ describe('TfState drivers', () => {
   });
 
   test('filesystem driver reports missing state files', async () => {
-    const directory = await mkdtemp(path.join(tmpdir(), 'baldin-tfstate-driver-'));
+    const directory = await mkdtemp(path.join(tmpdir(), 'baldim-tfstate-driver-'));
     try {
       const driver = new FilesystemTfStateDriver({ basePath: directory });
       await expect(driver.readStateFile('missing.tfstate')).rejects.toBeInstanceOf(StateFileNotFoundError);

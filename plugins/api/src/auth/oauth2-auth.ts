@@ -37,7 +37,7 @@
 
 import type { Context } from '../http/http-runtime.js';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
-import { createLogger, type Logger } from '@baldin/core/plugin';
+import { createLogger, type Logger } from '@baldim/core/plugin';
 import { createHttpClient, type HttpClient } from '../concerns/http-client.js';
 import { applyProviderPreset } from './providers.js';
 import { OAuth2ResourceManager, resolveUser, type ResourceLike, type DatabaseLike } from './resource-manager.js';
@@ -120,7 +120,7 @@ export type OAuth2Handler = (c: Context) => Promise<OAuth2User | null>;
 /**
  * Create OAuth2 authentication handler (NEW API)
  * @param inputConfig - OAuth2 configuration
- * @param database - Baldin database instance
+ * @param database - Baldim database instance
  * @returns HTTP middleware
  */
 export async function createOAuth2Handler(

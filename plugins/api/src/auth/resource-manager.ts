@@ -1,5 +1,5 @@
-import type { Logger } from '@baldin/core/plugin';
-import { createLogger } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 
 export interface ResourceSchema {
   attributes: Record<string, string>;

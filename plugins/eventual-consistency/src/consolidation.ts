@@ -3,8 +3,8 @@
  * @module eventual-consistency/consolidation
  */
 
-import { TasksPool } from '@baldin/core';
-import { getCronManager, PluginError, tryFn } from '@baldin/core/plugin';
+import { TasksPool } from '@baldim/core';
+import { getCronManager, PluginError, tryFn } from '@baldim/core/plugin';
 import {
   type Transaction,
   type FieldHandler,

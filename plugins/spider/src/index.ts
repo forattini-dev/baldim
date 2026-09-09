@@ -7,15 +7,15 @@ import {
   getValidatedNamespace,
   tryFn,
   type PluginOptions,
-} from '@baldin/core/plugin';
-import { PuppeteerPlugin } from '@baldin/plugin-puppeteer';
-import { S3QueuePlugin } from '@baldin/plugin-s3-queue';
+} from '@baldim/core/plugin';
+import { PuppeteerPlugin } from '@baldim/plugin-puppeteer';
+import { S3QueuePlugin } from '@baldim/plugin-s3-queue';
 import {
   QueueConsumerPlugin,
   type QueueConsumerPluginOptions,
   type DriverDefinition,
-} from '@baldin/plugin-queue-consumer';
-import { TTLPlugin } from '@baldin/plugin-ttl';
+} from '@baldim/plugin-queue-consumer';
+import { TTLPlugin } from '@baldim/plugin-ttl';
 import {
   ensureReckerCurlImpersonate,
   getReckerCurlImpersonateStatus,
@@ -1300,7 +1300,7 @@ export class SpiderPlugin extends Plugin {
 
   /**
    * Full-site crawl using recker's Spider engine.
-   * Passes the baldin adapters (crawlQueue, crawlStorage, proxy) to recker,
+   * Passes the baldim adapters (crawlQueue, crawlStorage, proxy) to recker,
    * inheriting all anti-bot, retry, and transport fallback features.
    */
   async crawl(startUrl: string, options: Record<string, any> = {}): Promise<any> {

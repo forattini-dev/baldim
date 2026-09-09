@@ -1,5 +1,5 @@
 /**
- * Baldin CLI Table Component
+ * Baldim CLI Table Component
  *
  * String-based table renderer for CLI output using tuiuiu border styles
  */

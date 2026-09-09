@@ -1,6 +1,6 @@
-import { SpiderPlugin, type SpiderPluginConfig } from '@baldin/plugin-spider';
-import { CrawlContext, URLPatternMatcher } from '@baldin/plugin-spider/spider';
-import { createCrawlQueue } from '@baldin/plugin-spider/adapters';
+import { SpiderPlugin, type SpiderPluginConfig } from '@baldim/plugin-spider';
+import { CrawlContext, URLPatternMatcher } from '@baldim/plugin-spider/spider';
+import { createCrawlQueue } from '@baldim/plugin-spider/adapters';
 
 const options: SpiderPluginConfig = {
   discovery: { enabled: true },

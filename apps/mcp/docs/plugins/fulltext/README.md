@@ -1,12 +1,12 @@
-# @baldin/plugin-fulltext
+# @baldim/plugin-fulltext
 
-Persistent word indexes and ranked full-text search for Baldin resources.
+Persistent word indexes and ranked full-text search for Baldim resources.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { FullTextPlugin } from '@baldin/plugin-fulltext';
+import { Baldim } from '@baldim/core';
+import { FullTextPlugin } from '@baldim/plugin-fulltext';
 
-const database = new Baldin({ connectionString: 'memory://catalog' });
+const database = new Baldim({ connectionString: 'memory://catalog' });
 await database.connect();
 
 await database.usePlugin(new FullTextPlugin({
@@ -20,8 +20,8 @@ const products = await database.createResource({
   attributes: { name: 'string|required', description: 'string' },
 });
 
-await products.insert({ name: 'Baldin azul', description: 'Pequeno e rápido' });
+await products.insert({ name: 'Baldim azul', description: 'Pequeno e rápido' });
 const matches = await database.plugins.fulltext.searchRecords('products', 'rápido');
 ```
 
-Indexes are stored in a normal Baldin resource, survive reconnects, and can be rebuilt or cleared through the plugin API.
+Indexes are stored in a normal Baldim resource, survive reconnects, and can be rebuilt or cleared through the plugin API.

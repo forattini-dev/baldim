@@ -3,7 +3,7 @@ import {
   mapWithConcurrency,
   type Logger,
   type PluginOptions,
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 import {
   createConsumer,
   type ConsumerFactory,

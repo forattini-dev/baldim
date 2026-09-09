@@ -124,7 +124,7 @@ export class EmailHeadersBuilder {
       Object.assign(headers, this.customUnsubscribeHeaders);
     }
 
-    headers['X-Mailer'] = '@baldin/plugin-smtp/2.0';
+    headers['X-Mailer'] = '@baldim/plugin-smtp/2.0';
     headers['X-Priority'] = message.priority || '3';
 
     if (message.customHeaders) {

@@ -6,7 +6,7 @@ import MLPlugin, {
   TimeSeriesModel,
   type MLPluginOptions,
   type ModelConfig,
-} from '@baldin/plugin-ml';
+} from '@baldim/plugin-ml';
 
 const config: ModelConfig = {
   type: 'regression',

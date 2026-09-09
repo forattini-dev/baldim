@@ -1,4 +1,4 @@
-import { idGenerator } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
 import { createFormat, getAvailableFormats } from './formats/index.js';
 import type { Bracket, Match, Standing, FormatConfig } from './types.js';
 

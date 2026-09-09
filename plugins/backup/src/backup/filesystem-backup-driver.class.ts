@@ -12,7 +12,7 @@ import { createReadStream, createWriteStream } from 'fs';
 import { pipeline } from 'node:stream/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { BackupError } from '../errors.js';
 
 export interface FilesystemBackupDriverConfig extends BackupDriverConfig {

@@ -1,12 +1,12 @@
-# @baldin/plugin-queue-consumer
+# @baldim/plugin-queue-consumer
 
-Queue consumption and publishing for Baldin. The package provides drivers for Amazon SQS, RabbitMQ, Redis lists, Redis streams, Redis pub/sub, and BullMQ. Install only the optional driver dependency used by your application.
+Queue consumption and publishing for Baldim. The package provides drivers for Amazon SQS, RabbitMQ, Redis lists, Redis streams, Redis pub/sub, and BullMQ. Install only the optional driver dependency used by your application.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { QueueConsumerPlugin } from '@baldin/plugin-queue-consumer';
+import { Baldim } from '@baldim/core';
+import { QueueConsumerPlugin } from '@baldim/plugin-queue-consumer';
 
-const database = new Baldin({ connectionString: 'memory://queues' });
+const database = new Baldim({ connectionString: 'memory://queues' });
 await database.connect();
 await database.createResource({ name: 'jobs', attributes: { title: 'string|required' } });
 await database.usePlugin(new QueueConsumerPlugin({

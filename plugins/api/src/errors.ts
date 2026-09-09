@@ -4,7 +4,7 @@
  * Pre-configured error classes with semantic names, HTTP status codes,
  * and error codes. Designed to work seamlessly with c.error() helper.
  *
- * These classes use the "Http" prefix to avoid conflicts with Baldin core
+ * These classes use the "Http" prefix to avoid conflicts with Baldim core
  * error classes (like ValidationError, NotFoundError, etc.)
  */
 

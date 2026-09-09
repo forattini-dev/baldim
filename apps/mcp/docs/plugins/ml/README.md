@@ -1,12 +1,12 @@
-# @baldin/plugin-ml
+# @baldim/plugin-ml
 
-TensorFlow.js models backed by Baldin resources and plugin storage.
+TensorFlow.js models backed by Baldim resources and plugin storage.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { MLPlugin } from '@baldin/plugin-ml';
+import { Baldim } from '@baldim/core';
+import { MLPlugin } from '@baldim/plugin-ml';
 
-const database = new Baldin({ connectionString: 'memory://models' });
+const database = new Baldim({ connectionString: 'memory://models' });
 await database.connect();
 await database.usePlugin(new MLPlugin({
   models: {
@@ -22,4 +22,4 @@ await database.usePlugin(new MLPlugin({
 ```
 
 The package owns its pure JavaScript `@tensorflow/tfjs` runtime. Applications
-do not need native TensorFlow bindings to install Baldin or this plugin.
+do not need native TensorFlow bindings to install Baldim or this plugin.

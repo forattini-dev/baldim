@@ -3,20 +3,20 @@ import { mkdirSync } from 'fs';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import EventEmitter from 'events';
 
-import { tryFn } from '@baldin/core/adapter';
-import { idGenerator } from '@baldin/core/adapter';
+import { tryFn } from '@baldim/core/adapter';
+import { idGenerator } from '@baldim/core/adapter';
 import { getNodeSqliteAvailabilityError, getNodeSqliteDatabaseSync } from '../sqlite-runtime.js';
-import { createLogger } from '@baldin/core/adapter';
-import { DatabaseError } from '@baldin/core/adapter';
-import { TasksRunner } from '@baldin/core/adapter';
-import type { LogLevel } from '@baldin/core/adapter';
+import { createLogger } from '@baldim/core/adapter';
+import { DatabaseError } from '@baldim/core/adapter';
+import { TasksRunner } from '@baldim/core/adapter';
+import type { LogLevel } from '@baldim/core/adapter';
 import type { DatabaseSync as NodeSqliteDatabaseSync } from 'node:sqlite';
 import type {
   Logger,
   TaskManager,
   MonitoringConfig,
   QueueStats
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 import type { SqliteClientConfig } from '../client-types.js';
 import type {
   DbRow,

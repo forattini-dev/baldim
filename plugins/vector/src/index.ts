@@ -5,7 +5,7 @@ import {
   type Logger,
   type PluginOptions,
   type Resource
-} from '@baldin/core/plugin';
+} from '@baldim/core/plugin';
 import { cosineDistance, euclideanDistance, manhattanDistance, dotProduct, normalize } from './vector/distances.js';
 import { kmeans, findOptimalK } from './vector/kmeans.js';
 import { VectorError } from './vector/vector-error.js';

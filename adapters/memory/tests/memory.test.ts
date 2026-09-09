@@ -12,7 +12,7 @@ afterEach(async () => {
   for (const path of paths.splice(0)) await rm(path, { recursive: true, force: true });
 });
 
-describe('@baldin/adapter-memory', () => {
+describe('@baldim/adapter-memory', () => {
   it('owns memory connection parsing', () => {
     const client = createMemoryClient({
       connectionString: 'memory://bucket-name/nested/prefix',
@@ -36,7 +36,7 @@ describe('@baldin/adapter-memory', () => {
   });
 
   it('persists and reloads a snapshot', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'baldin-memory-'));
+    const directory = await mkdtemp(join(tmpdir(), 'baldim-memory-'));
     paths.push(directory);
     const persistPath = join(directory, 'snapshot.json');
     const storage = new MemoryStorage({ bucket: 'persistent', persistPath, logLevel: 'silent' });
@@ -50,6 +50,6 @@ describe('@baldin/adapter-memory', () => {
     expect((await loaded.get('entry')).Metadata).toEqual({ kind: 'test' });
   });
 });
-runStorageAdapterContract('@baldin/adapter-memory', () =>
+runStorageAdapterContract('@baldim/adapter-memory', () =>
   new MemoryClient({ bucket: `contract-${Date.now()}-${Math.random()}`, logLevel: 'silent' })
 );

@@ -129,7 +129,7 @@ export class FetchFallback implements HttpClient {
   private _buildHeaders(requestHeaders: Record<string, string> = {}): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': 'baldin-http-client',
+      'User-Agent': 'baldim-http-client',
       ...this.defaultHeaders,
       ...requestHeaders
     };

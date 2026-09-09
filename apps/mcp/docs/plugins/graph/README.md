@@ -1,12 +1,12 @@
-# @baldin/plugin-graph
+# @baldim/plugin-graph
 
-Graph relationships, indexed edges, traversal, and weighted shortest paths for Baldin resources.
+Graph relationships, indexed edges, traversal, and weighted shortest paths for Baldim resources.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { GraphPlugin } from '@baldin/plugin-graph';
+import { Baldim } from '@baldim/core';
+import { GraphPlugin } from '@baldim/plugin-graph';
 
-const db = new Baldin({ connectionString: 'memory://social' });
+const db = new Baldim({ connectionString: 'memory://social' });
 await db.connect();
 await db.createResource({
   name: 'people',

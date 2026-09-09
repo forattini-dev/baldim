@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/plugin-tfstate",
+  "name": "@baldim/plugin-tfstate",
   "version": "0.1.0",
   "type": "module",
-  "description": "Terraform and OpenTofu state ingestion, history, diffs, monitoring, and export for Baldin.",
+  "description": "Terraform and OpenTofu state ingestion, history, diffs, monitoring, and export for Baldim.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "plugins/tfstate"
   },
   "main": "./dist/index.js",
@@ -41,15 +41,15 @@
     "prepack": "pnpm run build"
   },
   "dependencies": {
-    "@baldin/adapter-s3": "workspace:*",
+    "@baldim/adapter-s3": "workspace:*",
     "glob": "^13.0.6"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.2.0"
+    "@baldim/core": "^0.2.0"
   },
   "devDependencies": {
-    "@baldin/core": "workspace:*",
-    "@baldin/adapter-memory": "workspace:*",
+    "@baldim/core": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
     "@types/node": "25.5.2",
     "typescript": "6.0.2"
   }

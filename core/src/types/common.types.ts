@@ -1,5 +1,5 @@
 /**
- * Common utility types used throughout Baldin
+ * Common utility types used throughout Baldim
  */
 
 /** Deep partial utility - makes all nested properties optional */

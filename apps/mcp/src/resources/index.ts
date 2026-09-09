@@ -8,31 +8,31 @@ const docsDir = join(__dirname, '../../docs');
 
 export const resources = [
   {
-    uri: 'baldin:///core-docs',
+    uri: 'baldim:///core-docs',
     name: 'Core Documentation',
-    description: 'Baldin core concepts: database, resources, schema, behaviors, events, partitions, encryption, streaming',
+    description: 'Baldim core concepts: database, resources, schema, behaviors, events, partitions, encryption, streaming',
     mimeType: 'application/json'
   },
   {
-    uri: 'baldin:///plugins',
+    uri: 'baldim:///plugins',
     name: 'Plugin Catalog',
-    description: 'Complete catalog of Baldin plugins with configuration schemas and usage examples',
+    description: 'Complete catalog of Baldim plugins with configuration schemas and usage examples',
     mimeType: 'application/json'
   },
   {
-    uri: 'baldin:///examples',
+    uri: 'baldim:///examples',
     name: 'Examples Index',
-    description: 'Searchable index of 60+ Baldin examples covering all features',
+    description: 'Searchable index of 60+ Baldim examples covering all features',
     mimeType: 'application/json'
   },
   {
-    uri: 'baldin:///field-types',
+    uri: 'baldim:///field-types',
     name: 'Field Types Reference',
     description: 'All 30+ supported field types with encoding details, compression ratios, and usage',
     mimeType: 'application/json'
   },
   {
-    uri: 'baldin:///benchmarks',
+    uri: 'baldim:///benchmarks',
     name: 'Performance Benchmarks',
     description: 'Performance benchmark data comparing operations, strategies, and configurations',
     mimeType: 'application/json'
@@ -40,10 +40,10 @@ export const resources = [
 ];
 
 const coreDocsContent = {
-  overview: 'Baldin transforms AWS S3 into a powerful document database with ORM-like interface',
+  overview: 'Baldim transforms AWS S3 into a powerful document database with ORM-like interface',
   sections: [
     {
-      name: 'Baldin Instance',
+      name: 'Baldim Instance',
       path: 'core/database.md',
       summary: 'Main database class for connecting to S3 and managing resources'
     },
@@ -315,35 +315,35 @@ const benchmarksData = {
 
 export function getResourceContent(uri: string): { uri: string; mimeType: string; text: string } {
   switch (uri) {
-    case 'baldin:///core-docs':
+    case 'baldim:///core-docs':
       return {
         uri,
         mimeType: 'application/json',
         text: JSON.stringify(coreDocsContent, null, 2)
       };
 
-    case 'baldin:///plugins':
+    case 'baldim:///plugins':
       return {
         uri,
         mimeType: 'application/json',
         text: JSON.stringify(pluginCatalog, null, 2)
       };
 
-    case 'baldin:///examples':
+    case 'baldim:///examples':
       return {
         uri,
         mimeType: 'application/json',
         text: JSON.stringify(examplesIndex, null, 2)
       };
 
-    case 'baldin:///field-types':
+    case 'baldim:///field-types':
       return {
         uri,
         mimeType: 'application/json',
         text: JSON.stringify(fieldTypes, null, 2)
       };
 
-    case 'baldin:///benchmarks':
+    case 'baldim:///benchmarks':
       return {
         uri,
         mimeType: 'application/json',

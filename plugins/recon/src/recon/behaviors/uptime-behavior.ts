@@ -27,7 +27,7 @@ import { spawn, ChildProcessWithoutNullStreams } from 'node:child_process';
 import dns from 'node:dns/promises';
 import https from 'node:https';
 import http from 'node:http';
-import { getCronManager } from '@baldin/core/plugin';
+import { getCronManager } from '@baldim/core/plugin';
 
 export type CheckMethod = 'ping' | 'http' | 'dns';
 

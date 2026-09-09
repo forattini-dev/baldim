@@ -48,7 +48,7 @@ export function MFAVerificationPage(props: MFAVerificationPageProps = {}): HtmlE
         </div>
 
         <footer class="identity-login__panel-footer">
-          ${config.footerText || `© ${new Date().getFullYear()} ${config.legalName || config.companyName || 'Baldin'} • All rights reserved`}
+          ${config.footerText || `© ${new Date().getFullYear()} ${config.legalName || config.companyName || 'Baldim'} • All rights reserved`}
         </footer>
       </aside>
 

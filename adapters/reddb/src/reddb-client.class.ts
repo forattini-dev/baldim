@@ -4,14 +4,14 @@ import { createHash } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { chunk } from 'lodash-es';
 
-import { tryFn } from '@baldin/core/adapter';
-import { idGenerator } from '@baldin/core/adapter';
-import { metadataEncode, metadataDecode } from '@baldin/core/adapter';
-import { createHttpClient, type HttpClient } from '@baldin/utils/http-client';
-import { DatabaseError, NoSuchKey, ResourceError } from '@baldin/core/adapter';
-import { TasksRunner } from '@baldin/core/adapter';
-import { createLogger } from '@baldin/core/adapter';
-import type { LogLevel } from '@baldin/core/adapter';
+import { tryFn } from '@baldim/core/adapter';
+import { idGenerator } from '@baldim/core/adapter';
+import { metadataEncode, metadataDecode } from '@baldim/core/adapter';
+import { createHttpClient, type HttpClient } from '@baldim/utils/http-client';
+import { DatabaseError, NoSuchKey, ResourceError } from '@baldim/core/adapter';
+import { TasksRunner } from '@baldim/core/adapter';
+import { createLogger } from '@baldim/core/adapter';
+import type { LogLevel } from '@baldim/core/adapter';
 import type { RedDbClientConfig } from './reddb-types.js';
 import type {
   Logger,
@@ -29,7 +29,7 @@ import type {
   StorageDeleteObjectResponse,
   StorageDeleteObjectsResponse,
   StorageListObjectsResponse,
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 
 const pathPosix = path.posix;
 
@@ -97,9 +97,9 @@ function decodeBody(encoded: string | undefined, encoding: string | undefined): 
 }
 
 /**
- * RedDB client for Baldin
+ * RedDB client for Baldim
  *
- * Maps the Baldin storage interface to RedDB's public HTTP API.
+ * Maps the Baldim storage interface to RedDB's public HTTP API.
  * Each object is stored as a RedDB row with _key, _body, _content_type,
  * _content_encoding, _etag fields. Object metadata maps to RedDB metadata.
  *

@@ -6,11 +6,11 @@
     "verbatimModuleSyntax": false,
     "types": ["node"],
     "paths": {
-      "@baldin/plugin-recon": ["./src/index.ts"],
-      "@baldin/plugin-recon/stages": ["./src/recon/stages/index.ts"],
-      "@baldin/plugin-recon/concerns": ["./src/recon/concerns/index.ts"],
-      "@baldin/plugin-recon/behaviors": ["./src/recon/behaviors/index.ts"],
-      "@baldin/plugin-recon/managers": ["./src/recon/managers/index.ts"]
+      "@baldim/plugin-recon": ["./src/index.ts"],
+      "@baldim/plugin-recon/stages": ["./src/recon/stages/index.ts"],
+      "@baldim/plugin-recon/concerns": ["./src/recon/concerns/index.ts"],
+      "@baldim/plugin-recon/behaviors": ["./src/recon/behaviors/index.ts"],
+      "@baldim/plugin-recon/managers": ["./src/recon/managers/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "tests/type-contract.ts"]

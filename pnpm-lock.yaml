@@ -23,7 +23,7 @@ importers:
 
   adapters/filesystem:
     dependencies:
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       lodash-es:
@@ -58,10 +58,10 @@ importers:
 
   adapters/reddb:
     dependencies:
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
-      '@baldin/utils':
+      '@baldim/utils':
         specifier: workspace:*
         version: link:../../packages/utils
       lodash-es:
@@ -83,7 +83,7 @@ importers:
       '@aws-sdk/client-s3':
         specifier: 3.1127.0
         version: 3.1127.0
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       lodash-es:
@@ -105,7 +105,7 @@ importers:
 
   adapters/sqlite:
     dependencies:
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       lodash-es:
@@ -131,31 +131,31 @@ importers:
 
   apps/cli:
     dependencies:
-      '@baldin/adapter-filesystem':
+      '@baldim/adapter-filesystem':
         specifier: workspace:*
         version: link:../../adapters/filesystem
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/adapter-reddb':
+      '@baldim/adapter-reddb':
         specifier: workspace:*
         version: link:../../adapters/reddb
-      '@baldin/adapter-s3':
+      '@baldim/adapter-s3':
         specifier: workspace:*
         version: link:../../adapters/s3
-      '@baldin/adapter-sqlite':
+      '@baldim/adapter-sqlite':
         specifier: workspace:*
         version: link:../../adapters/sqlite
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
-      '@baldin/mcp':
+      '@baldim/mcp':
         specifier: workspace:*
         version: link:../mcp
-      '@baldin/testing':
+      '@baldim/testing':
         specifier: workspace:*
         version: link:../../packages/testing
-      '@baldin/typegen':
+      '@baldim/typegen':
         specifier: workspace:*
         version: link:../../packages/typegen
       cli-args-parser:
@@ -174,28 +174,28 @@ importers:
 
   apps/mcp:
     dependencies:
-      '@baldin/adapter-filesystem':
+      '@baldim/adapter-filesystem':
         specifier: workspace:*
         version: link:../../adapters/filesystem
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/adapter-reddb':
+      '@baldim/adapter-reddb':
         specifier: workspace:*
         version: link:../../adapters/reddb
-      '@baldin/adapter-s3':
+      '@baldim/adapter-s3':
         specifier: workspace:*
         version: link:../../adapters/s3
-      '@baldin/adapter-sqlite':
+      '@baldim/adapter-sqlite':
         specifier: workspace:*
         version: link:../../adapters/sqlite
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
-      '@baldin/plugin-cache':
+      '@baldim/plugin-cache':
         specifier: workspace:*
         version: link:../../plugins/cache
-      '@baldin/plugin-costs':
+      '@baldim/plugin-costs':
         specifier: workspace:*
         version: link:../../plugins/costs
       '@modelcontextprotocol/sdk':
@@ -217,7 +217,7 @@ importers:
 
   core:
     dependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../adapters/memory
       fastest-validator:
@@ -264,10 +264,10 @@ importers:
 
   packages/testing:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -279,10 +279,10 @@ importers:
 
   packages/typegen:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -294,10 +294,10 @@ importers:
 
   packages/utils:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -331,10 +331,10 @@ importers:
         specifier: 1.0.103
         version: 1.0.103(ioredis@5.11.1)(socks@2.8.10)(ws@8.21.3)
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/lodash-es':
@@ -365,7 +365,7 @@ importers:
 
   plugins/audit:
     devDependencies:
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -377,13 +377,13 @@ importers:
 
   plugins/backup:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/adapter-s3':
+      '@baldim/adapter-s3':
         specifier: workspace:*
         version: link:../../adapters/s3
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -399,10 +399,10 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -538,10 +538,10 @@ importers:
         specifier: ^4.0.0
         version: 4.6.0
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/lodash-es':
@@ -686,14 +686,14 @@ importers:
 
   plugins/cookie-farm:
     dependencies:
-      '@baldin/plugin-puppeteer':
+      '@baldim/plugin-puppeteer':
         specifier: workspace:*
         version: link:../puppeteer
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -705,23 +705,23 @@ importers:
 
   plugins/cookie-farm-suite:
     dependencies:
-      '@baldin/plugin-cookie-farm':
+      '@baldim/plugin-cookie-farm':
         specifier: workspace:*
         version: link:../cookie-farm
-      '@baldin/plugin-puppeteer':
+      '@baldim/plugin-puppeteer':
         specifier: workspace:*
         version: link:../puppeteer
-      '@baldin/plugin-s3-queue':
+      '@baldim/plugin-s3-queue':
         specifier: workspace:*
         version: link:../s3-queue
-      '@baldin/plugin-ttl':
+      '@baldim/plugin-ttl':
         specifier: workspace:*
         version: link:../ttl
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -733,10 +733,10 @@ importers:
 
   plugins/costs:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -748,10 +748,10 @@ importers:
 
   plugins/eventual-consistency:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -763,7 +763,7 @@ importers:
 
   plugins/fulltext:
     devDependencies:
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -775,7 +775,7 @@ importers:
 
   plugins/geo:
     devDependencies:
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -787,7 +787,7 @@ importers:
 
   plugins/graph:
     devDependencies:
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -799,17 +799,17 @@ importers:
 
   plugins/identity:
     dependencies:
-      '@baldin/plugin-audit':
+      '@baldim/plugin-audit':
         specifier: workspace:*
         version: link:../audit
       raffel:
         specifier: 1.0.26
         version: 1.0.26(ajv@8.20.0)(fastest-validator@1.19.1)(yup@1.7.1)(zod@4.5.4)
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -840,10 +840,10 @@ importers:
 
   plugins/importer:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -868,10 +868,10 @@ importers:
         specifier: ^4.0.0
         version: 4.6.0
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/lodash-es':
@@ -886,10 +886,10 @@ importers:
 
   plugins/metrics:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -905,10 +905,10 @@ importers:
         specifier: ^4.22.0
         version: 4.22.0(seedrandom@3.0.5)
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -933,10 +933,10 @@ importers:
         specifier: ^1.0.0
         version: 1.1.675
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -952,10 +952,10 @@ importers:
 
   plugins/queue-consumer:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -971,10 +971,10 @@ importers:
         specifier: 1.0.103
         version: 1.0.103(ioredis@5.11.1)(socks@2.8.10)(ws@8.21.3)
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1018,10 +1018,10 @@ importers:
         specifier: ^8.0.0
         version: 8.23.0
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1036,10 +1036,10 @@ importers:
 
   plugins/s3-queue:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1051,7 +1051,7 @@ importers:
 
   plugins/scheduler:
     devDependencies:
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1070,10 +1070,10 @@ importers:
         specifier: 1.0.103
         version: 1.0.103(ioredis@5.11.1)(socks@2.8.10)(ws@8.21.3)
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1092,26 +1092,26 @@ importers:
 
   plugins/spider:
     dependencies:
-      '@baldin/plugin-puppeteer':
+      '@baldim/plugin-puppeteer':
         specifier: workspace:*
         version: link:../puppeteer
-      '@baldin/plugin-queue-consumer':
+      '@baldim/plugin-queue-consumer':
         specifier: workspace:*
         version: link:../queue-consumer
-      '@baldin/plugin-s3-queue':
+      '@baldim/plugin-s3-queue':
         specifier: workspace:*
         version: link:../s3-queue
-      '@baldin/plugin-ttl':
+      '@baldim/plugin-ttl':
         specifier: workspace:*
         version: link:../ttl
       recker:
         specifier: 1.0.103
         version: 1.0.103(ioredis@5.11.1)(socks@2.8.10)(ws@8.21.3)
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1142,13 +1142,13 @@ importers:
 
   plugins/state-machine:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
-      '@baldin/plugin-scheduler':
+      '@baldim/plugin-scheduler':
         specifier: workspace:*
         version: link:../scheduler
       '@types/node':
@@ -1160,17 +1160,17 @@ importers:
 
   plugins/tfstate:
     dependencies:
-      '@baldin/adapter-s3':
+      '@baldim/adapter-s3':
         specifier: workspace:*
         version: link:../../adapters/s3
       glob:
         specifier: ^13.0.6
         version: 13.0.6
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1182,10 +1182,10 @@ importers:
 
   plugins/tournament:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1197,10 +1197,10 @@ importers:
 
   plugins/tree:
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1212,7 +1212,7 @@ importers:
 
   plugins/ttl:
     devDependencies:
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1224,10 +1224,10 @@ importers:
 
   plugins/vector:
     devDependencies:
-      '@baldin/adapter-sqlite':
+      '@baldim/adapter-sqlite':
         specifier: workspace:*
         version: link:../../adapters/sqlite
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
       '@types/node':
@@ -1246,13 +1246,13 @@ importers:
         specifier: 1.0.26
         version: 1.0.26(ajv@8.20.0)(fastest-validator@1.19.1)(yup@1.7.1)(zod@4.5.4)
     devDependencies:
-      '@baldin/adapter-memory':
+      '@baldim/adapter-memory':
         specifier: workspace:*
         version: link:../../adapters/memory
-      '@baldin/core':
+      '@baldim/core':
         specifier: workspace:*
         version: link:../../core
-      '@baldin/plugin-api':
+      '@baldim/plugin-api':
         specifier: workspace:*
         version: link:../api
       '@types/node':

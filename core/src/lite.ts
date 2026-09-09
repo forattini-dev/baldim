@@ -1,5 +1,5 @@
 /**
- * @baldin/core - Baldin's database engine and storage contracts
+ * @baldim/core - Baldim's database engine and storage contracts
  *
  * This entry point excludes all plugins with peer dependencies, making it
  * suitable for bundling with pkg, esbuild, or other tools that create
@@ -22,9 +22,9 @@
  *
  * Usage:
  * ```typescript
- * import { Baldin, Schema } from '@baldin/core';
+ * import { Baldim, Schema } from '@baldim/core';
  *
- * const db = new Baldin({ connectionString: 'memory://my-app' });
+ * const db = new Baldim({ connectionString: 'memory://my-app' });
  * ```
  */
 
@@ -32,7 +32,7 @@
 // Core Classes
 // =============================================================================
 
-export { Baldin, BuckieDB, Database, S3db } from './database.class.js';
+export { Baldim, BuckieDB, Database, S3db } from './database.class.js';
 export {
   DatabaseManager,
   type DatabaseManagerOptions,
@@ -49,8 +49,8 @@ export type { StorageAdapterContext, StorageAdapterFactory, StorageAdapterRegist
 // Built-in storage adapter compatibility exports
 // =============================================================================
 
-export { MemoryClient } from '@baldin/adapter-memory';
-export type { MemoryClientConfig, MemoryStorageConfig, MemoryStorageStats, StorageSnapshot } from '@baldin/adapter-memory';
+export { MemoryClient } from '@baldim/adapter-memory';
+export type { MemoryClientConfig, MemoryStorageConfig, MemoryStorageStats, StorageSnapshot } from '@baldim/adapter-memory';
 
 // =============================================================================
 // Errors
@@ -139,4 +139,4 @@ export { PerformanceMonitor } from './concerns/performance-monitor.js';
 // Default Export
 // =============================================================================
 
-export { Baldin as default } from './database.class.js';
+export { Baldim as default } from './database.class.js';

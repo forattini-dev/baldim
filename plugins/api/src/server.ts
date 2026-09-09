@@ -1,5 +1,5 @@
 /**
- * API Server - Raffel-based HTTP server for Baldin API Plugin
+ * API Server - Raffel-based HTTP server for Baldim API Plugin
  *
  * Manages HTTP server lifecycle and delegates routing/middleware concerns
  * to dedicated components (MiddlewareChain, Router, HealthManager).
@@ -12,7 +12,7 @@ import type { NetworkInterfaceInfo } from 'node:os';
 import type { Socket as UdpSocket } from 'node:dgram';
 import type { IncomingMessage } from 'node:http';
 import type { Server as NetServer, Socket as NetSocket } from 'node:net';
-import type { Logger } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 import { networkInterfaces } from 'node:os';
 import { createErrorHandler } from './http/error-handler.js';
 import * as formatter from './http/response-formatter.js';
@@ -102,7 +102,7 @@ export interface ApiServerOptions {
   addManagedServer?: (server: { stop(): Promise<void> }, name?: string) => void;
   /**
    * Low-level setup hook. Called with the bare Raffel `HttpApp` and the full
-   * `raffel` module immediately after the app is created — before any Baldin
+   * `raffel` module immediately after the app is created — before any Baldim
    * middleware, routes, or auth handlers are registered.
    *
    * Use this to prepend middleware, mount sub-apps, configure proxy handlers,
@@ -175,7 +175,7 @@ export interface StaticConfig {
 
 export interface DatabaseLike {
   resources?: Record<string, ResourceLike>;
-  baldinVersion?: string;
+  baldimVersion?: string;
   pluginRegistry?: Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -349,9 +349,9 @@ export class ApiServer {
       auth: options.auth || createDefaultAuthConfig(),
       docs: {
         enabled: options.docs?.enabled !== false,
-        title: options.docs?.title || 'Baldin API',
+        title: options.docs?.title || 'Baldim API',
         version: options.docs?.version || '1.0.0',
-        description: options.docs?.description || 'Auto-generated REST API for Baldin resources',
+        description: options.docs?.description || 'Auto-generated REST API for Baldim resources',
         uiTheme: options.docs?.uiTheme || 'auto',
         tryItOut: options.docs?.tryItOut !== false,
         codeGeneration: options.docs?.codeGeneration !== false
@@ -1616,7 +1616,7 @@ export class ApiServer {
           { registry, schemaRegistry },
           {
             info: {
-              title: this.options.docs?.title || 'Baldin API',
+              title: this.options.docs?.title || 'Baldim API',
               version: this.options.docs?.version || '1.0.0',
               description: this.options.docs?.description,
             },
@@ -1742,7 +1742,7 @@ export class ApiServer {
       return;
     }
 
-    const version = this.options.database?.baldinVersion || 'latest';
+    const version = this.options.database?.baldimVersion || 'latest';
     const basePath = this.options.basePath || '';
     const localHost = this._resolveLocalHostname();
     const localUrl = this._buildUrl(localHost, info.port, basePath);
@@ -1755,7 +1755,7 @@ export class ApiServer {
 
     const lines = [
       '',
-      `  🗄️  Baldin API ${version}`,
+      `  🗄️  Baldim API ${version}`,
       `     - Local:    ${localUrl}`
     ];
 
@@ -1881,8 +1881,8 @@ export class ApiServer {
       HttpApp: HttpAppCtor,
       docs: {
         enabled: this.options.docs?.enabled !== false,
-        title: this.options.docs?.title || 'Baldin API',
-        description: this.options.docs?.description || 'Auto-generated REST API for Baldin resources'
+        title: this.options.docs?.title || 'Baldim API',
+        description: this.options.docs?.description || 'Auto-generated REST API for Baldim resources'
       },
       rootRoute: this.options.rootRoute,
       routeRegistry: this.routeRegistry

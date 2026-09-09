@@ -24,9 +24,9 @@ jobs:
       - name: Run S3 contract against MinIO
         shell: bash
         env:
-          BALDIN_S3_CONTRACT_URL: http://minioadmin:minioadmin@127.0.0.1:9000/baldin-contract?region=us-east-1&forcePathStyle=true
+          BALDIM_S3_CONTRACT_URL: http://minioadmin:minioadmin@127.0.0.1:9000/baldim-contract?region=us-east-1&forcePathStyle=true
         run: |
-          docker run --detach --name baldin-minio \
+          docker run --detach --name baldim-minio \
             --publish 9000:9000 \
             --env MINIO_ROOT_USER=minioadmin \
             --env MINIO_ROOT_PASSWORD=minioadmin \
@@ -36,58 +36,58 @@ jobs:
               break
             fi
             if [ "$attempt" -eq 30 ]; then
-              docker logs baldin-minio
+              docker logs baldim-minio
               exit 1
             fi
             sleep 1
           done
-          pnpm --filter @baldin/adapter-s3 exec vitest run tests/storage-contract.test.ts tests/compatibility.test.ts
+          pnpm --filter @baldim/adapter-s3 exec vitest run tests/storage-contract.test.ts tests/compatibility.test.ts
       - name: Pack public packages
         run: |
           mkdir -p "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/adapter-memory pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/core pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/adapter-filesystem pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/adapter-reddb pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/adapter-sqlite pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/adapter-s3 pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-audit pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-ttl pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-scheduler pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-fulltext pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-geo pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-graph pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-costs pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-metrics pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-queue-consumer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-backup pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-cache pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-state-machine pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-tree pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-importer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-vector pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-smtp pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-tournament pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-s3-queue pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-eventual-consistency pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-tfstate pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-api pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-identity pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-websocket pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-puppeteer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-cookie-farm pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-cookie-farm-suite pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-kubernetes-inventory pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-ml pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-replicator pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-cloud-inventory pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-spider pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/plugin-recon pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/utils pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/mcp pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter @baldin/cli pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/adapter-memory pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/core pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/adapter-filesystem pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/adapter-reddb pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/adapter-sqlite pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/adapter-s3 pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-audit pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-ttl pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-scheduler pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-fulltext pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-geo pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-graph pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-costs pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-metrics pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-queue-consumer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-backup pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-cache pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-state-machine pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-tree pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-importer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-vector pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-smtp pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-tournament pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-s3-queue pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-eventual-consistency pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-tfstate pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-api pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-identity pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-websocket pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-puppeteer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-cookie-farm pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-cookie-farm-suite pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-kubernetes-inventory pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-ml pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-replicator pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-cloud-inventory pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-spider pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/plugin-recon pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/utils pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/mcp pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldim/cli pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify S3 and Tfstate package isolation
         shell: bash
         run: |
@@ -95,14 +95,14 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-s3-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-tfstate-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-s3-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-tfstate-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { S3Client } from '@baldin/adapter-s3';
-          import { FilesystemTfStateDriver, S3TfStateDriver, TfStatePlugin } from '@baldin/plugin-tfstate';
+          import { S3Client } from '@baldim/adapter-s3';
+          import { FilesystemTfStateDriver, S3TfStateDriver, TfStatePlugin } from '@baldim/plugin-tfstate';
 
           assert.equal(typeof S3Client, 'function');
           assert.equal(typeof FilesystemTfStateDriver, 'function');
@@ -116,13 +116,13 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-utils-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-reddb-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-utils-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-reddb-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { RedDbClient } from '@baldin/adapter-reddb';
+          import { RedDbClient } from '@baldim/adapter-reddb';
 
           const client = new RedDbClient({
             baseUrl: 'http://127.0.0.1:8080',
@@ -139,12 +139,12 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-api-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-api-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { ApiPlugin } from '@baldin/plugin-api';
+          import { ApiPlugin } from '@baldim/plugin-api';
 
           const api = new ApiPlugin({ docs: { enabled: false }, startupBanner: false });
           assert.equal(typeof api.raffel.createRouter, 'function');
@@ -157,14 +157,14 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-audit-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-identity-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-audit-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-identity-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { IdentityPlugin } from '@baldin/plugin-identity';
-          import { PasswordAuthDriver } from '@baldin/plugin-identity/drivers';
+          import { IdentityPlugin } from '@baldim/plugin-identity';
+          import { PasswordAuthDriver } from '@baldim/plugin-identity/drivers';
 
           const identity = new IdentityPlugin({
             resources: {
@@ -186,15 +186,15 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-websocket-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-websocket-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { Baldin } from '@baldin/core';
-          import { WebSocketPlugin } from '@baldin/plugin-websocket';
+          import { Baldim } from '@baldim/core';
+          import { WebSocketPlugin } from '@baldim/plugin-websocket';
 
-          const database = new Baldin({ connectionString: 'memory://websocket-package', logLevel: 'silent' });
+          const database = new Baldim({ connectionString: 'memory://websocket-package', logLevel: 'silent' });
           const websocket = new WebSocketPlugin({
             host: '127.0.0.1',
             port: 0,
@@ -220,19 +220,19 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-ttl-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-s3-queue-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-puppeteer-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cookie-farm-[0-9]*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cookie-farm-suite-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-ttl-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-s3-queue-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-puppeteer-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-cookie-farm-[0-9]*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-cookie-farm-suite-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { Baldin } from '@baldin/core';
-          import { CookieFarmPlugin } from '@baldin/plugin-cookie-farm';
-          import { CookieFarmSuitePlugin } from '@baldin/plugin-cookie-farm-suite';
-          import { CookieManager, ProxyManager, PuppeteerPlugin } from '@baldin/plugin-puppeteer';
+          import { Baldim } from '@baldim/core';
+          import { CookieFarmPlugin } from '@baldim/plugin-cookie-farm';
+          import { CookieFarmSuitePlugin } from '@baldim/plugin-cookie-farm-suite';
+          import { CookieManager, ProxyManager, PuppeteerPlugin } from '@baldim/plugin-puppeteer';
 
           const plugin = new PuppeteerPlugin({ cookies: { enabled: false }, pool: { enabled: false } });
           await plugin._importDependencies();
@@ -242,7 +242,7 @@ jobs:
           assert.equal(typeof ProxyManager, 'function');
 
           plugin._importDependencies = async () => {};
-          const database = new Baldin({ connectionString: 'memory://cookie-farm-package', logLevel: 'silent' });
+          const database = new Baldim({ connectionString: 'memory://cookie-farm-package', logLevel: 'silent' });
           await database.connect();
           await database.usePlugin(plugin);
           const farm = new CookieFarmPlugin({
@@ -256,7 +256,7 @@ jobs:
           assert.equal((await farm.generatePersonas(1)).length, 1);
           await database.disconnect();
 
-          const suiteDatabase = new Baldin({ connectionString: 'memory://cookie-farm-suite-package', logLevel: 'silent' });
+          const suiteDatabase = new Baldim({ connectionString: 'memory://cookie-farm-suite-package', logLevel: 'silent' });
           await suiteDatabase.connect();
           const suite = new CookieFarmSuitePlugin({
             namespace: 'packed',
@@ -292,13 +292,13 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-kubernetes-inventory-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-kubernetes-inventory-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { Baldin } from '@baldin/core';
-          import { KubernetesInventoryPlugin, formatResourceTypeId } from '@baldin/plugin-kubernetes-inventory';
+          import { Baldim } from '@baldim/core';
+          import { KubernetesInventoryPlugin, formatResourceTypeId } from '@baldim/plugin-kubernetes-inventory';
 
           const driver = {
             initialize: async () => {},
@@ -311,7 +311,7 @@ jobs:
               };
             },
           };
-          const database = new Baldin({ connectionString: 'memory://k8s-package', logLevel: 'silent' });
+          const database = new Baldim({ connectionString: 'memory://k8s-package', logLevel: 'silent' });
           const inventory = new KubernetesInventoryPlugin({
             clusters: [{ id: 'packed' }],
             driverFactory: () => driver,
@@ -332,13 +332,13 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-ml-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-ml-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import * as tf from '@tensorflow/tfjs';
-          import { MLPlugin, RegressionModel } from '@baldin/plugin-ml';
+          import { MLPlugin, RegressionModel } from '@baldim/plugin-ml';
 
           const plugin = new MLPlugin({ models: {} });
           const model = new RegressionModel({
@@ -357,12 +357,12 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-replicator-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-replicator-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { ReplicatorPlugin, WebhookReplicator, loadDynamoDBReplicator, loadMongoDBReplicator } from '@baldin/plugin-replicator';
+          import { ReplicatorPlugin, WebhookReplicator, loadDynamoDBReplicator, loadMongoDBReplicator } from '@baldim/plugin-replicator';
           import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
           import { MongoClient } from 'mongodb';
 
@@ -380,13 +380,13 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cloud-inventory-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-cloud-inventory-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { CloudInventoryPlugin } from '@baldin/plugin-cloud-inventory';
-          import { getDriver } from '@baldin/plugin-cloud-inventory/drivers';
+          import { CloudInventoryPlugin } from '@baldim/plugin-cloud-inventory';
+          import { getDriver } from '@baldim/plugin-cloud-inventory/drivers';
 
           assert.equal(typeof CloudInventoryPlugin, 'function');
           assert.equal(typeof await getDriver('aws'), 'function');
@@ -400,21 +400,21 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-ttl-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-s3-queue-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-queue-consumer-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-puppeteer-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-spider-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-ttl-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-s3-queue-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-queue-consumer-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-puppeteer-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-spider-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { Baldin } from '@baldin/core';
-          import { SpiderPlugin } from '@baldin/plugin-spider';
-          import { CrawlContext } from '@baldin/plugin-spider/spider';
-          import { createCrawlQueue } from '@baldin/plugin-spider/adapters';
+          import { Baldim } from '@baldim/core';
+          import { SpiderPlugin } from '@baldim/plugin-spider';
+          import { CrawlContext } from '@baldim/plugin-spider/spider';
+          import { createCrawlQueue } from '@baldim/plugin-spider/adapters';
 
-          const database = new Baldin({ connectionString: 'memory://spider-package', logLevel: 'silent' });
+          const database = new Baldim({ connectionString: 'memory://spider-package', logLevel: 'silent' });
           const spider = new SpiderPlugin({
             puppeteer: { enabled: false },
             queue: { autoStart: false },
@@ -438,17 +438,17 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-recon-*.tgz
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-recon-*.tgz
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { Baldin } from '@baldin/core';
-          import { ReconPlugin } from '@baldin/plugin-recon';
-          import { DnsStage } from '@baldin/plugin-recon/stages';
-          import { TargetNormalizer } from '@baldin/plugin-recon/concerns';
+          import { Baldim } from '@baldim/core';
+          import { ReconPlugin } from '@baldim/plugin-recon';
+          import { DnsStage } from '@baldim/plugin-recon/stages';
+          import { TargetNormalizer } from '@baldim/plugin-recon/concerns';
 
-          const database = new Baldin({ connectionString: 'memory://recon-package', logLevel: 'silent' });
+          const database = new Baldim({ connectionString: 'memory://recon-package', logLevel: 'silent' });
           const recon = new ReconPlugin({ behavior: 'passive', logLevel: 'silent' });
           recon.commandRunner.isRedBlueAvailable = async () => false;
           await database.connect();
@@ -467,23 +467,23 @@ jobs:
           cd "$consumer"
           npm init -y
           npm install --ignore-scripts --no-audit --no-fund \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-utils-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-filesystem-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-reddb-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-sqlite-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-s3-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cache-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-costs-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-mcp-*.tgz \
-            "$GITHUB_WORKSPACE"/artifacts/baldin-cli-*.tgz
-          ./node_modules/.bin/baldin --help | grep 'Baldin CLI'
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-utils-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-filesystem-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-reddb-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-sqlite-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-adapter-s3-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-cache-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-plugin-costs-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-testing-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-typegen-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-mcp-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldim-cli-*.tgz
+          ./node_modules/.bin/baldim --help | grep 'Baldim CLI'
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { parseArgs } from '@baldin/mcp';
+          import { parseArgs } from '@baldim/mcp';
 
           assert.deepEqual(parseArgs(['--transport=http', '--port=18000']), {
             transport: 'http', host: '0.0.0.0', port: 18000,
@@ -492,47 +492,47 @@ jobs:
       - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
-          core=("$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz)
-          memory=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz)
-          filesystem=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-filesystem-*.tgz)
-          reddb=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-reddb-*.tgz)
-          sqlite=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-sqlite-*.tgz)
-          adapter=("$GITHUB_WORKSPACE"/artifacts/baldin-adapter-s3-*.tgz)
-          plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-audit-*.tgz)
-          ttl_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-ttl-*.tgz)
-          scheduler_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-scheduler-*.tgz)
-          fulltext_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-fulltext-*.tgz)
-          geo_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-geo-*.tgz)
-          graph_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-graph-*.tgz)
-          costs_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-costs-*.tgz)
-          metrics_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-metrics-*.tgz)
-          queue_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-queue-consumer-*.tgz)
-          backup_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-backup-*.tgz)
-          cache_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cache-*.tgz)
-          state_machine_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-state-machine-*.tgz)
-          tree_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-tree-*.tgz)
-          importer_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-importer-*.tgz)
-          vector_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-vector-*.tgz)
-          smtp_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-smtp-*.tgz)
-          tournament_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-tournament-*.tgz)
-          s3_queue_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-s3-queue-*.tgz)
-          eventual_consistency_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-eventual-consistency-*.tgz)
-          tfstate_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-tfstate-*.tgz)
-          api_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-api-*.tgz)
-          identity_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-identity-*.tgz)
-          websocket_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-websocket-*.tgz)
-          puppeteer_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-puppeteer-*.tgz)
-          cookie_farm_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cookie-farm-[0-9]*.tgz)
-          cookie_farm_suite_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cookie-farm-suite-*.tgz)
-          kubernetes_inventory_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-kubernetes-inventory-*.tgz)
-          ml_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-ml-*.tgz)
-          replicator_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-replicator-*.tgz)
-          cloud_inventory_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cloud-inventory-*.tgz)
-          spider_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-spider-*.tgz)
-          recon_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-recon-*.tgz)
-          testing_package=("$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz)
-          typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz)
-          utils_package=("$GITHUB_WORKSPACE"/artifacts/baldin-utils-*.tgz)
+          core=("$GITHUB_WORKSPACE"/artifacts/baldim-core-*.tgz)
+          memory=("$GITHUB_WORKSPACE"/artifacts/baldim-adapter-memory-*.tgz)
+          filesystem=("$GITHUB_WORKSPACE"/artifacts/baldim-adapter-filesystem-*.tgz)
+          reddb=("$GITHUB_WORKSPACE"/artifacts/baldim-adapter-reddb-*.tgz)
+          sqlite=("$GITHUB_WORKSPACE"/artifacts/baldim-adapter-sqlite-*.tgz)
+          adapter=("$GITHUB_WORKSPACE"/artifacts/baldim-adapter-s3-*.tgz)
+          plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-audit-*.tgz)
+          ttl_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-ttl-*.tgz)
+          scheduler_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-scheduler-*.tgz)
+          fulltext_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-fulltext-*.tgz)
+          geo_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-geo-*.tgz)
+          graph_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-graph-*.tgz)
+          costs_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-costs-*.tgz)
+          metrics_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-metrics-*.tgz)
+          queue_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-queue-consumer-*.tgz)
+          backup_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-backup-*.tgz)
+          cache_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-cache-*.tgz)
+          state_machine_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-state-machine-*.tgz)
+          tree_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-tree-*.tgz)
+          importer_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-importer-*.tgz)
+          vector_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-vector-*.tgz)
+          smtp_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-smtp-*.tgz)
+          tournament_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-tournament-*.tgz)
+          s3_queue_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-s3-queue-*.tgz)
+          eventual_consistency_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-eventual-consistency-*.tgz)
+          tfstate_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-tfstate-*.tgz)
+          api_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-api-*.tgz)
+          identity_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-identity-*.tgz)
+          websocket_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-websocket-*.tgz)
+          puppeteer_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-puppeteer-*.tgz)
+          cookie_farm_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-cookie-farm-[0-9]*.tgz)
+          cookie_farm_suite_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-cookie-farm-suite-*.tgz)
+          kubernetes_inventory_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-kubernetes-inventory-*.tgz)
+          ml_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-ml-*.tgz)
+          replicator_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-replicator-*.tgz)
+          cloud_inventory_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-cloud-inventory-*.tgz)
+          spider_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-spider-*.tgz)
+          recon_plugin=("$GITHUB_WORKSPACE"/artifacts/baldim-plugin-recon-*.tgz)
+          testing_package=("$GITHUB_WORKSPACE"/artifacts/baldim-testing-*.tgz)
+          typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldim-typegen-*.tgz)
+          utils_package=("$GITHUB_WORKSPACE"/artifacts/baldim-utils-*.tgz)
           test "${#core[@]}" -eq 1
           test "${#memory[@]}" -eq 1
           test "${#filesystem[@]}" -eq 1
@@ -584,57 +584,57 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${api_plugin[0]}" "${identity_plugin[0]}" "${websocket_plugin[0]}" "${puppeteer_plugin[0]}" "${cookie_farm_plugin[0]}" "${cookie_farm_suite_plugin[0]}" "${kubernetes_inventory_plugin[0]}" "${ml_plugin[0]}" "${replicator_plugin[0]}" "${cloud_inventory_plugin[0]}" "${spider_plugin[0]}" "${recon_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}" "${utils_package[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
-          import { Baldin, encode, decode } from '@baldin/core';
-          import { hasStorageAdapter } from '@baldin/core/adapter';
-          import { encodeKey, decodeKey } from '@baldin/core/encoding';
-          import { StreamInserter } from '@baldin/core/concerns/high-performance-inserter';
-          import { AuditPlugin } from '@baldin/plugin-audit';
-          import { TTLPlugin } from '@baldin/plugin-ttl';
-          import { SchedulerPlugin } from '@baldin/plugin-scheduler';
-          import { FullTextPlugin } from '@baldin/plugin-fulltext';
-          import { GeoPlugin } from '@baldin/plugin-geo';
-          import { GraphPlugin } from '@baldin/plugin-graph';
-          import { CostsPlugin } from '@baldin/plugin-costs';
-          import { MetricsPlugin } from '@baldin/plugin-metrics';
-          import { QueueConsumerPlugin } from '@baldin/plugin-queue-consumer';
-          import { BackupPlugin } from '@baldin/plugin-backup';
-          import { CachePlugin } from '@baldin/plugin-cache';
-          import { StateMachinePlugin } from '@baldin/plugin-state-machine';
-          import { TreePlugin } from '@baldin/plugin-tree';
-          import { ImporterPlugin, Transformers } from '@baldin/plugin-importer';
-          import { VectorPlugin } from '@baldin/plugin-vector';
-          import { cosineDistance } from '@baldin/plugin-vector/distances';
-          import { SMTPPlugin } from '@baldin/plugin-smtp';
-          import { TournamentPlugin } from '@baldin/plugin-tournament';
-          import { getAvailableFormats } from '@baldin/plugin-tournament/toolkit';
-          import { S3QueuePlugin } from '@baldin/plugin-s3-queue';
-          import { EventualConsistencyPlugin } from '@baldin/plugin-eventual-consistency';
-          import { TfStatePlugin } from '@baldin/plugin-tfstate';
-          import { ApiPlugin } from '@baldin/plugin-api';
-          import { requireAdmin } from '@baldin/plugin-api/guards';
-          import { FailbanManager } from '@baldin/plugin-api/failban';
-          import { IdentityPlugin } from '@baldin/plugin-identity';
-          import { WebSocketPlugin } from '@baldin/plugin-websocket';
-          import { PuppeteerPlugin } from '@baldin/plugin-puppeteer';
-          import { CookieFarmPlugin } from '@baldin/plugin-cookie-farm';
-          import { CookieFarmSuitePlugin } from '@baldin/plugin-cookie-farm-suite';
-          import { KubernetesInventoryPlugin } from '@baldin/plugin-kubernetes-inventory';
-          import { MLPlugin } from '@baldin/plugin-ml';
-          import { ReplicatorPlugin } from '@baldin/plugin-replicator';
-          import { CloudInventoryPlugin } from '@baldin/plugin-cloud-inventory';
-          import { SpiderPlugin } from '@baldin/plugin-spider';
-          import { ReconPlugin } from '@baldin/plugin-recon';
-          import { Factory, Seeder } from '@baldin/testing';
-          import { printTypes } from '@baldin/typegen';
-          import { createHttpClientSync, encodeMoney, optimizedDecode, optimizedEncode } from '@baldin/utils';
-          import { MemoryClient } from '@baldin/adapter-memory';
-          import { isNodeSqliteAvailable } from '@baldin/adapter-sqlite';
+          import { Baldim, encode, decode } from '@baldim/core';
+          import { hasStorageAdapter } from '@baldim/core/adapter';
+          import { encodeKey, decodeKey } from '@baldim/core/encoding';
+          import { StreamInserter } from '@baldim/core/concerns/high-performance-inserter';
+          import { AuditPlugin } from '@baldim/plugin-audit';
+          import { TTLPlugin } from '@baldim/plugin-ttl';
+          import { SchedulerPlugin } from '@baldim/plugin-scheduler';
+          import { FullTextPlugin } from '@baldim/plugin-fulltext';
+          import { GeoPlugin } from '@baldim/plugin-geo';
+          import { GraphPlugin } from '@baldim/plugin-graph';
+          import { CostsPlugin } from '@baldim/plugin-costs';
+          import { MetricsPlugin } from '@baldim/plugin-metrics';
+          import { QueueConsumerPlugin } from '@baldim/plugin-queue-consumer';
+          import { BackupPlugin } from '@baldim/plugin-backup';
+          import { CachePlugin } from '@baldim/plugin-cache';
+          import { StateMachinePlugin } from '@baldim/plugin-state-machine';
+          import { TreePlugin } from '@baldim/plugin-tree';
+          import { ImporterPlugin, Transformers } from '@baldim/plugin-importer';
+          import { VectorPlugin } from '@baldim/plugin-vector';
+          import { cosineDistance } from '@baldim/plugin-vector/distances';
+          import { SMTPPlugin } from '@baldim/plugin-smtp';
+          import { TournamentPlugin } from '@baldim/plugin-tournament';
+          import { getAvailableFormats } from '@baldim/plugin-tournament/toolkit';
+          import { S3QueuePlugin } from '@baldim/plugin-s3-queue';
+          import { EventualConsistencyPlugin } from '@baldim/plugin-eventual-consistency';
+          import { TfStatePlugin } from '@baldim/plugin-tfstate';
+          import { ApiPlugin } from '@baldim/plugin-api';
+          import { requireAdmin } from '@baldim/plugin-api/guards';
+          import { FailbanManager } from '@baldim/plugin-api/failban';
+          import { IdentityPlugin } from '@baldim/plugin-identity';
+          import { WebSocketPlugin } from '@baldim/plugin-websocket';
+          import { PuppeteerPlugin } from '@baldim/plugin-puppeteer';
+          import { CookieFarmPlugin } from '@baldim/plugin-cookie-farm';
+          import { CookieFarmSuitePlugin } from '@baldim/plugin-cookie-farm-suite';
+          import { KubernetesInventoryPlugin } from '@baldim/plugin-kubernetes-inventory';
+          import { MLPlugin } from '@baldim/plugin-ml';
+          import { ReplicatorPlugin } from '@baldim/plugin-replicator';
+          import { CloudInventoryPlugin } from '@baldim/plugin-cloud-inventory';
+          import { SpiderPlugin } from '@baldim/plugin-spider';
+          import { ReconPlugin } from '@baldim/plugin-recon';
+          import { Factory, Seeder } from '@baldim/testing';
+          import { printTypes } from '@baldim/typegen';
+          import { createHttpClientSync, encodeMoney, optimizedDecode, optimizedEncode } from '@baldim/utils';
+          import { MemoryClient } from '@baldim/adapter-memory';
+          import { isNodeSqliteAvailable } from '@baldim/adapter-sqlite';
           import { mkdtemp, rm, writeFile } from 'node:fs/promises';
           import { tmpdir } from 'node:os';
           import path from 'node:path';
-          import '@baldin/adapter-filesystem';
-          import '@baldin/adapter-reddb';
-          import '@baldin/adapter-s3';
+          import '@baldim/adapter-filesystem';
+          import '@baldim/adapter-reddb';
+          import '@baldim/adapter-s3';
 
           assert.equal(encode(62), '10');
           assert.equal(decode('10'), 62);
@@ -673,12 +673,12 @@ jobs:
           assert.equal(typeof new CookieFarmSuitePlugin({ queue: { autoStart: false } }).enqueueJob, 'function');
           assert.equal(typeof new KubernetesInventoryPlugin({ clusters: [{ id: 'packed' }] }).syncCluster, 'function');
           assert.equal(typeof new MLPlugin({ models: {} }).train, 'function');
-          assert.equal(typeof new ReplicatorPlugin({ replicators: [{ driver: 'baldin', client: {}, resources: ['users'] }] }).start, 'function');
+          assert.equal(typeof new ReplicatorPlugin({ replicators: [{ driver: 'baldim', client: {}, resources: ['users'] }] }).start, 'function');
           assert.equal(typeof new CloudInventoryPlugin({ clouds: [{ id: 'packed', driver: 'aws', credentials: {} }] }).syncCloud, 'function');
           assert.equal(typeof new SpiderPlugin({ puppeteer: { enabled: false }, queue: { autoStart: false } }).crawl, 'function');
           assert.equal(typeof new ReconPlugin({ behavior: 'passive' }).scan, 'function');
 
-          const database = new Baldin({ connectionString: 'memory://pack-smoke', logLevel: 'silent' });
+          const database = new Baldim({ connectionString: 'memory://pack-smoke', logLevel: 'silent' });
           await database.connect();
           await database.usePlugin(new AuditPlugin());
           assert.ok(database.resources.plg_audits);
@@ -700,8 +700,8 @@ jobs:
           const fulltext = new FullTextPlugin({ fields: { notes: ['title'] } });
           await database.usePlugin(fulltext);
           const notes = await database.createResource({ name: 'notes', attributes: { title: 'string|required' } });
-          await notes.insert({ id: 'searchable', title: 'Packed Baldin search' });
-          assert.equal((await fulltext.searchRecords('notes', 'baldin'))[0]?.id, 'searchable');
+          await notes.insert({ id: 'searchable', title: 'Packed Baldim search' });
+          assert.equal((await fulltext.searchRecords('notes', 'baldim'))[0]?.id, 'searchable');
           const places = await database.createResource({
             name: 'places',
             attributes: { latitude: 'number|required', longitude: 'number|required' },
@@ -734,7 +734,7 @@ jobs:
           await database.usePlugin(metrics);
           await nodes.get('a');
           assert.equal(metrics.metrics.operations.get.count, 1);
-          assert.match(await metrics.getPrometheusMetrics(), /baldin_info/);
+          assert.match(await metrics.getPrometheusMetrics(), /baldim_info/);
           const costs = new CostsPlugin();
           await database.usePlugin(costs);
           await database.client.putObject({ key: 'resource=pack/item', body: 'x' });
@@ -755,7 +755,7 @@ jobs:
           });
           await database.usePlugin(queue);
           assert.deepEqual(await queue.publish('pack-queue', { packed: true }), { packed: true });
-          const backupDir = await mkdtemp(path.join(tmpdir(), 'baldin-pack-backup-'));
+          const backupDir = await mkdtemp(path.join(tmpdir(), 'baldim-pack-backup-'));
           const backup = new BackupPlugin({
             logLevel: 'silent',
             config: { path: path.join(backupDir, 'store') },
@@ -814,7 +814,7 @@ jobs:
             transforms: { email: Transformers.toLowerCase() },
           });
           await database.usePlugin(importer);
-          const importDir = await mkdtemp(path.join(tmpdir(), 'baldin-pack-import-'));
+          const importDir = await mkdtemp(path.join(tmpdir(), 'baldim-pack-import-'));
           const importFile = path.join(importDir, 'users.csv');
           await writeFile(importFile, 'id,name,email\nu1,Ada,ADA@EXAMPLE.COM\n');
           assert.equal((await importer.import(importFile)).inserted, 1);
@@ -870,7 +870,7 @@ jobs:
             { success: true, recordsProcessed: 1, transactionsApplied: 1, errors: [] },
           );
           assert.equal((await counters.get('pack-counter')).value, 2);
-          const tfstateDir = await mkdtemp(path.join(tmpdir(), 'baldin-pack-tfstate-'));
+          const tfstateDir = await mkdtemp(path.join(tmpdir(), 'baldim-pack-tfstate-'));
           const tfstateFile = path.join(tfstateDir, 'terraform.tfstate');
           await writeFile(tfstateFile, JSON.stringify({
             version: 4,

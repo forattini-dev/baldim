@@ -1,4 +1,4 @@
-import { StorageError } from '@baldin/core';
+import { StorageError } from '@baldim/core';
 
 export interface FulltextErrorDetails {
   resourceName?: string;
@@ -31,7 +31,7 @@ Common causes:
 Solution:
 Ensure resource is configured for fulltext search and index is built.
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/plugins/fulltext/README.md
+Docs: https://github.com/forattini-dev/baldim/blob/main/plugins/fulltext/README.md
 `.trim();
     }
 

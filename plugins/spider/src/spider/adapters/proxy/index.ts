@@ -5,7 +5,7 @@
  *
  * Drivers:
  * - memory: Static proxy list with round-robin (recker built-in)
- * - s3: baldin resource-backed proxy list with health tracking
+ * - s3: baldim resource-backed proxy list with health tracking
  */
 
 import type { AdapterContext } from '../index.js';

@@ -9,8 +9,8 @@
  */
 
 import { randomBytes } from 'crypto';
-import { idGenerator } from '@baldin/core/plugin';
-import { PluginError } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export type TokenEncoding = 'hex' | 'base64' | 'base64url';
 

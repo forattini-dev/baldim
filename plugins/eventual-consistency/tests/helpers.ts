@@ -1,16 +1,16 @@
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
-import { CronManager } from '@baldin/core/plugin';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
+import { CronManager } from '@baldim/core/plugin';
 
 let databaseCounter = 0;
 
 export function createDatabaseForTest(
   testName: string,
   options: Record<string, unknown> = {},
-): Baldin {
+): Baldim {
   const suffix = `${Date.now()}-${++databaseCounter}`;
   const client = options.client ?? new MemoryClient({
-    bucket: 'baldin-tests',
+    bucket: 'baldim-tests',
     keyPrefix: `${testName}/${suffix}`,
     logLevel: 'silent',
   });
@@ -20,7 +20,7 @@ export function createDatabaseForTest(
     logLevel: 'silent',
   });
 
-  return new Baldin({
+  return new Baldim({
     ...options,
     client,
     cronManager,

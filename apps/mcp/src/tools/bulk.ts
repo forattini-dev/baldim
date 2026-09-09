@@ -1,6 +1,6 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
 import type { ResourceUpdateManyArgs, ResourceBulkUpsertArgs } from '../types/index.js';
-import type { Baldin } from '@baldin/core';
+import type { Baldim } from '@baldim/core';
 
 export const bulkTools = [
   {
@@ -50,9 +50,9 @@ export const bulkTools = [
   }
 ];
 
-export function createBulkHandlers(server: BaldinMCPServer) {
+export function createBulkHandlers(server: BaldimMCPServer) {
   return {
-    async resourceUpdateMany(args: ResourceUpdateManyArgs, database: Baldin): Promise<any> {
+    async resourceUpdateMany(args: ResourceUpdateManyArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, filters, updates, limit = 1000 } = args;
       const resource = server.getResource(database, resourceName);
@@ -85,7 +85,7 @@ export function createBulkHandlers(server: BaldinMCPServer) {
       }
     },
 
-    async resourceBulkUpsert(args: ResourceBulkUpsertArgs, database: Baldin): Promise<any> {
+    async resourceBulkUpsert(args: ResourceBulkUpsertArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, data } = args;
       const resource = server.getResource(database, resourceName);

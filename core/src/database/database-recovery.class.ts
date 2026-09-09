@@ -266,7 +266,7 @@ export class DatabaseRecovery {
   async uploadHealedMetadata(metadata: SavedMetadata, healingLog: string[]): Promise<void> {
     const [ok, err] = await tryFn(async () => {
       if (healingLog.length > 0) {
-        this.database.logger.warn({ healingOperations: healingLog }, 'Baldin self-healing operations');
+        this.database.logger.warn({ healingOperations: healingLog }, 'Baldim self-healing operations');
         healingLog.forEach(log => this.database.logger.warn(`  - ${log}`));
       }
 

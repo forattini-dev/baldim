@@ -25,7 +25,7 @@ export interface RegisterPageProps {
 export function RegisterPage(props: RegisterPageProps = {}): HtmlEscapedString {
   const { error = null, email = '', name = '', passwordPolicy = {}, config = {} } = props;
 
-  const companyName = config.companyName || 'Baldin';
+  const companyName = config.companyName || 'Baldim';
 
   const minLength = passwordPolicy.minLength || 8;
   const maxLength = passwordPolicy.maxLength || 128;
@@ -191,7 +191,7 @@ export function RegisterPage(props: RegisterPageProps = {}): HtmlEscapedString {
           </div>
         ` : ''}
         <h1 class="text-3xl font-semibold tracking-tight text-white md:text-4xl">
-          Welcome to ${config.title || 'Baldin Identity'}
+          Welcome to ${config.title || 'Baldim Identity'}
         </h1>
         <p class="mt-4 text-base text-slate-300 md:text-lg">
           ${config.tagline || 'Create a secure identity to access your workspace and applications.'}

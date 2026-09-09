@@ -1,14 +1,14 @@
-# @baldin/plugin-tree
+# @baldim/plugin-tree
 
-Tree operations for Baldin resources using nested-set or adjacency-list storage.
+Tree operations for Baldim resources using nested-set or adjacency-list storage.
 The plugin adds a `resource.tree` namespace and enriches returned nodes with
 node-scoped tree helpers.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { TreePlugin } from '@baldin/plugin-tree';
+import { Baldim } from '@baldim/core';
+import { TreePlugin } from '@baldim/plugin-tree';
 
-const database = new Baldin({ connectionString: 'memory://catalog' });
+const database = new Baldim({ connectionString: 'memory://catalog' });
 await database.connect();
 
 const categories = await database.createResource({

@@ -1,5 +1,5 @@
-import { Baldin } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import {
   QueueConsumerPlugin,
   QueueError,
@@ -38,7 +38,7 @@ describe('QueueConsumerPlugin integration', () => {
         return consumer;
       },
     });
-    const database = new Baldin({ connectionString: 'memory://queue-lifecycle', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://queue-lifecycle', logLevel: 'silent' });
     await database.connect();
     await database.usePlugin(plugin);
 
@@ -59,7 +59,7 @@ describe('QueueConsumerPlugin integration', () => {
       consumerFactory: async (_driver, value) => { config = value; return fakeConsumer(value); },
       logLevel: 'silent',
     });
-    const database = new Baldin({ connectionString: 'memory://queue-custom', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://queue-custom', logLevel: 'silent' });
     await database.connect();
     await database.usePlugin(plugin);
     const message = { kind: 'created' };
@@ -78,7 +78,7 @@ describe('QueueConsumerPlugin integration', () => {
       },
       logLevel: 'silent',
     });
-    const database = new Baldin({ connectionString: 'memory://queue-crud', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://queue-crud', logLevel: 'silent' });
     await database.connect();
     const records = await database.createResource({ name: 'records', attributes: { value: 'string|required' } });
     await database.usePlugin(plugin);
@@ -92,7 +92,7 @@ describe('QueueConsumerPlugin integration', () => {
   });
 
   it.each(['update', 'delete'])('requires data.id for %s', async action => {
-    const database = new Baldin({ connectionString: `memory://queue-${action}`, logLevel: 'silent' });
+    const database = new Baldim({ connectionString: `memory://queue-${action}`, logLevel: 'silent' });
     await database.connect();
     await database.createResource({ name: 'records', attributes: { value: 'string' } });
     const plugin = new QueueConsumerPlugin({ logLevel: 'silent' });
@@ -102,7 +102,7 @@ describe('QueueConsumerPlugin integration', () => {
   });
 
   it('rejects unsupported actions and missing resources', async () => {
-    const database = new Baldin({ connectionString: 'memory://queue-validation', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://queue-validation', logLevel: 'silent' });
     await database.connect();
     const plugin = new QueueConsumerPlugin({ logLevel: 'silent' });
     await database.usePlugin(plugin);
@@ -120,7 +120,7 @@ describe('QueueConsumerPlugin integration', () => {
       consumerFactory: factory,
       logLevel: 'silent',
     });
-    const database = new Baldin({ connectionString: 'memory://queue-duplicates', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://queue-duplicates', logLevel: 'silent' });
     await database.connect();
     await expect(database.usePlugin(plugin)).rejects.toThrow("Duplicate queue publisher name 'same'");
     expect(factory).not.toHaveBeenCalled();
@@ -139,7 +139,7 @@ describe('QueueConsumerPlugin integration', () => {
       },
       logLevel: 'silent',
     });
-    const database = new Baldin({ connectionString: 'memory://queue-rollback', logLevel: 'silent' });
+    const database = new Baldim({ connectionString: 'memory://queue-rollback', logLevel: 'silent' });
     await database.connect();
     await expect(database.usePlugin(plugin)).rejects.toThrow('Failed to start one or more queue consumers');
     expect(created).toHaveLength(2);

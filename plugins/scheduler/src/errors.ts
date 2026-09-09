@@ -1,4 +1,4 @@
-import { StorageError } from '@baldin/core';
+import { StorageError } from '@baldim/core';
 
 export interface SchedulerErrorDetails {
   taskId?: string;
@@ -31,7 +31,7 @@ Common causes:
 Solution:
 Check task configuration and ensure scheduler is properly initialized.
 
-Docs: https://github.com/forattini-dev/baldin/blob/main/plugins/scheduler/README.md
+Docs: https://github.com/forattini-dev/baldim/blob/main/plugins/scheduler/README.md
 `.trim();
     }
 

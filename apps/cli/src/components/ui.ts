@@ -1,5 +1,5 @@
 /**
- * Baldin CLI UI Components
+ * Baldim CLI UI Components
  *
  * Uses tuiuiu.js for colors and styling
  */

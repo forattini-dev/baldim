@@ -1,8 +1,8 @@
 import { error as formatError, ErrorResponse } from './response-formatter.js';
 import type { Context } from './http-runtime.js';
-import type { Logger } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 
-export interface BaldinError extends Error {
+export interface BaldimError extends Error {
   resource?: string;
   bucket?: string;
   key?: string;
@@ -56,7 +56,7 @@ export function getStatusFromError(err: Error): number {
 }
 
 export function createErrorHandler(context: ErrorHandlerContext) {
-  return function errorHandler(err: BaldinError, c: Context): Response {
+  return function errorHandler(err: BaldimError, c: Context): Response {
     const status = getStatusFromError(err);
     const code = err.name || 'INTERNAL_ERROR';
 
@@ -112,7 +112,7 @@ export function createErrorHandler(context: ErrorHandlerContext) {
   };
 }
 
-export function errorHandler(this: ErrorHandlerContext, err: BaldinError, c: Context): Response {
+export function errorHandler(this: ErrorHandlerContext, err: BaldimError, c: Context): Response {
   return createErrorHandler(this)(err, c);
 }
 
@@ -126,7 +126,7 @@ export function asyncHandler(
     try {
       return await fn(c);
     } catch (err) {
-      return handler.call(context, err as BaldinError, c);
+      return handler.call(context, err as BaldimError, c);
     }
   };
 }
@@ -144,7 +144,7 @@ export async function tryApiCall<T>(
     const result = await fn();
     return [true, null, result];
   } catch (err) {
-    const response = handler.call(context, err as BaldinError, c);
+    const response = handler.call(context, err as BaldimError, c);
     return [false, err as Error, response];
   }
 }

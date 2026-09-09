@@ -6,8 +6,8 @@
     "verbatimModuleSyntax": false,
     "types": ["node"],
     "paths": {
-      "@baldin/plugin-cloud-inventory": ["./src/index.ts"],
-      "@baldin/plugin-cloud-inventory/drivers": ["./src/cloud-inventory/drivers/index.ts"]
+      "@baldim/plugin-cloud-inventory": ["./src/index.ts"],
+      "@baldim/plugin-cloud-inventory/drivers": ["./src/cloud-inventory/drivers/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "tests/type-contract.ts"]

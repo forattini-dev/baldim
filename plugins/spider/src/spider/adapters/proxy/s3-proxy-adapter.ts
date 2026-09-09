@@ -1,7 +1,7 @@
 /**
  * S3 Proxy Adapter Driver
  *
- * baldin resource-backed proxy list with health tracking.
+ * baldim resource-backed proxy list with health tracking.
  * Round-robin among healthy proxies, with success/failure counters.
  */
 

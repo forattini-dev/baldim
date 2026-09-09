@@ -1,7 +1,7 @@
 import type { Context } from '../http/http-runtime.js';
 import { asyncHandler } from './error-handler.js';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 import { createRouteContext, type RouteContext } from '../concerns/route-context.js';
 import { applyBasePath } from './base-path.js';
 

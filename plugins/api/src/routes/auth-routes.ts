@@ -6,7 +6,7 @@ import { asyncHandler } from '../utils/error-handler.js';
 import * as formatter from '../utils/response-formatter.js';
 import { createToken, createRefreshToken, verifyRefreshToken } from '../auth/jwt-auth.js';
 import { generateApiKey } from '../auth/api-key-auth.js';
-import { compactHash, hashPassword, isPasswordHash, type SecurityConfig } from '@baldin/core/password';
+import { compactHash, hashPassword, isPasswordHash, type SecurityConfig } from '@baldim/core/password';
 import { verifyPassword } from '../http/password-verification.js';
 import { resolveUser } from '../auth/resource-manager.js';
 

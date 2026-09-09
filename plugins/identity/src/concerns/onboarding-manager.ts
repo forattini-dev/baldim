@@ -14,8 +14,8 @@
  * - Idempotent - skips if admin exists
  */
 
-import { PluginError } from '@baldin/core/plugin';
-import { idGenerator } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
 
 export interface OnboardingConfig {
   enabled?: boolean;

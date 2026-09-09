@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/adapter-reddb",
+  "name": "@baldim/adapter-reddb",
   "version": "0.2.0",
   "type": "module",
-  "description": "RedDB storage adapter for Baldin.",
+  "description": "RedDB storage adapter for Baldim.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "adapters/reddb"
   },
   "main": "./dist/index.js",
@@ -37,8 +37,8 @@
     "prepack": "pnpm run build"
   },
   "dependencies": {
-    "@baldin/core": "workspace:*",
-    "@baldin/utils": "workspace:*",
+    "@baldim/core": "workspace:*",
+    "@baldim/utils": "workspace:*",
     "lodash-es": "^4.18.1"
   },
   "devDependencies": {

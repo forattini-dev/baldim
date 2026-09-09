@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Baldin } from '@baldin/core';
+import { Baldim } from '@baldim/core';
 import { SqliteClient } from '../src/index.js';
 
 const fixture = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 's3db-v21.sqlite');
@@ -20,7 +20,7 @@ afterEach(async () => {
 
 describe('s3db.js SQLite persisted-data compatibility', () => {
   it('opens v21 metadata, bodies, and partitions without rewriting the database', async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'baldin-legacy-sqlite-'));
+    const directory = await mkdtemp(join(tmpdir(), 'baldim-legacy-sqlite-'));
     paths.push(directory);
     const databasePath = join(directory, 'legacy.sqlite');
     await copyFile(fixture, databasePath);
@@ -32,7 +32,7 @@ describe('s3db.js SQLite persisted-data compatibility', () => {
       keyPrefix: 'compat',
       logLevel: 'silent'
     });
-    const database = new Baldin({ client, logLevel: 'silent', exitOnSignal: false });
+    const database = new Baldim({ client, logLevel: 'silent', exitOnSignal: false });
     await database.connect();
 
     expect(Object.keys(database.resources).sort()).toEqual(['articles', 'users']);

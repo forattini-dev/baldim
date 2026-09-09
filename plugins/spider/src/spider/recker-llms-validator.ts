@@ -115,7 +115,7 @@ export class ReckerLlmsTxtValidator {
 
   constructor(config: LlmsTxtValidatorConfig = {}) {
     this.config = {
-      userAgent: config.userAgent || 'baldin-spider',
+      userAgent: config.userAgent || 'baldim-spider',
       fetchTimeout: config.fetchTimeout || 10000,
       cacheTimeout: config.cacheTimeout || 3600000,
       context: config.context || null

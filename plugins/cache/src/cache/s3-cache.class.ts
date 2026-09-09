@@ -3,7 +3,7 @@ import { promisify } from "node:util";
 
 const gzipAsync = promisify(zlib.gzip);
 const gunzipAsync = promisify(zlib.gunzip);
-import { PluginStorage, type PluginStorageSetOptions, type PluginClient } from "@baldin/core/plugin";
+import { PluginStorage, type PluginStorageSetOptions, type PluginClient } from "@baldim/core/plugin";
 import { Cache, type CacheConfig } from "./cache.class.js";
 import { CacheError } from "../errors.js";
 

@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/plugin-s3-queue",
+  "name": "@baldim/plugin-s3-queue",
   "version": "0.1.1",
   "type": "module",
-  "description": "Durable database-backed queues with visibility locks, retries, and coordinated workers for Baldin.",
+  "description": "Durable database-backed queues with visibility locks, retries, and coordinated workers for Baldim.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "plugins/s3-queue"
   },
   "main": "./dist/index.js",
@@ -37,11 +37,11 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.2.0"
+    "@baldim/core": "^0.2.0"
   },
   "devDependencies": {
-    "@baldin/adapter-memory": "workspace:*",
-    "@baldin/core": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
+    "@baldim/core": "workspace:*",
     "@types/node": "25.5.2",
     "typescript": "6.0.2"
   }

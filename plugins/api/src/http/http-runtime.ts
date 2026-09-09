@@ -16,7 +16,7 @@ import {
 } from 'raffel/http';
 
 /**
- * Local adapter for framework primitives used by Baldin.
+ * Local adapter for framework primitives used by Baldim.
  *
  * Context is aliased to HttpContextInterface so that middleware handlers typed
  * as `(c: Context, next: Next) => ...` remain assignable to HttpMiddleware.

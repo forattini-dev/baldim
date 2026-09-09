@@ -1,6 +1,6 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
 import type { ResourceExportArgs, ResourceImportArgs, DbBackupMetadataArgs } from '../types/index.js';
-import type { Baldin } from '@baldin/core';
+import type { Baldim } from '@baldim/core';
 import { readBody } from '../read-body.js';
 
 export const exportImportTools = [
@@ -83,9 +83,9 @@ export const exportImportTools = [
   }
 ];
 
-export function createExportImportHandlers(server: BaldinMCPServer) {
+export function createExportImportHandlers(server: BaldimMCPServer) {
   return {
-    async resourceExport(args: ResourceExportArgs, database: Baldin): Promise<any> {
+    async resourceExport(args: ResourceExportArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, format = 'json', filters, fields, limit } = args;
       const resource = server.getResource(database, resourceName);
@@ -172,7 +172,7 @@ export function createExportImportHandlers(server: BaldinMCPServer) {
       }
     },
 
-    async resourceImport(args: ResourceImportArgs, database: Baldin): Promise<any> {
+    async resourceImport(args: ResourceImportArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, data, mode = 'insert', batchSize = 100 } = args;
       const resource = server.getResource(database, resourceName);
@@ -230,7 +230,7 @@ export function createExportImportHandlers(server: BaldinMCPServer) {
       }
     },
 
-    async dbBackupMetadata(args: DbBackupMetadataArgs, database: Baldin): Promise<any> {
+    async dbBackupMetadata(args: DbBackupMetadataArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { timestamp = true } = args;
 

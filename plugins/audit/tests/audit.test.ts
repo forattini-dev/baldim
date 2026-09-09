@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Baldin } from '@baldin/core';
+import { Baldim } from '@baldim/core';
 import { AuditPlugin } from '../src/index.js';
 
-let database: Baldin | undefined;
+let database: Baldim | undefined;
 
 afterEach(async () => {
   await database?.disconnect();
@@ -11,7 +11,7 @@ afterEach(async () => {
 
 describe('AuditPlugin', () => {
   it('installs its namespaced audit resource through the public plugin API', async () => {
-    database = new Baldin({ connectionString: 'memory://audit-test', logLevel: 'silent' });
+    database = new Baldim({ connectionString: 'memory://audit-test', logLevel: 'silent' });
     await database.connect();
 
     const plugin = new AuditPlugin({ namespace: 'admin' });
@@ -23,7 +23,7 @@ describe('AuditPlugin', () => {
   });
 
   it('records inserts from an existing resource', async () => {
-    database = new Baldin({ connectionString: 'memory://audit-events', logLevel: 'silent' });
+    database = new Baldim({ connectionString: 'memory://audit-events', logLevel: 'silent' });
     await database.connect();
     const users = await database.createResource({
       name: 'users',

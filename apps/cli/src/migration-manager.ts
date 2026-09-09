@@ -1,11 +1,11 @@
 /**
- * Migration Manager for Baldin
+ * Migration Manager for Baldim
  * Handles database schema migrations
  */
 
 import fs from 'fs/promises';
 import path from 'path';
-import type { Baldin, Resource } from '@baldin/core';
+import type { Baldim, Resource } from '@baldim/core';
 
 export interface MigrationRecord {
   id: string;
@@ -15,16 +15,16 @@ export interface MigrationRecord {
 }
 
 export interface MigrationModule {
-  up: (database: Baldin) => Promise<void>;
-  down: (database: Baldin) => Promise<void>;
+  up: (database: Baldim) => Promise<void>;
+  down: (database: Baldim) => Promise<void>;
 }
 
 export class MigrationManager {
-  database: Baldin | null;
+  database: Baldim | null;
   migrationsDir: string;
   migrationResource: Resource | null;
 
-  constructor(database: Baldin | null, migrationsDir: string = './migrations') {
+  constructor(database: Baldim | null, migrationsDir: string = './migrations') {
     this.database = database;
     this.migrationsDir = migrationsDir;
     this.migrationResource = null;

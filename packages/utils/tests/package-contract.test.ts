@@ -14,7 +14,7 @@ describe('package contract', () => {
   it('has no provider or web-framework runtime dependency', () => {
     expect(manifest.dependencies ?? {}).toEqual({});
     expect(manifest.peerDependencies).toEqual({
-      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+      '@baldim/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
     });
     expect(JSON.stringify(manifest)).not.toMatch(/recker|raffel|hono|aws-sdk/);
   });

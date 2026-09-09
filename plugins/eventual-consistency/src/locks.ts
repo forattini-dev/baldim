@@ -3,7 +3,7 @@
  * @module eventual-consistency/locks
  */
 
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 
 export interface PluginStorage {
   listKeys(prefix?: string): Promise<string[]>;

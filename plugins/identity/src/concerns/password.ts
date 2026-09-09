@@ -1,7 +1,7 @@
 /**
  * Password Management - Validation and Generation
  *
- * Uses Baldin's native `password` field aliases for one-way hashing.
+ * Uses Baldim's native `password` field aliases for one-way hashing.
  * Passwords are hashed automatically on insert/update using the database security config
  * (bcrypt by default, or argon2id when configured).
  * Provides password strength validation according to policy.

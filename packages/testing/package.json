@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/testing",
+  "name": "@baldim/testing",
   "version": "0.1.1",
   "type": "module",
-  "description": "Factories and seeders for Baldin applications and plugin test suites.",
+  "description": "Factories and seeders for Baldim applications and plugin test suites.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "packages/testing"
   },
   "main": "./dist/index.js",
@@ -37,11 +37,11 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.2.0"
+    "@baldim/core": "^0.2.0"
   },
   "devDependencies": {
-    "@baldin/core": "workspace:*",
-    "@baldin/adapter-memory": "workspace:*",
+    "@baldim/core": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
     "@types/node": "25.5.2",
     "typescript": "6.0.2"
   }

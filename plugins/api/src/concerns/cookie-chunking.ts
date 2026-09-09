@@ -1,6 +1,6 @@
 import type { Context } from '../http/http-runtime.js';
 import { getCookie, getCookies, setCookie, generateCookie, type CookieOptions as RaffelCookieOptions } from '../http/http-runtime.js';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 
 const logger = createLogger({ name: 'CookieChunking', level: 'info' });
 

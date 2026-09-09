@@ -12,16 +12,16 @@ describe('HTTP client', () => {
       headers: { 'X-Default': 'yes' }
     });
 
-    const response = await client.post('records', { json: { name: 'Baldin' } });
+    const response = await client.post('records', { json: { name: 'Baldim' } });
 
     expect(response.status).toBe(201);
     expect(fetchMock).toHaveBeenCalledWith('https://example.test/v1/records', expect.objectContaining({
       method: 'POST',
-      body: '{"name":"Baldin"}',
+      body: '{"name":"Baldim"}',
       headers: expect.objectContaining({
         Authorization: 'Bearer secret',
         'Content-Type': 'application/json',
-        'User-Agent': 'baldin-http-client',
+        'User-Agent': 'baldim-http-client',
         'X-Default': 'yes'
       })
     }));

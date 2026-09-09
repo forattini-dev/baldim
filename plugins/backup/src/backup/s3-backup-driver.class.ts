@@ -12,7 +12,7 @@ import type { Readable } from 'node:stream';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { BackupError } from '../errors.js';
 
 export interface ObjectStoragePutInput {
@@ -134,7 +134,7 @@ export default class S3BackupDriver extends BaseBackupDriver {
       throw new BackupError('S3BackupDriver: client is required', {
         operation: 'onSetup',
         driver: 's3',
-        suggestion: 'Provide an object-storage client or install the plugin on a database backed by @baldin/adapter-s3'
+        suggestion: 'Provide an object-storage client or install the plugin on a database backed by @baldim/adapter-s3'
       });
     }
     if (!this.client.putObject && !this.client.uploadObject) {

@@ -2,8 +2,8 @@ import type { Context, HttpApp as HttpAppType, MiddlewareHandler } from '../http
 import type { ContentfulStatusCode } from '../http/http-runtime.js';
 import type { HttpMethod } from 'raffel/http';
 import { asyncHandler } from '../utils/error-handler.js';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 import * as formatter from '../utils/response-formatter.js';
 import { guardMiddleware } from '../utils/guards.js';
 import type { GuardsConfig } from '../utils/guards.js';
@@ -12,7 +12,7 @@ import { applyResponsePolicy, resolveRequestedView, resolveWritePolicy } from '.
 import { generateRecordETag, validateIfMatch, validateIfNoneMatch } from '../utils/etag.js';
 import { getResourceCustomRoutes } from '../utils/resource-custom-routes.js';
 import { decodeRequestParam } from '../utils/request-params.js';
-import { ValidationError } from '@baldin/core';
+import { ValidationError } from '@baldim/core';
 import { createHash } from 'node:crypto';
 
 const logger: Logger = createLogger({ name: 'ResourceRoutes', level: 'info' });

@@ -1,11 +1,11 @@
-import { Baldin, MemoryClient, type Database, type Resource } from '@baldin/core';
+import { Baldim, MemoryClient, type Database, type Resource } from '@baldim/core';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { TTLPlugin, type TTLExpireStrategy } from '../src/index.js';
 
 let sequence = 0;
 
 function createDatabase(label: string): Database {
-  return new Baldin({
+  return new Baldim({
     connectionString: `memory://plugin-ttl-${label}-${++sequence}`,
     logLevel: 'silent',
   });
@@ -48,7 +48,7 @@ beforeEach(() => {
   MemoryClient.clearAllStorage();
 });
 
-describe('@baldin/plugin-ttl', () => {
+describe('@baldim/plugin-ttl', () => {
   test('validates batch size at construction', () => {
     expect(() => new TTLPlugin({ batchSize: 0 })).toThrow('[TTLPlugin] Invalid batchSize');
     expect(() => new TTLPlugin({ batchSize: 10_001 })).toThrow('[TTLPlugin] Invalid batchSize');

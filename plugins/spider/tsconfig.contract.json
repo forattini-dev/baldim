@@ -6,9 +6,9 @@
     "verbatimModuleSyntax": false,
     "types": ["node"],
     "paths": {
-      "@baldin/plugin-spider": ["./src/index.ts"],
-      "@baldin/plugin-spider/spider": ["./src/spider/index.ts"],
-      "@baldin/plugin-spider/adapters": ["./src/spider/adapters/index.ts"]
+      "@baldim/plugin-spider": ["./src/index.ts"],
+      "@baldim/plugin-spider/spider": ["./src/spider/index.ts"],
+      "@baldim/plugin-spider/adapters": ["./src/spider/adapters/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "tests/type-contract.ts"]

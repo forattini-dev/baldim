@@ -9,7 +9,7 @@ import {
   PutObjectCommand,
   S3Client as AwsS3Client
 } from '@aws-sdk/client-s3';
-import { Baldin } from '@baldin/core';
+import { Baldim } from '@baldim/core';
 import { S3Client } from '../src/index.js';
 
 interface Fixture {
@@ -23,17 +23,17 @@ interface Fixture {
   }>;
 }
 
-const contractUrl = process.env.BALDIN_S3_CONTRACT_URL;
+const contractUrl = process.env.BALDIM_S3_CONTRACT_URL;
 const fixturePath = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 's3db-v21-objects.json');
 
 if (!contractUrl) {
   describe.skip('s3db.js S3-compatible persisted-data compatibility', () => {
-    it('runs when BALDIN_S3_CONTRACT_URL is configured', () => undefined);
+    it('runs when BALDIM_S3_CONTRACT_URL is configured', () => undefined);
   });
 } else {
   const url = new URL(contractUrl);
   const bucket = url.pathname.split('/').filter(Boolean)[0];
-  if (!bucket) throw new Error('BALDIN_S3_CONTRACT_URL must include a bucket path.');
+  if (!bucket) throw new Error('BALDIM_S3_CONTRACT_URL must include a bucket path.');
   const admin = new AwsS3Client({
     region: url.searchParams.get('region') || 'us-east-1',
     endpoint: url.origin,
@@ -86,7 +86,7 @@ if (!contractUrl) {
           logLevel: 'silent',
           httpClientOptions: { useReckerHandler: false }
         });
-        const database = new Baldin({ client, logLevel: 'silent', exitOnSignal: false });
+        const database = new Baldim({ client, logLevel: 'silent', exitOnSignal: false });
         await database.connect();
 
         expect(Object.keys(database.resources).sort()).toEqual(['articles', 'users']);

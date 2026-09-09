@@ -1,4 +1,4 @@
-import type { Logger, MonitoringConfig, TaskManager } from '@baldin/core/adapter';
+import type { Logger, MonitoringConfig, TaskManager } from '@baldim/core/adapter';
 
 export interface RedDbClientConfig {
   id?: string; logLevel?: string; logger?: Logger; taskExecutor?: TaskManager;

@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/adapter-memory",
+  "name": "@baldim/adapter-memory",
   "version": "0.1.0",
   "type": "module",
-  "description": "Built-in in-memory storage adapter for Baldin.",
+  "description": "Built-in in-memory storage adapter for Baldim.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "adapters/memory"
   },
   "main": "./dist/index.js",

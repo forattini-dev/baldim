@@ -1,14 +1,14 @@
 {
-  "name": "@baldin/plugin-cloud-inventory",
+  "name": "@baldim/plugin-cloud-inventory",
   "version": "0.1.0",
   "type": "module",
-  "description": "Multi-cloud resource discovery, snapshots, diffs, schedules, and Terraform export for Baldin.",
+  "description": "Multi-cloud resource discovery, snapshots, diffs, schedules, and Terraform export for Baldim.",
   "license": "MIT",
   "engines": { "node": ">=24" },
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "plugins/cloud-inventory"
   },
   "main": "./dist/index.js",
@@ -113,10 +113,10 @@
     "oci-objectstorage": "^2.140.0",
     "tslib": "2.3.1"
   },
-  "peerDependencies": { "@baldin/core": "^0.2.0" },
+  "peerDependencies": { "@baldim/core": "^0.2.0" },
   "devDependencies": {
-    "@baldin/adapter-memory": "workspace:*",
-    "@baldin/core": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
+    "@baldim/core": "workspace:*",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "25.5.2",
     "typescript": "6.0.2"

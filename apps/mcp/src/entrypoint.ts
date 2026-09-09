@@ -12,10 +12,10 @@ import {
   ListPromptsRequestSchema,
   GetPromptRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { Baldin } from '@baldin/core';
-import { CachePlugin } from '@baldin/plugin-cache';
-import { CostsPlugin } from '@baldin/plugin-costs';
-import { FilesystemCache } from '@baldin/plugin-cache/drivers';
+import { Baldim } from '@baldim/core';
+import { CachePlugin } from '@baldim/plugin-cache';
+import { CostsPlugin } from '@baldim/plugin-costs';
+import { FilesystemCache } from '@baldim/plugin-cache/drivers';
 import { config } from 'dotenv';
 import { join } from 'path';
 import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -40,19 +40,19 @@ import { loadOfficialAdapter } from './load-adapter.js';
 config({ path: join(process.cwd(), '.env'), quiet: true });
 
 // Global database instance
-let database: Baldin | null = null;
+let database: Baldim | null = null;
 
 // Server configuration
-const SERVER_NAME = 'baldin-mcp';
+const SERVER_NAME = 'baldim-mcp';
 const SERVER_VERSION = getVersion();
 
-const SERVER_INSTRUCTIONS = `Baldin v${SERVER_VERSION} — a document database with pluggable storage adapters.
+const SERVER_INSTRUCTIONS = `Baldim v${SERVER_VERSION} — a document database with pluggable storage adapters.
 
-Auto-connects on startup via BALDIN_CONNECTION_STRING env var. All resources are restored — just start using tools.
+Auto-connects on startup via BALDIM_CONNECTION_STRING env var. All resources are restored — just start using tools.
 
 ## Connection Strings
 
-Baldin supports its official storage adapters via connection strings. Set \`BALDIN_CONNECTION_STRING\` or use the \`dbConnect\` tool.
+Baldim supports its official storage adapters via connection strings. Set \`BALDIM_CONNECTION_STRING\` or use the \`dbConnect\` tool.
 
 ### Production backends
 
@@ -70,7 +70,7 @@ Baldin supports its official storage adapters via connection strings. Set \`BALD
 | Backend | Connection string | Best for |
 |---------|------------------|----------|
 | **Memory** | \`memory://bucket\` | Unit tests (fastest, no persistence) |
-| **FileSystem** | \`file:///tmp/baldin\` | Integration tests (persistent, no deps) |
+| **FileSystem** | \`file:///tmp/baldim\` | Integration tests (persistent, no deps) |
 | **SQLite** | \`sqlite:///tmp/test.db\` | Tests needing persistence + SQL perf |
 
 ### Examples
@@ -92,7 +92,7 @@ https://KEY:SECRET@ACCOUNT_ID.r2.cloudflarestorage.com/mybucket
 https://keyId:appKey@s3.us-west-000.backblazeb2.com/mybucket
 
 # SQLite local file
-sqlite:///home/user/data/baldin.sqlite
+sqlite:///home/user/data/baldim.sqlite
 
 # SQLite in-memory
 sqlite:///:memory:
@@ -107,7 +107,7 @@ sqlite+libsql://my-db-my-org.turso.io?authToken=YOUR_TOKEN
 memory://testbucket
 
 # Filesystem for tests
-file:///tmp/baldin-test
+file:///tmp/baldim-test
 \`\`\`
 
 ### Query parameters (all backends)
@@ -143,14 +143,14 @@ Some backends require additional packages:
 - **Cloudflare D1**: No extra deps (uses HTTP API)
 - **SQLite**: \`pnpm add better-sqlite3\` (auto-detected)
 
-For full connection string reference: read \`baldin://reference/connection-strings\` resource.
+For full connection string reference: read \`baldim://reference/connection-strings\` resource.
 
 ## Tools (all you need)
 
 **Read:** resourceGet (by ID), resourceList (browse/filter), resourcePage (paginate), resourceQuery (filter by values), resourceCount
 **Write:** resourceInsert, resourceUpdate, resourceDelete
 **Admin:** dbListResources, dbCreateResource, dbConnect (only if not auto-connected), dbStatus
-**Docs:** baldinSearchDocs (search all documentation)
+**Docs:** baldimSearchDocs (search all documentation)
 
 ## Partitions (critical for performance)
 
@@ -160,7 +160,7 @@ Example: resource "orders" has partition "by-status" on field "status".
 - \`resourceList({ resourceName: "orders", partition: "by-status", partitionValues: { status: "pending" } })\` — O(1)
 - \`resourceList({ resourceName: "orders" })\` — O(n) full scan
 
-Use \`baldin://resource/{name}\` to see which partitions a resource has.
+Use \`baldim://resource/{name}\` to see which partitions a resource has.
 
 ## Pagination
 
@@ -168,16 +168,16 @@ Use \`baldin://resource/{name}\` to see which partitions a resource has.
 - \`resourcePage\` with page number: for random access (page=1, page=5).
 - \`resourceList\` with limit/offset: simple browsing, but offset is slow on large datasets.
 
-## Docs (baldin:// resources)
+## Docs (baldim:// resources)
 
-- \`baldin://resource/{name}\` — live schema, partitions, behavior, usage examples
-- \`baldin://overview\` — full capabilities overview
-- \`baldin://best-practices\` — behaviors, partitions, performance guide
-- \`baldin://plugin/{name}\` — plugin docs (cache, api, audit, ttl, vector, etc.)
-- \`baldin://core/security\` — **security config reference** (passphrase, pepper, bcrypt, argon2, passwords)
-- \`baldin://guide/{topic}\` — guides (getting-started, performance, testing, security)
-- \`baldin://field-type/{type}\` — field type reference (string, password, secret, embedding, ip4)
-- \`baldin://reference/connection-strings\` — **full connection string reference**
+- \`baldim://resource/{name}\` — live schema, partitions, behavior, usage examples
+- \`baldim://overview\` — full capabilities overview
+- \`baldim://best-practices\` — behaviors, partitions, performance guide
+- \`baldim://plugin/{name}\` — plugin docs (cache, api, audit, ttl, vector, etc.)
+- \`baldim://core/security\` — **security config reference** (passphrase, pepper, bcrypt, argon2, passwords)
+- \`baldim://guide/{topic}\` — guides (getting-started, performance, testing, security)
+- \`baldim://field-type/{type}\` — field type reference (string, password, secret, embedding, ip4)
+- \`baldim://reference/connection-strings\` — **full connection string reference**
 
 ## Prompts (ask for help)
 
@@ -206,7 +206,7 @@ const LIBRARY_MODE_PROMPTS = new Set([
   'migrate_from_prisma',
 ]);
 
-export class BaldinMCPServer {
+export class BaldimMCPServer {
   private server: Server;
   private allToolHandlers: Record<string, Function>;
   private httpTransportServer: ReturnType<typeof createHttpServer> | null;
@@ -242,7 +242,7 @@ export class BaldinMCPServer {
     // All handlers remain registered so advanced tools still work if called directly.
     // In library mode (no connection string), only docs tools are advertised.
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-      const essentialDocs = docsSearchTools.filter(t => t.name === 'baldinSearchDocs');
+      const essentialDocs = docsSearchTools.filter(t => t.name === 'baldimSearchDocs');
       const docsTools = essentialDocs.length > 0 ? essentialDocs : docsSearchTools.slice(0, 1);
 
       if (this.isLibraryMode) {
@@ -291,10 +291,10 @@ export class BaldinMCPServer {
         if (!handler) {
           throw new Error(`Unknown tool: ${name}`);
         }
-        const result = await handler(args, database, { Baldin, CachePlugin, CostsPlugin, FilesystemCache });
+        const result = await handler(args, database, { Baldim, CachePlugin, CostsPlugin, FilesystemCache });
 
         // Update global database state from connection handlers
-        if (result?.database instanceof Baldin) {
+        if (result?.database instanceof Baldim) {
           database = result.database;
           this.isLibraryMode = false;
           delete result.database;
@@ -340,7 +340,7 @@ export class BaldinMCPServer {
     // List available resource templates
     this.server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
       const templates = this.isLibraryMode
-        ? resourceTemplates.filter(t => t.uriTemplate !== 'baldin://resource/{name}')
+        ? resourceTemplates.filter(t => t.uriTemplate !== 'baldim://resource/{name}')
         : resourceTemplates;
 
       return {
@@ -364,12 +364,12 @@ export class BaldinMCPServer {
     this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       const { uri } = request.params;
 
-      if (this.isLibraryMode && uri.startsWith('baldin://resource/')) {
+      if (this.isLibraryMode && uri.startsWith('baldim://resource/')) {
         return {
           contents: [{
             uri,
             mimeType: 'text/markdown',
-            text: `# Live Resource Unavailable\n\nThe \`baldin://resource/{name}\` resource requires an active database connection.\n\nSet \`BALDIN_CONNECTION_STRING\` to enable full mode, or use the \`dbConnect\` tool to connect at runtime.`,
+            text: `# Live Resource Unavailable\n\nThe \`baldim://resource/{name}\` resource requires an active database connection.\n\nSet \`BALDIM_CONNECTION_STRING\` to enable full mode, or use the \`dbConnect\` tool to connect at runtime.`,
           }],
         };
       }
@@ -557,7 +557,7 @@ export class BaldinMCPServer {
       this.httpTransportServer!.once('error', reject);
       this.httpTransportServer!.listen(port, host, () => {
         this.httpTransportServer!.off('error', reject);
-        console.log(`Baldin MCP Server running on http://${host}:${port}/mcp`);
+        console.log(`Baldim MCP Server running on http://${host}:${port}/mcp`);
         console.log(`Health check endpoint: http://${host}:${port}/health`);
         resolve();
       });
@@ -565,13 +565,13 @@ export class BaldinMCPServer {
   }
 
   // Helper methods for tool handlers
-  ensureConnected(db: Baldin): void {
+  ensureConnected(db: Baldim): void {
     if (!db || !db.isConnected()) {
-      throw new Error('Database not connected. Set BALDIN_CONNECTION_STRING env var for auto-connect, or use dbConnect tool.');
+      throw new Error('Database not connected. Set BALDIM_CONNECTION_STRING env var for auto-connect, or use dbConnect tool.');
     }
   }
 
-  getResource(db: Baldin, resourceName: string): any {
+  getResource(db: Baldim, resourceName: string): any {
     this.ensureConnected(db);
 
     if (!db.resources[resourceName]) {
@@ -761,7 +761,7 @@ export async function startServer(args?: TransportArgs): Promise<void> {
   if (finalArgs.host) process.env.MCP_SERVER_HOST = finalArgs.host;
   if (finalArgs.port) process.env.MCP_SERVER_PORT = finalArgs.port.toString();
 
-  const server = new BaldinMCPServer();
+  const server = new BaldimMCPServer();
 
   // Preload search indexes for faster first query
   await preloadSearch();
@@ -775,7 +775,7 @@ export async function startServer(args?: TransportArgs): Promise<void> {
   }
 
   if (server.isLibraryMode) {
-    process.stderr.write('[baldin MCP] Library mode — no connection string found. Serving documentation only.\n');
+    process.stderr.write('[baldim MCP] Library mode — no connection string found. Serving documentation only.\n');
   }
 
   // Auto-connect if connection string is available
@@ -794,7 +794,7 @@ export async function startServer(args?: TransportArgs): Promise<void> {
             includePartitions: true,
             driver: new FilesystemCache({
               directory: cacheConf.directory || './cache',
-              prefix: cacheConf.prefix || 'baldin',
+              prefix: cacheConf.prefix || 'baldim',
               ttl: cacheConf.ttl || 300000,
               enableCompression: true,
               enableCleanup: true,
@@ -815,7 +815,7 @@ export async function startServer(args?: TransportArgs): Promise<void> {
       }
 
       await loadOfficialAdapter(mcpConfig.connectionString);
-      database = new Baldin({
+      database = new Baldim({
         connectionString: mcpConfig.connectionString,
         verbose: mcpConfig.verbose,
         parallelism: mcpConfig.parallelism,
@@ -827,7 +827,7 @@ export async function startServer(args?: TransportArgs): Promise<void> {
 
       const resourceCount = Object.keys(database.resources || {}).length;
       log(`Auto-connected to ${database.bucket} (${resourceCount} resources restored)`);
-      process.stderr.write('[baldin MCP] Full mode — connected to database.\n');
+      process.stderr.write('[baldim MCP] Full mode — connected to database.\n');
     } catch (err: any) {
       log(`Auto-connect failed: ${err.message}. Use dbConnect tool manually.`);
       database = null;
@@ -838,7 +838,7 @@ export async function startServer(args?: TransportArgs): Promise<void> {
 
   // Handle graceful shutdown
   const shutdown = async () => {
-    log('Shutting down Baldin MCP Server...');
+    log('Shutting down Baldim MCP Server...');
     if (database && database.isConnected()) {
       await database.disconnect();
     }
@@ -853,7 +853,7 @@ export async function startServer(args?: TransportArgs): Promise<void> {
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 
-  log(`Baldin MCP Server v${SERVER_VERSION} started`);
+  log(`Baldim MCP Server v${SERVER_VERSION} started`);
   log(`Transport: ${finalArgs.transport || 'stdio'}`);
   if (finalArgs.transport === 'http') {
     log(`URL: http://${finalArgs.host}:${finalArgs.port}/mcp`);

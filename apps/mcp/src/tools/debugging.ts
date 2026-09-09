@@ -1,6 +1,6 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
 import type { DbInspectResourceArgs, ResourceValidateArgs, DbHealthCheckArgs, DbGetRawArgs } from '../types/index.js';
-import type { Baldin } from '@baldin/core';
+import type { Baldim } from '@baldim/core';
 import { readBody } from '../read-body.js';
 
 export const debuggingTools = [
@@ -80,9 +80,9 @@ export const debuggingTools = [
   }
 ];
 
-export function createDebuggingHandlers(server: BaldinMCPServer) {
+export function createDebuggingHandlers(server: BaldimMCPServer) {
   return {
-    async dbInspectResource(args: DbInspectResourceArgs, database: Baldin): Promise<any> {
+    async dbInspectResource(args: DbInspectResourceArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName } = args;
       const resource = server.getResource(database, resourceName);
@@ -141,7 +141,7 @@ export function createDebuggingHandlers(server: BaldinMCPServer) {
       return inspection;
     },
 
-    async dbGetMetadata(args: {}, database: Baldin): Promise<any> {
+    async dbGetMetadata(args: {}, database: Baldim): Promise<any> {
       server.ensureConnected(database);
 
       const metadataKey = 's3db.json';
@@ -172,7 +172,7 @@ export function createDebuggingHandlers(server: BaldinMCPServer) {
       }
     },
 
-    async resourceValidate(args: ResourceValidateArgs, database: Baldin): Promise<any> {
+    async resourceValidate(args: ResourceValidateArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, data } = args;
       const resource = server.getResource(database, resourceName);
@@ -196,7 +196,7 @@ export function createDebuggingHandlers(server: BaldinMCPServer) {
       }
     },
 
-    async dbHealthCheck(args: DbHealthCheckArgs, database: Baldin): Promise<any> {
+    async dbHealthCheck(args: DbHealthCheckArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { includeOrphanedPartitions = true } = args;
 
@@ -256,7 +256,7 @@ export function createDebuggingHandlers(server: BaldinMCPServer) {
       return health;
     },
 
-    async resourceGetRaw(args: DbGetRawArgs, database: Baldin): Promise<any> {
+    async resourceGetRaw(args: DbGetRawArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, id } = args;
       const resource = server.getResource(database, resourceName);

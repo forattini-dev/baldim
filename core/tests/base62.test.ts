@@ -4,7 +4,7 @@ import {
   decode as fromBase62,
   encodeDecimal,
   decodeDecimal,
-} from '@baldin/core/encoding';
+} from '@baldim/core/encoding';
 
 describe('base62 encode/decode', () => {
   test('encodes and decodes 0', () => {

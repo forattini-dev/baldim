@@ -16,7 +16,7 @@ import type {
   Database
 } from './types.js';
 import { StateMachineError } from './errors.js';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { resolveEdge, resolveHooks, findGuardForTargetState, buildTransitionContext, getCorrelationId, contractAssertionFailure } from './helpers.js';
 import { executeHooks, executeMachineHooks } from './hooks.js';
 

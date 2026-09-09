@@ -29,7 +29,7 @@ describe('replicator drivers', () => {
     await expect(createReplicator('unknown')).rejects.toThrow(/Unknown replicator driver/);
   });
 
-  it('replicates to an HTTP endpoint with authentication and Baldin source metadata', async () => {
+  it('replicates to an HTTP endpoint with authentication and Baldim source metadata', async () => {
     const received: Array<{ headers: Record<string, string | string[] | undefined>; body: any }> = [];
     const server = createServer((request, response) => {
       let body = '';
@@ -56,6 +56,6 @@ describe('replicator drivers', () => {
 
     expect(received).toHaveLength(1);
     expect(received[0]!.headers.authorization).toBe('Bearer secret');
-    expect(received[0]!.body).toMatchObject({ resource: 'users', action: 'insert', source: 'baldin-webhook-replicator' });
+    expect(received[0]!.body).toMatchObject({ resource: 'users', action: 'insert', source: 'baldim-webhook-replicator' });
   });
 });

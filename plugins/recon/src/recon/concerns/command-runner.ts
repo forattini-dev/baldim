@@ -9,7 +9,7 @@
  */
 
 import { spawn, type SpawnOptions } from 'child_process';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 
 const logger = createLogger({ name: 'recon-command-runner' });
 

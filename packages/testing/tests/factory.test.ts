@@ -1,5 +1,5 @@
-import { Baldin, ValidationError } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim, ValidationError } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { Factory } from '../src/index.js';
 
 describe('Factory', () => {
@@ -39,8 +39,8 @@ describe('Factory', () => {
     expect(users.sequence('global')).toBe(1);
   });
 
-  it('creates records in a real Baldin resource and runs callbacks', async () => {
-    const database = new Baldin({ connectionString: 'memory://testing-factory', logLevel: 'silent' });
+  it('creates records in a real Baldim resource and runs callbacks', async () => {
+    const database = new Baldim({ connectionString: 'memory://testing-factory', logLevel: 'silent' });
     await database.connect();
     const users = await database.createResource({ name: 'users', attributes: { name: 'string|required', normalized: 'boolean' } });
     const before = vi.fn(async (attributes: Record<string, unknown>) => ({ ...attributes, name: String(attributes.name).trim() }));

@@ -2,8 +2,8 @@ import path from 'path';
 import { rm } from 'fs/promises';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { Baldin as Database } from '@baldin/core';
-import { isNodeSqliteAvailable } from '@baldin/adapter-sqlite';
+import { Baldim as Database } from '@baldim/core';
+import { isNodeSqliteAvailable } from '@baldim/adapter-sqlite';
 import { VectorPlugin } from '../src/index.js';
 import { createTemporaryPathForTest } from './helpers.js';
 

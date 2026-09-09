@@ -1,5 +1,5 @@
-import { Plugin, resolveResourceName, tryFn } from '@baldin/core/plugin';
-import { PuppeteerPlugin, StealthManager } from '@baldin/plugin-puppeteer';
+import { Plugin, resolveResourceName, tryFn } from '@baldim/core/plugin';
+import { PuppeteerPlugin, StealthManager } from '@baldim/plugin-puppeteer';
 import { CookieFarmError, PersonaNotFoundError } from './errors.js';
 
 export interface CookieFarmPluginOptions {

@@ -1,6 +1,6 @@
 import { createDatabaseForTest } from './config.js';
 import { startApiPlugin } from './helpers/server.js';
-import { verifyPassword } from '@baldin/core/password';
+import { verifyPassword } from '@baldim/core/password';
 
 describe('API Plugin - Security Contracts', () => {
   describe('JWT driver protections', () => {

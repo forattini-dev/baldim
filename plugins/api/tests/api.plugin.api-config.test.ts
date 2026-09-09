@@ -10,7 +10,7 @@
 import { ApiPlugin } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './config.js';
 import { getApiPort } from './helpers/server.js';
-import { verifyPassword } from '@baldin/core/password';
+import { verifyPassword } from '@baldim/core/password';
 
 async function waitForServer(port, maxAttempts = 100) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {

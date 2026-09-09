@@ -9,10 +9,10 @@
  * - Client registration
  *
  * @example
- * import { Baldin } from '@baldin/core';
- * import { IdentityPlugin } from '@baldin/plugin-identity';
+ * import { Baldim } from '@baldim/core';
+ * import { IdentityPlugin } from '@baldim/plugin-identity';
  *
- * const db = new Baldin({ connectionString: '...' });
+ * const db = new Baldim({ connectionString: '...' });
  * await db.connect();
  *
  * await db.usePlugin(new IdentityPlugin({
@@ -26,13 +26,13 @@
  * }));
  */
 
-import { Plugin } from '@baldin/core/plugin';
-import { tryFn } from '@baldin/core/plugin';
+import { Plugin } from '@baldim/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { OAuth2Server } from './oauth2-server.js';
 import { RateLimiter } from './concerns/rate-limit.js';
-import { resolveResourceNames } from '@baldin/core/plugin';
+import { resolveResourceNames } from '@baldim/core/plugin';
 import { prepareResourceConfigs, type PreparedResourceConfigs } from './concerns/config.js';
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 import {
   BASE_USER_ATTRIBUTES,
   BASE_TENANT_ATTRIBUTES,
@@ -44,16 +44,16 @@ import {
   compactHash,
   hashPassword,
   type SecurityConfig as DatabasePasswordSecurityConfig
-} from '@baldin/core/password';
+} from '@baldim/core/password';
 import { createBuiltInAuthDrivers } from './drivers/index.js';
 import { AuthDriver, type AuthenticateResult, type AuthDriverContext } from './drivers/auth-driver.interface.js';
-import { idGenerator } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
 import { OnboardingManager, type OnboardingConfig } from './concerns/onboarding-manager.js';
 import type { KeyManager } from './rsa-keys.js';
 import type { SessionManager } from './session-manager.js';
 import type { EmailService } from './email-service.js';
 import type { FailbanManager } from './failban-manager.js';
-import type { AuditPlugin } from '@baldin/plugin-audit';
+import type { AuditPlugin } from '@baldim/plugin-audit';
 import type { MFAManager } from './concerns/mfa-manager.js';
 import type { IdentityServer, IdentityPluginServerInfo } from './server.js';
 import type {
@@ -278,7 +278,7 @@ export class IdentityPlugin extends Plugin {
 
       session: {
         sessionExpiry: options.session?.sessionExpiry || '24h',
-        cookieName: options.session?.cookieName || 'baldin_session',
+        cookieName: options.session?.cookieName || 'baldim_session',
         cookiePath: options.session?.cookiePath || '/',
         cookieHttpOnly: options.session?.cookieHttpOnly !== false,
         cookieSecure: options.session?.cookieSecure || false,
@@ -306,9 +306,9 @@ export class IdentityPlugin extends Plugin {
       },
 
       ui: {
-        title: options.ui?.title || 'Baldin Identity',
-        companyName: options.ui?.companyName || 'Baldin',
-        legalName: options.ui?.legalName || options.ui?.companyName || 'Baldin',
+        title: options.ui?.title || 'Baldim Identity',
+        companyName: options.ui?.companyName || 'Baldim',
+        legalName: options.ui?.legalName || options.ui?.companyName || 'Baldim',
         tagline: options.ui?.tagline || 'Secure Identity & Access Management',
         welcomeMessage: options.ui?.welcomeMessage || 'Welcome back!',
         logoUrl: options.ui?.logoUrl || null,
@@ -348,7 +348,7 @@ export class IdentityPlugin extends Plugin {
 
       email: {
         enabled: options.email?.enabled !== false,
-        from: options.email?.from || 'noreply@baldin.identity',
+        from: options.email?.from || 'noreply@baldim.identity',
         replyTo: options.email?.replyTo || null,
         smtp: {
           host: options.email?.smtp?.host || 'localhost',
@@ -364,7 +364,7 @@ export class IdentityPlugin extends Plugin {
         },
         templates: {
           baseUrl: options.email?.templates?.baseUrl || options.ui?.baseUrl || `http://localhost:${options.port || 4000}`,
-          brandName: options.email?.templates?.brandName || options.ui?.title || 'Baldin Identity',
+          brandName: options.email?.templates?.brandName || options.ui?.title || 'Baldim Identity',
           brandLogo: options.email?.templates?.brandLogo || options.ui?.logoUrl || null,
           brandColor: options.email?.templates?.brandColor || options.ui?.primaryColor || '#007bff',
           supportEmail: options.email?.templates?.supportEmail || options.email?.replyTo || null,
@@ -375,7 +375,7 @@ export class IdentityPlugin extends Plugin {
       mfa: {
         enabled: options.mfa?.enabled || false,
         required: options.mfa?.required || false,
-        issuer: options.mfa?.issuer || options.ui?.title || 'Baldin Identity',
+        issuer: options.mfa?.issuer || options.ui?.title || 'Baldim Identity',
         algorithm: options.mfa?.algorithm || 'SHA1',
         digits: options.mfa?.digits || 6,
         period: options.mfa?.period || 30,
@@ -1039,7 +1039,7 @@ export class IdentityPlugin extends Plugin {
       return;
     }
 
-    const { AuditPlugin } = await import('@baldin/plugin-audit');
+    const { AuditPlugin } = await import('@baldim/plugin-audit');
 
     this.auditPlugin = new AuditPlugin({
       includeData: this.config.audit.includeData,

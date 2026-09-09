@@ -1,6 +1,6 @@
 import type { Context, Next, MiddlewareHandler } from '../http/http-runtime.js';
-import type { Logger } from '@baldin/core/plugin';
-import { idGenerator } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
 import { createRequestIdMiddleware } from '../middlewares/request-id.js';
 import { createPinoLoggerMiddleware, type LoggerLike, type CustomLogLevelFn, type CustomPropsFn } from '../middlewares/pino-logger.js';
 import { createSecurityHeadersMiddleware, type SecurityHeadersMiddlewareConfig } from '../middlewares/security-headers.js';

@@ -13,7 +13,7 @@ import { bulkTools, createBulkHandlers } from './bulk.js';
 import { exportImportTools, createExportImportHandlers } from './export-import.js';
 import { statsTools, createStatsHandlers } from './stats.js';
 import { docsSearchTools, createDocsSearchHandlers } from './docs-search.js';
-import type { BaldinMCPServer } from '../entrypoint.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
 
 /**
  * Get all tool definitions
@@ -38,7 +38,7 @@ export function getAllTools(): any[] {
  * @param server - Server instance with helper methods
  * @returns Map of tool name -> handler function
  */
-export function createAllHandlers(server: BaldinMCPServer): Record<string, Function> {
+export function createAllHandlers(server: BaldimMCPServer): Record<string, Function> {
   return {
     ...createDocsSearchHandlers(server),
     ...createConnectionHandlers(server),

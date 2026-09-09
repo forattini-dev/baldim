@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import BaldinDefault, {
-  Baldin,
+import BaldimDefault, {
+  Baldim,
   BuckieDB,
   CronManager,
   createCronManager,
@@ -10,10 +10,10 @@ import BaldinDefault, {
   S3dbError,
   decode,
   encode,
-} from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+} from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 
-describe('@baldin/core public API', () => {
+describe('@baldim/core public API', () => {
   const databases: Database[] = [];
 
   afterEach(async () => {
@@ -24,9 +24,9 @@ describe('@baldin/core public API', () => {
     vi.unstubAllEnvs();
   });
 
-  it('exports Baldin as the primary and default database class', () => {
-    expect(BaldinDefault).toBe(Baldin);
-    expect(new Baldin({ connectionString: 'memory://api-test', logLevel: 'silent' })).toBeInstanceOf(Database);
+  it('exports Baldim as the primary and default database class', () => {
+    expect(BaldimDefault).toBe(Baldim);
+    expect(new Baldim({ connectionString: 'memory://api-test', logLevel: 'silent' })).toBeInstanceOf(Database);
   });
 
   it('exports lifecycle managers from the core entry point', () => {
@@ -36,8 +36,8 @@ describe('@baldin/core public API', () => {
   });
 
   it('keeps the old public names as migration aliases', () => {
-    expect(new BuckieDB({ connectionString: 'memory://name-compat', logLevel: 'silent' })).toBeInstanceOf(Baldin);
-    expect(new S3db({ connectionString: 'memory://compat-test', logLevel: 'silent' })).toBeInstanceOf(Baldin);
+    expect(new BuckieDB({ connectionString: 'memory://name-compat', logLevel: 'silent' })).toBeInstanceOf(Baldim);
+    expect(new S3db({ connectionString: 'memory://compat-test', logLevel: 'silent' })).toBeInstanceOf(Baldim);
   });
 
   it('keeps the canonical storage error compatible with the old class name', () => {
@@ -50,13 +50,13 @@ describe('@baldin/core public API', () => {
     expect(error.awsMessage).toBe('low-level failure');
   });
 
-  it('prefers BALDIN environment settings and accepts S3DB fallbacks', () => {
-    vi.stubEnv('BALDIN_LOG_LEVEL', 'error');
+  it('prefers BALDIM environment settings and accepts S3DB fallbacks', () => {
+    vi.stubEnv('BALDIM_LOG_LEVEL', 'error');
     vi.stubEnv('S3DB_LOG_LEVEL', 'debug');
-    vi.stubEnv('BALDIN_DISABLE_CRON', 'true');
+    vi.stubEnv('BALDIM_DISABLE_CRON', 'true');
     vi.stubEnv('S3DB_DISABLE_CRON', 'false');
 
-    const database = new Baldin({
+    const database = new Baldim({
       connectionString: 'memory://environment-test',
       exitOnSignal: false,
     });
@@ -65,8 +65,8 @@ describe('@baldin/core public API', () => {
   });
 
   it('performs a document lifecycle through the memory client', async () => {
-    const database = new Baldin({
-      connectionString: 'memory://baldin-tests/documents',
+    const database = new Baldim({
+      connectionString: 'memory://baldim-tests/documents',
       logLevel: 'silent',
     });
     databases.push(database);
@@ -76,9 +76,9 @@ describe('@baldin/core public API', () => {
       name: 'notes',
       attributes: { title: 'string', done: 'boolean' },
     });
-    const inserted = await notes.insert({ id: 'first', title: 'Ship Baldin', done: false });
+    const inserted = await notes.insert({ id: 'first', title: 'Ship Baldim', done: false });
     expect(inserted.id).toBe('first');
-    expect(await notes.get('first')).toMatchObject({ title: 'Ship Baldin', done: false });
+    expect(await notes.get('first')).toMatchObject({ title: 'Ship Baldim', done: false });
 
     await notes.update('first', { done: true });
     expect(await notes.get('first')).toMatchObject({ done: true });

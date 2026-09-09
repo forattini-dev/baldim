@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url));
 
-describe('@baldin/plugin-kubernetes-inventory package contract', () => {
+describe('@baldim/plugin-kubernetes-inventory package contract', () => {
   it('owns every Kubernetes runtime dependency and keeps core as a peer', async () => {
     const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
@@ -15,7 +15,7 @@ describe('@baldin/plugin-kubernetes-inventory package contract', () => {
       'node-cron': '^4.0.0',
     });
     expect(manifest.peerDependencies).toEqual({
-      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+      '@baldim/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
     });
   });
 

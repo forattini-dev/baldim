@@ -1,11 +1,11 @@
 import { timingSafeEqual } from 'crypto';
-import { decrypt } from '@baldin/core';
-import { isPasswordHash } from '@baldin/core/password';
+import { decrypt } from '@baldim/core';
+import { isPasswordHash } from '@baldim/core/password';
 import type { Context, Next } from '../http/http-runtime.js';
 import type { ContentfulStatusCode } from '../http/http-runtime.js';
 import type { DatabaseLike } from './resource-manager.js';
 import { unauthorized } from '../utils/response-formatter.js';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 import { verifyPassword } from '../http/password-verification.js';
 import { getCookie } from '../http/http-runtime.js';
 import { BasicAuthResourceManager, resolveUser, resolveUsers } from './resource-manager.js';

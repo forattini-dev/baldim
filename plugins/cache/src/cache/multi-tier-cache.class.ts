@@ -1,6 +1,6 @@
 import { Cache, type CacheConfig } from "./cache.class.js";
 import { CacheError } from "../errors.js";
-import { createLogger, type Logger, type LogLevel } from '@baldin/core/plugin';
+import { createLogger, type Logger, type LogLevel } from '@baldim/core/plugin';
 
 export interface CacheDriver {
   get<T>(key: string): Promise<T | null | undefined>;

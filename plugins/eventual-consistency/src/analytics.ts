@@ -3,8 +3,8 @@
  * @module eventual-consistency/analytics
  */
 
-import { TasksPool, AnalyticsNotEnabledError } from '@baldin/core';
-import { forEachWithConcurrency, PluginError, tryFn } from '@baldin/core/plugin';
+import { TasksPool, AnalyticsNotEnabledError } from '@baldim/core';
+import { forEachWithConcurrency, PluginError, tryFn } from '@baldim/core/plugin';
 import {
   ensureCohortHours,
   groupByCohort,

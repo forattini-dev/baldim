@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Baldin, Database } from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim, Database } from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 
 const databases: Database[] = [];
 let sequence = 0;
 
-async function createDatabase(label: string): Promise<Baldin> {
-  const database = new Baldin({
+async function createDatabase(label: string): Promise<Baldim> {
+  const database = new Baldim({
     connectionString: `memory://engine-${label}-${++sequence}`,
     logLevel: 'silent',
     exitOnSignal: false,
@@ -23,7 +23,7 @@ afterEach(async () => {
   MemoryClient.clearAllStorage();
 });
 
-describe('Baldin core engine', () => {
+describe('Baldim core engine', () => {
   it('accepts comma-separated enum values in compact attribute schemas', async () => {
     const database = await createDatabase('compact-enum');
     const jobs = await database.createResource({
@@ -159,7 +159,7 @@ describe('Baldin core engine', () => {
 
   it('restores resource definitions and documents on reconnect', async () => {
     const connectionString = `memory://engine-reconnect-${++sequence}`;
-    const first = new Baldin({ connectionString, logLevel: 'silent', exitOnSignal: false });
+    const first = new Baldim({ connectionString, logLevel: 'silent', exitOnSignal: false });
     databases.push(first);
     await first.connect();
     const notes = await first.createResource({
@@ -170,7 +170,7 @@ describe('Baldin core engine', () => {
     await notes.insert({ id: 'one', title: 'Persisted definition', pinned: true });
     await first.disconnect();
 
-    const reopened = new Baldin({ connectionString, logLevel: 'silent', exitOnSignal: false });
+    const reopened = new Baldim({ connectionString, logLevel: 'silent', exitOnSignal: false });
     databases.push(reopened);
     await reopened.connect();
     expect(Object.keys(reopened.resources)).toEqual(['notes']);
@@ -188,7 +188,7 @@ describe('Baldin core engine', () => {
       attributes: { name: 'string|required' },
     });
     await assets.insert({ id: 'logo', name: 'logo.txt' });
-    const payload = Buffer.from('baldin-content');
+    const payload = Buffer.from('baldim-content');
     await assets.setContent({ id: 'logo', buffer: payload, contentType: 'text/plain' });
 
     expect(await assets.hasContent('logo')).toBe(true);

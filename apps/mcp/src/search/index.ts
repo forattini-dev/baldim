@@ -1,5 +1,5 @@
 /**
- * MCP Search module - Fuzzy search for Baldin documentation.
+ * MCP Search module - Fuzzy search for Baldim documentation.
  */
 
 export { HybridSearch } from './hybrid-search.js';

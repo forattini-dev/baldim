@@ -1,5 +1,5 @@
 import type { Context, Next } from '../http/http-runtime.js';
-import type { Logger } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 
 export interface CompressionConfig {
   threshold: number;

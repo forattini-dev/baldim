@@ -7,5 +7,5 @@ metadata header, and content type needed by an S3-compatible provider.
 
 Run `node adapters/s3/tests/fixtures/generate-from-filesystem.mjs` to reproduce it
 from the filesystem fixture. The S3 compatibility test writes the captured objects
-with the AWS SDK, opens them through Baldin, and compares the provider's object
+with the AWS SDK, opens them through Baldim, and compares the provider's object
 listing before and after the read.

@@ -1,7 +1,7 @@
 /**
  * S3 CrawlQueue Driver
  *
- * baldin resource-backed queue with visited URL tracking.
+ * baldim resource-backed queue with visited URL tracking.
  * Uses two resources: queue items and visited set.
  */
 

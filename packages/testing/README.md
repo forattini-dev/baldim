@@ -1,9 +1,9 @@
-# @baldin/testing
+# @baldim/testing
 
-Factories and seeders for Baldin applications and plugin test suites.
+Factories and seeders for Baldim applications and plugin test suites.
 
 ```ts
-import { Factory, Seeder } from '@baldin/testing';
+import { Factory, Seeder } from '@baldim/testing';
 
 Factory.define('users', ({ seq }) => ({ id: `user-${seq}`, name: `User ${seq}` }));
 const seeder = new Seeder(database);

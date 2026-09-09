@@ -1,4 +1,4 @@
-import { idGenerator } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
 import type { Match } from './types.js';
 
 interface GameResult {

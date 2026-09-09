@@ -7,7 +7,7 @@
  * - Iterates over enabled targets
  */
 
-import { forEachWithConcurrency, getCronManager } from '@baldin/core/plugin';
+import { forEachWithConcurrency, getCronManager } from '@baldim/core/plugin';
 import type { TargetManager, TargetRecord } from './target-manager.js';
 
 export interface ReconPlugin {

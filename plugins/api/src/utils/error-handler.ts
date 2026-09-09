@@ -1,11 +1,11 @@
 import type { Context } from '../http/http-runtime.js';
 import { error as formatError } from './response-formatter.js';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 
 const logger: Logger = createLogger({ name: 'ErrorHandler', level: 'info' });
 
-export interface BaldinError extends Error {
+export interface BaldimError extends Error {
   resource?: string;
   bucket?: string;
   key?: string;
@@ -37,7 +37,7 @@ const errorStatusMap: Record<string, number> = {
   'ResourceError': 500
 };
 
-export function getStatusFromError(err: Error | BaldinError): number {
+export function getStatusFromError(err: Error | BaldimError): number {
   if (err.name && errorStatusMap[err.name]) {
     return errorStatusMap[err.name]!;
   }
@@ -64,19 +64,19 @@ export function getStatusFromError(err: Error | BaldinError): number {
   return 500;
 }
 
-export function errorHandler(err: Error | BaldinError, c: Context): Response {
+export function errorHandler(err: Error | BaldimError, c: Context): Response {
   const status = getStatusFromError(err);
   const code = err.name || 'INTERNAL_ERROR';
 
   const details: ErrorDetails = {};
 
-  const baldinError = err as BaldinError;
-  if (baldinError.resource) details.resource = baldinError.resource;
-  if (baldinError.bucket) details.bucket = baldinError.bucket;
-  if (baldinError.key) details.key = baldinError.key;
-  if (baldinError.operation) details.operation = baldinError.operation;
-  if (baldinError.suggestion) details.suggestion = baldinError.suggestion;
-  if (baldinError.availableResources) details.availableResources = baldinError.availableResources;
+  const baldimError = err as BaldimError;
+  if (baldimError.resource) details.resource = baldimError.resource;
+  if (baldimError.bucket) details.bucket = baldimError.bucket;
+  if (baldimError.key) details.key = baldimError.key;
+  if (baldimError.operation) details.operation = baldimError.operation;
+  if (baldimError.suggestion) details.suggestion = baldimError.suggestion;
+  if (baldimError.availableResources) details.availableResources = baldimError.availableResources;
 
   const response = formatError(err, {
     status,

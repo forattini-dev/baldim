@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Baldin CLI - Command Line Interface
+ * Baldim CLI - Command Line Interface
  *
  * 🪵 INTENTIONAL CONSOLE USAGE
  * This file uses console.log/error/warn for user-facing CLI output.
@@ -23,8 +23,8 @@ import {
   c,
 } from './components/index.js';
 import { prompt } from 'tuiuiu.js';
-import { Baldin } from '@baldin/core';
-import { startServer as startMcpServer } from '@baldin/mcp';
+import { Baldim } from '@baldim/core';
+import { startServer as startMcpServer } from '@baldim/mcp';
 import { getVersion } from './version.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -34,7 +34,7 @@ import type { CLIConfig } from './types.js';
 import { MigrationManager } from './migration-manager.js';
 import { loadOfficialAdapter } from './load-adapter.js';
 
-const configPath = path.join(os.homedir(), '.baldin', 'config.json');
+const configPath = path.join(os.homedir(), '.baldim', 'config.json');
 
 async function loadConfig(): Promise<CLIConfig> {
   try {
@@ -53,7 +53,7 @@ async function saveConfig(config: CLIConfig): Promise<void> {
 
 async function detectConnectionString(): Promise<string | null> {
   const sources = [
-    async () => process.env.BALDIN_CONNECTION_STRING,
+    async () => process.env.BALDIM_CONNECTION_STRING,
     async () => process.env.S3DB_CONNECTION_STRING,
     async () => process.env.S3_CONNECTION_STRING,
     async () => process.env.DATABASE_URL,
@@ -72,7 +72,7 @@ async function detectConnectionString(): Promise<string | null> {
         const mcpConfigPath = path.join(os.homedir(), '.config', 'mcp', 'config.json');
         const content = await fs.readFile(mcpConfigPath, 'utf-8');
         const config = JSON.parse(content);
-        return config.servers?.baldin?.env?.BALDIN_CONNECTION_STRING
+        return config.servers?.baldim?.env?.BALDIM_CONNECTION_STRING
           || config.servers?.s3db?.env?.S3DB_CONNECTION_STRING
           || null;
       } catch {
@@ -92,39 +92,39 @@ async function detectConnectionString(): Promise<string | null> {
   return null;
 }
 
-async function getDatabase(connection?: string): Promise<Baldin> {
+async function getDatabase(connection?: string): Promise<Baldim> {
   const config = await loadConfig();
-  let connectionString = connection || config.connection || process.env.BALDIN_CONNECTION_STRING;
+  let connectionString = connection || config.connection || process.env.BALDIM_CONNECTION_STRING;
 
   if (!connectionString) {
     connectionString = (await detectConnectionString()) || undefined;
   }
 
   if (!connectionString) {
-    console.error(red('No connection string provided. Use --connection or baldin configure'));
+    console.error(red('No connection string provided. Use --connection or baldim configure'));
     process.exit(1);
   }
 
   await loadOfficialAdapter(connectionString);
-  return new Baldin({ connectionString });
+  return new Baldim({ connectionString });
 }
 
 const cli = createCLI({
-  name: 'baldin',
+  name: 'baldim',
   version: getVersion(),
-  description: 'Baldin CLI - Transform AWS S3 into a powerful document database',
+  description: 'Baldim CLI - Transform AWS S3 into a powerful document database',
   autoShort: true,
   options: {
     connection: {
       short: 'c',
       type: 'string',
-      description: 'Baldin connection string',
-      env: 'BALDIN_CONNECTION_STRING'
+      description: 'Baldim connection string',
+      env: 'BALDIM_CONNECTION_STRING'
     }
   },
   commands: {
     mcp: {
-      description: 'Start the Baldin MCP (Model Context Protocol) server',
+      description: 'Start the Baldim MCP (Model Context Protocol) server',
       aliases: ['server'],
       options: {
         cwd: {
@@ -164,7 +164,7 @@ const cli = createCLI({
 
         if (connectionString) {
           log('Connection string detected');
-          process.env.BALDIN_CONNECTION_STRING = connectionString;
+          process.env.BALDIM_CONNECTION_STRING = connectionString;
         } else {
           log('No connection string found. Server will start without auto-connection.');
         }
@@ -185,7 +185,7 @@ const cli = createCLI({
     },
 
     configure: {
-      description: 'Configure Baldin connection',
+      description: 'Configure Baldim connection',
       handler: async () => {
         const connection = await prompt.input('Enter S3 connection string:', {
           default: 's3://KEY:SECRET@bucket/database'
@@ -198,14 +198,14 @@ const cli = createCLI({
         );
 
         await saveConfig({ connection, defaultBehavior });
-        console.log(green('✓ Configuration saved to ~/.baldin/config.json'));
+        console.log(green('✓ Configuration saved to ~/.baldim/config.json'));
       }
     },
 
     list: {
       description: 'List all resources',
       handler: async (result) => {
-        const spinner = new Spinner('Connecting to Baldin...').start();
+        const spinner = new Spinner('Connecting to Baldim...').start();
         try {
           const db = await getDatabase((result.options as any).connection);
           const resources = await db.listResources();
@@ -584,7 +584,7 @@ const cli = createCLI({
           spinner.stop();
 
           if (opts.format === 'typescript') {
-            const { generateTypes } = await import('@baldin/typegen');
+            const { generateTypes } = await import('@baldim/typegen');
             const types = generateTypes(db as any);
             console.log(types);
           } else if (opts.format === 'bigquery') {
@@ -959,7 +959,7 @@ const cli = createCLI({
 
             try {
               const db = await getDatabase(opts.connection);
-              const { Factory, Seeder } = await import('@baldin/testing');
+              const { Factory, Seeder } = await import('@baldim/testing');
               Factory.setDatabase(db);
 
               const seeder = new Seeder(db, { logLevel: 'silent' });
@@ -1040,7 +1040,7 @@ const cli = createCLI({
 
             try {
               const config = await loadConfig();
-              let baseConnection = opts.connection || config.connection || process.env.BALDIN_CONNECTION_STRING;
+              let baseConnection = opts.connection || config.connection || process.env.BALDIM_CONNECTION_STRING;
 
               if (!baseConnection) {
                 spinner.fail(red('No connection string provided'));
@@ -1052,7 +1052,7 @@ const cli = createCLI({
               url.pathname = `${originalPath}/${opts.name}`;
               const testConnection = url.toString();
 
-              const db = new Baldin({ connectionString: testConnection });
+              const db = new Baldim({ connectionString: testConnection });
 
               spinner.text = 'Loading fixtures...';
 
@@ -1078,7 +1078,7 @@ const cli = createCLI({
               console.log(`  Name: ${opts.name}`);
               console.log(`  Connection: ${testConnection}`);
               console.log(gray('\n💡 Use this connection string for your tests'));
-              console.log(gray(`💡 Teardown with: baldin test teardown --name ${opts.name}`));
+              console.log(gray(`💡 Teardown with: baldim test teardown --name ${opts.name}`));
 
               const testConfig = { ...config, testConnection, testName: opts.name };
               await saveConfig(testConfig);
@@ -1113,7 +1113,7 @@ const cli = createCLI({
               let connection = opts.connection;
 
               if (!connection && opts.name) {
-                const baseConnection = config.connection || process.env.BALDIN_CONNECTION_STRING;
+                const baseConnection = config.connection || process.env.BALDIM_CONNECTION_STRING;
                 if (!baseConnection) {
                   spinner.fail(red('No base connection string found for test database'));
                   process.exit(1);
@@ -1131,9 +1131,9 @@ const cli = createCLI({
                 process.exit(1);
               }
 
-              const db = new Baldin({ connectionString: connection });
+              const db = new Baldim({ connectionString: connection });
 
-                const { Seeder } = await import('@baldin/testing');
+                const { Seeder } = await import('@baldim/testing');
               const seeder = new Seeder(db, { logLevel: 'silent' });
 
               spinner.text = 'Resetting database...';
@@ -1187,7 +1187,7 @@ const cli = createCLI({
             try {
               const db = await getDatabase(opts.connection);
 
-              const { Seeder } = await import('@baldin/testing');
+              const { Seeder } = await import('@baldim/testing');
               const seeder = new Seeder(db, { logLevel: 'silent' });
 
               await seeder.truncate([pos.resource]);
@@ -1230,7 +1230,7 @@ const cli = createCLI({
               console.log(cyan('\nMigration file:'));
               console.log(`  ${filepath}`);
               console.log(gray('\n💡 Edit the file to add your migration logic'));
-              console.log(gray('💡 Run with: baldin migrate up'));
+              console.log(gray('💡 Run with: baldim migrate up'));
             } catch (error: any) {
               spinner.fail(red(error.message));
               console.error(error.stack);
@@ -1427,7 +1427,7 @@ const cli = createCLI({
 
 async function consoleREPL(connection?: string): Promise<void> {
   console.log(c.cyan.bold('\n┌─────────────────────────────────────┐'));
-  console.log(c.cyan.bold('│  Baldin Interactive Console v19.3     │'));
+  console.log(c.cyan.bold('│  Baldim Interactive Console v19.3     │'));
   console.log(c.cyan.bold('└─────────────────────────────────────┘\n'));
 
   const db = await getDatabase(connection);
@@ -1443,12 +1443,12 @@ async function consoleREPL(connection?: string): Promise<void> {
   console.log(gray('  .exit         - Exit console\n'));
 
   const repl = await import('repl');
-  const { Factory, Seeder } = await import('@baldin/testing');
+  const { Factory, Seeder } = await import('@baldim/testing');
 
   let currentResource: any = null;
 
   const server = repl.start({
-    prompt: green('baldin> '),
+    prompt: green('baldim> '),
     useColors: true,
     ignoreUndefined: true,
     eval: async (cmd: string, context: any, filename: string, callback: (err: Error | null, result: any) => void) => {
@@ -1456,7 +1456,7 @@ async function consoleREPL(connection?: string): Promise<void> {
         const trimmed = cmd.trim().replace(/\n$/, '');
 
         if (trimmed === '.help' || trimmed === 'help') {
-          console.log(cyan('\n📖 Baldin Console Commands:\n'));
+          console.log(cyan('\n📖 Baldim Console Commands:\n'));
           console.log(bold('Database:'));
           console.log('  db                      - Database instance');
           console.log('  db.listResources()      - List all resources');
@@ -1543,7 +1543,7 @@ async function consoleREPL(connection?: string): Promise<void> {
     }
   });
 
-  server.setupHistory(path.join(os.homedir(), '.baldin', 'history'), () => {});
+  server.setupHistory(path.join(os.homedir(), '.baldim', 'history'), () => {});
 
   server.on('exit', () => {
     console.log(cyan('\n👋 Bye!\n'));

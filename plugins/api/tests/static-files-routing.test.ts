@@ -31,7 +31,7 @@ describe('API Plugin static file routing', () => {
 
   beforeEach(async () => {
     port = 0;
-    staticDir = await mkdtemp(path.join(os.tmpdir(), 'baldin-static-assets-'));
+    staticDir = await mkdtemp(path.join(os.tmpdir(), 'baldim-static-assets-'));
     await mkdir(path.join(staticDir, 'heroes', 'icons'), { recursive: true });
     await writeFile(path.join(staticDir, 'index.html'), '<html>assets root</html>');
     await writeFile(path.join(staticDir, 'heroes', 'icons', 'icon_218103810.txt'), 'icon payload');

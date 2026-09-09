@@ -1,5 +1,5 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
-import type { Baldin } from '@baldin/core';
+import type { BaldimMCPServer } from '../entrypoint.js';
+import type { Baldim } from '@baldim/core';
 
 export const streamTools = [
   {
@@ -127,9 +127,9 @@ export const streamTools = [
   }
 ];
 
-export function createStreamHandlers(server: BaldinMCPServer) {
+export function createStreamHandlers(server: BaldimMCPServer) {
   return {
-    async streamInsert(args: { resourceName: string; data: any[]; batchSize?: number }, database: Baldin): Promise<any> {
+    async streamInsert(args: { resourceName: string; data: any[]; batchSize?: number }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, data, batchSize = 100 } = args;
 
@@ -164,7 +164,7 @@ export function createStreamHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async streamUpdate(args: { resourceName: string; filter: any; update: any; batchSize?: number }, database: Baldin): Promise<any> {
+    async streamUpdate(args: { resourceName: string; filter: any; update: any; batchSize?: number }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, filter, update, batchSize = 50 } = args;
 
@@ -200,7 +200,7 @@ export function createStreamHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async streamRead(args: { resourceName: string; filter?: any; pageSize?: number; cursor?: string }, database: Baldin): Promise<any> {
+    async streamRead(args: { resourceName: string; filter?: any; pageSize?: number; cursor?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, filter, pageSize = 100, cursor } = args;
 
@@ -243,7 +243,7 @@ export function createStreamHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async streamDelete(args: { resourceName: string; filter: any; batchSize?: number; dryRun?: boolean }, database: Baldin): Promise<any> {
+    async streamDelete(args: { resourceName: string; filter: any; batchSize?: number; dryRun?: boolean }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, filter, batchSize = 50, dryRun = false } = args;
 
@@ -290,7 +290,7 @@ export function createStreamHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async streamExport(args: { resourceName: string; format?: string; filter?: any }, database: Baldin): Promise<any> {
+    async streamExport(args: { resourceName: string; format?: string; filter?: any }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, format = 'json', filter } = args;
 

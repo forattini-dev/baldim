@@ -1,4 +1,4 @@
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { createHttpClient, type HttpClient } from '../http-client.js';
 import BaseReplicator from './base-replicator.class.js';
 
@@ -213,7 +213,7 @@ class WebhookReplicator extends BaseReplicator {
       resource: resource,
       action: operation,
       timestamp: new Date().toISOString(),
-      source: 'baldin-webhook-replicator'
+      source: 'baldim-webhook-replicator'
     };
 
     switch (operation) {
@@ -246,7 +246,7 @@ class WebhookReplicator extends BaseReplicator {
       this._httpClient = await createHttpClient({
         baseUrl: this.url,
         headers: {
-          'User-Agent': 'baldin-webhook-replicator',
+          'User-Agent': 'baldim-webhook-replicator',
           ...this.headers
         },
         timeout: this.timeout,
@@ -493,7 +493,7 @@ class WebhookReplicator extends BaseReplicator {
       const testPayload = {
         test: true,
         timestamp: new Date().toISOString(),
-        source: 'baldin-webhook-replicator'
+        source: 'baldim-webhook-replicator'
       };
 
       const response = await this._makeRequest(testPayload);

@@ -1,7 +1,7 @@
 import { S3QueuePlugin } from '../src/index.js';
 import { createDatabaseForTest } from './helpers.js';
-import { MemoryClient } from '@baldin/adapter-memory';
-import { getCronManager } from '@baldin/core/plugin';
+import { MemoryClient } from '@baldim/adapter-memory';
+import { getCronManager } from '@baldim/core/plugin';
 
 describe('S3QueuePlugin - Edge Cases', () => {
   let database;

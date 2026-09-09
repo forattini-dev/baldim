@@ -114,7 +114,7 @@ export class ThreadPool {
           modulePath: handlersPath,
           poolSize,
           scheduler,
-          workerName: 'baldin-thread-pool',
+          workerName: 'baldim-thread-pool',
         }) as TaskBridge;
 
         this._logger?.debug({ poolSize, scheduler, mode: 'worker' }, 'thread pool initialized with workers');

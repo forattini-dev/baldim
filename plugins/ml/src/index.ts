@@ -1,5 +1,5 @@
-import { Resource } from '@baldin/core';
-import { Plugin, createLogger, tryFn } from '@baldin/core/plugin';
+import { Resource } from '@baldim/core';
+import { Plugin, createLogger, tryFn } from '@baldim/core/plugin';
 import { IntervalScheduler } from './interval-scheduler.js';
 
 import { RegressionModel } from './ml/regression-model.class.js';

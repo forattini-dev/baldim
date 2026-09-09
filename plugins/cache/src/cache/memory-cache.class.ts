@@ -7,7 +7,7 @@ const gzipAsync = promisify(zlib.gzip);
 const gunzipAsync = promisify(zlib.gunzip);
 import { Cache, type CacheConfig, type CacheStats } from './cache.class.js';
 import { CacheError } from '../errors.js';
-import { createLogger, type Logger } from '@baldin/core/plugin';
+import { createLogger, type Logger } from '@baldim/core/plugin';
 
 export type EvictionPolicy = 'lru' | 'fifo';
 

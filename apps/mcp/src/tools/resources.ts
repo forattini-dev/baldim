@@ -1,6 +1,6 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
 import type { DbCreateResourceArgs } from '../types/index.js';
-import type { Baldin } from '@baldin/core';
+import type { Baldim } from '@baldim/core';
 
 export const resourceManagementTools = [
   {
@@ -11,7 +11,7 @@ export const resourceManagementTools = [
 - partitions: define on fields you query by for O(1) lookups (e.g. { "by-status": { fields: { status: "string" } } })
 - timestamps: true for auto createdAt/updatedAt
 
-Read baldin://best-practices for detailed guidance.`,
+Read baldim://best-practices for detailed guidance.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -49,7 +49,7 @@ Read baldin://best-practices for detailed guidance.`,
   },
   {
     name: 'dbListResources',
-    description: 'List all resources (tables/collections) in the connected database. Shows name, schema, behavior, and partition info for each resource. Use baldin://resource/{name} for detailed inspection.',
+    description: 'List all resources (tables/collections) in the connected database. Shows name, schema, behavior, and partition info for each resource. Use baldim://resource/{name} for detailed inspection.',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -58,9 +58,9 @@ Read baldin://best-practices for detailed guidance.`,
   }
 ];
 
-export function createResourceManagementHandlers(server: BaldinMCPServer) {
+export function createResourceManagementHandlers(server: BaldimMCPServer) {
   return {
-    async dbCreateResource(args: DbCreateResourceArgs, database: Baldin): Promise<any> {
+    async dbCreateResource(args: DbCreateResourceArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
 
       const { name, attributes, behavior = 'user-managed', timestamps = false, partitions, paranoid = true } = args;
@@ -86,7 +86,7 @@ export function createResourceManagementHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async dbListResources(args: {}, database: Baldin): Promise<any> {
+    async dbListResources(args: {}, database: Baldim): Promise<any> {
       server.ensureConnected(database);
 
       const summary = Object.values(database.resources || {}).map((r: any) => {
@@ -107,7 +107,7 @@ export function createResourceManagementHandlers(server: BaldinMCPServer) {
         success: true,
         resources: summary,
         count: summary.length,
-        hint: 'Use baldin://resource/{name} for full schema, partition details, and usage examples.'
+        hint: 'Use baldim://resource/{name} for full schema, partition details, and usage examples.'
       };
     }
   };

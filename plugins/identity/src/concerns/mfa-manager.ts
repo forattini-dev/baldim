@@ -8,8 +8,8 @@
  */
 
 import { loadOptionalDependency } from '../optional-dependency.js';
-import { idGenerator } from '@baldin/core/plugin';
-import { PluginError } from '@baldin/core/plugin';
+import { idGenerator } from '@baldim/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export type TOTPAlgorithm = 'SHA1' | 'SHA256' | 'SHA512';
 
@@ -57,7 +57,7 @@ export class MFAManager {
 
   constructor(options: MFAManagerOptions = {}) {
     this.options = {
-      issuer: options.issuer || 'Baldin Identity',
+      issuer: options.issuer || 'Baldim Identity',
       algorithm: options.algorithm || 'SHA1',
       digits: options.digits || 6,
       period: options.period || 30,

@@ -37,8 +37,8 @@ function createD1Binding(): { prepare(sql: string): BoundStatement; close(): voi
   };
 }
 
-runStorageAdapterContract('@baldin/adapter-sqlite libSQL executor', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'baldin-libsql-contract-'));
+runStorageAdapterContract('@baldim/adapter-sqlite libSQL executor', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'baldim-libsql-contract-'));
   return new RemoteSqliteClient({
     endpoint: `file:${join(directory, 'contract.db')}`,
     connectionString: `sqlite+libsql://local/${Date.now()}`,
@@ -48,7 +48,7 @@ runStorageAdapterContract('@baldin/adapter-sqlite libSQL executor', async () => 
   });
 });
 
-runStorageAdapterContract('@baldin/adapter-sqlite D1 binding executor', () => {
+runStorageAdapterContract('@baldim/adapter-sqlite D1 binding executor', () => {
   const binding = createD1Binding();
   const client = new RemoteSqliteClient({
     endpoint: 'sqlite+d1://binding/DB',
@@ -67,26 +67,26 @@ runStorageAdapterContract('@baldin/adapter-sqlite D1 binding executor', () => {
   return client;
 });
 
-const configuredLibsqlUrl = process.env.BALDIN_LIBSQL_TEST_URL;
+const configuredLibsqlUrl = process.env.BALDIM_LIBSQL_TEST_URL;
 if (configuredLibsqlUrl) {
-  runStorageAdapterContract('@baldin/adapter-sqlite configured libSQL service', () => new RemoteSqliteClient({
+  runStorageAdapterContract('@baldim/adapter-sqlite configured libSQL service', () => new RemoteSqliteClient({
     endpoint: configuredLibsqlUrl,
     connectionString: configuredLibsqlUrl,
     sqliteDriver: 'libsql',
-    authToken: process.env.BALDIN_LIBSQL_AUTH_TOKEN,
+    authToken: process.env.BALDIM_LIBSQL_AUTH_TOKEN,
     bucket: `contract-${Date.now()}-${Math.random()}`,
     logLevel: 'silent'
   }));
 } else {
-  describe.skip('@baldin/adapter-sqlite configured libSQL service', () => {});
+  describe.skip('@baldim/adapter-sqlite configured libSQL service', () => {});
 }
 
-const configuredD1Account = process.env.BALDIN_D1_ACCOUNT_ID;
-const configuredD1Database = process.env.BALDIN_D1_DATABASE_ID;
-const configuredD1Token = process.env.BALDIN_D1_API_TOKEN;
+const configuredD1Account = process.env.BALDIM_D1_ACCOUNT_ID;
+const configuredD1Database = process.env.BALDIM_D1_DATABASE_ID;
+const configuredD1Token = process.env.BALDIM_D1_API_TOKEN;
 if (configuredD1Account && configuredD1Database && configuredD1Token) {
   const endpoint = `sqlite+d1://${configuredD1Account}/${configuredD1Database}`;
-  runStorageAdapterContract('@baldin/adapter-sqlite configured D1 service', () => new RemoteSqliteClient({
+  runStorageAdapterContract('@baldim/adapter-sqlite configured D1 service', () => new RemoteSqliteClient({
     endpoint,
     connectionString: endpoint,
     sqliteDriver: 'd1',
@@ -95,5 +95,5 @@ if (configuredD1Account && configuredD1Database && configuredD1Token) {
     logLevel: 'silent'
   }));
 } else {
-  describe.skip('@baldin/adapter-sqlite configured D1 service', () => {});
+  describe.skip('@baldim/adapter-sqlite configured D1 service', () => {});
 }

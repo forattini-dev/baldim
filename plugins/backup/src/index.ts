@@ -1,4 +1,4 @@
-import { Plugin, PluginError, tryFn, type PluginOptions, type Database, type Resource } from '@baldin/core/plugin';
+import { Plugin, PluginError, tryFn, type PluginOptions, type Database, type Resource } from '@baldim/core/plugin';
 import { createBackupDriver, validateBackupConfig } from './backup/index.js';
 import { StreamingExporter } from './backup/streaming-exporter.js';
 import { createReadStream } from 'fs';
@@ -166,7 +166,7 @@ export class BackupPlugin extends Plugin {
       include = null,
       exclude = [],
       backupMetadataResource = 'plg_backup_metadata',
-      tempDir = path.join(os.tmpdir(), 'baldin', 'backups'),
+      tempDir = path.join(os.tmpdir(), 'baldim', 'backups'),
       onBackupStart = null,
       onBackupComplete = null,
       onBackupError = null,
@@ -734,7 +734,7 @@ export class BackupPlugin extends Plugin {
 
     const restoredResources: RestoredResourceInfo[] = [];
     const metadataFile = archive.files.find(file =>
-      file.name === 's3db.json' || file.name === 'baldin.json'
+      file.name === 's3db.json' || file.name === 'baldim.json'
     );
 
     if (metadataFile) {

@@ -5,7 +5,7 @@
  * exported to users. Users should only interact with WebSocketPlugin and WebSocketServer.
  */
 
-import type { Database } from '@baldin/core/plugin';
+import type { Database } from '@baldim/core/plugin';
 
 export interface WebSocketAuthDriver {
   driver: 'jwt' | 'apiKey' | 'oidc';

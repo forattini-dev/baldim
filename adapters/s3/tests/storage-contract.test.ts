@@ -3,16 +3,16 @@ import { CreateBucketCommand, S3Client as AwsS3Client } from '@aws-sdk/client-s3
 import { S3Client } from '../src/index.js';
 import { runStorageAdapterContract } from '../../../tests/storage-adapter-contract.js';
 
-const contractUrl = process.env.BALDIN_S3_CONTRACT_URL;
+const contractUrl = process.env.BALDIM_S3_CONTRACT_URL;
 
 if (!contractUrl) {
-  describe.skip('@baldin/adapter-s3 storage contract', () => {
-    it('runs when BALDIN_S3_CONTRACT_URL is configured', () => undefined);
+  describe.skip('@baldim/adapter-s3 storage contract', () => {
+    it('runs when BALDIM_S3_CONTRACT_URL is configured', () => undefined);
   });
 } else {
   const baseUrl = new URL(contractUrl);
   const bucket = baseUrl.pathname.split('/').filter(Boolean)[0];
-  if (!bucket) throw new Error('BALDIN_S3_CONTRACT_URL must include a bucket path.');
+  if (!bucket) throw new Error('BALDIM_S3_CONTRACT_URL must include a bucket path.');
 
   beforeAll(async () => {
     const admin = new AwsS3Client({
@@ -34,7 +34,7 @@ if (!contractUrl) {
     }
   });
 
-  runStorageAdapterContract('@baldin/adapter-s3', () => {
+  runStorageAdapterContract('@baldim/adapter-s3', () => {
     const url = new URL(contractUrl);
     const prefix = `run-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     url.pathname = `/${bucket}/${prefix}`;

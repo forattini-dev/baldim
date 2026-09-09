@@ -1,6 +1,6 @@
 import { createDatabaseForTest } from './config.js';
 import { startApiPlugin } from './helpers/server.js';
-import { encrypt, decrypt } from '@baldin/core';
+import { encrypt, decrypt } from '@baldim/core';
 
 function createBasicAuthHeader(username, password) {
   const credentials = Buffer.from(`${username}:${password}`).toString('base64');

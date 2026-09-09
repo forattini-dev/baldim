@@ -1,4 +1,4 @@
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import requirePluginDependency from '../load-dependency.js';
 import BaseReplicator from './base-replicator.class.js';
 import {
@@ -387,7 +387,7 @@ class BigqueryReplicator extends BaseReplicator {
               resourceName,
               statusCode: 409,
               retriable: (errSync as { retriable?: boolean })?.retriable ?? false,
-              suggestion: 'Review the BigQuery table schema and align it with the Baldin resource definition or relax schemaSync.onMismatch.',
+              suggestion: 'Review the BigQuery table schema and align it with the Baldim resource definition or relax schemaSync.onMismatch.',
               metadata: { tableName }
             });
           } else if (this.schemaSync.onMismatch === 'warn') {
@@ -744,7 +744,7 @@ class BigqueryReplicator extends BaseReplicator {
             record_id: id,
             data: JSON.stringify(data),
             timestamp: new Date().toISOString(),
-            source: 'baldin-replicator'
+            source: 'baldim-replicator'
           }]);
         });
         if (!okLog) {

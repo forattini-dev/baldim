@@ -1,9 +1,9 @@
 import type { Context, Next } from '../http/http-runtime.js';
 import type { ContentfulStatusCode } from '../http/http-runtime.js';
-import type { Logger } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 import type { ResourceLike, DatabaseLike } from './resource-manager.js';
 import { unauthorized } from '../utils/response-formatter.js';
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 import { APIKeyResourceManager, resolveUser } from './resource-manager.js';
 
 const logger = createLogger({ name: 'ApiKeyAuth', level: 'info' });

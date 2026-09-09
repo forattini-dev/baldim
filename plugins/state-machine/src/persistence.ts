@@ -1,6 +1,6 @@
 import type { StateMachinePluginContext, StateRecord, Resource, Lock } from './types.js';
 import { StateMachineError } from './errors.js';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { parseDuration } from './helpers.js';
 
 export function getStateResource(plugin: StateMachinePluginContext): Resource | null {

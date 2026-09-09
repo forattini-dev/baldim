@@ -1,8 +1,8 @@
 /**
- * WebSocket Server - Real-time connection manager for Baldin resources
+ * WebSocket Server - Real-time connection manager for Baldim resources
  *
  * Uses raffel's WebSocket adapter for connection management, heartbeat,
- * auth, channels, backpressure, and compression. Implements the Baldin
+ * auth, channels, backpressure, and compression. Implements the Baldim
  * CRUD protocol via onMessage hook.
  *
  * @example
@@ -15,7 +15,7 @@
  */
 
 import { EventEmitter } from 'node:events';
-import type { Database } from '@baldin/core/plugin';
+import type { Database } from '@baldim/core/plugin';
 import type * as http from 'node:http';
 import type {
   WebSocketAuthDriver,
@@ -428,7 +428,7 @@ export class WebSocketServer extends EventEmitter {
   }
 
   /**
-   * Build Raffel auth config from Baldin auth drivers
+   * Build Raffel auth config from Baldim auth drivers
    * @private
    */
   private _buildRaffelAuth(): any {
@@ -1315,7 +1315,7 @@ export class WebSocketServer extends EventEmitter {
         uptime: process.uptime(),
         checks: {
           websocket: { status: this.adapter ? 'healthy' : 'unhealthy', clients: this.adapter?.clientCount || 0 },
-          baldin: { status: this.database?.isConnected() ? 'healthy' : 'unhealthy' }
+          baldim: { status: this.database?.isConnected() ? 'healthy' : 'unhealthy' }
         }
       }));
       return true;

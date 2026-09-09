@@ -166,19 +166,19 @@ for (const directory of packageDirectories) {
     }
   }
 
-  if (manifest.name === '@baldin/core') {
+  if (manifest.name === '@baldim/core') {
     for (const dependency of importedRuntime) {
-      const isFeaturePackage = dependency.startsWith('@baldin/adapter-')
-        || dependency.startsWith('@baldin/plugin-');
-      if (isFeaturePackage && dependency !== '@baldin/adapter-memory') {
+      const isFeaturePackage = dependency.startsWith('@baldim/adapter-')
+        || dependency.startsWith('@baldim/plugin-');
+      if (isFeaturePackage && dependency !== '@baldim/adapter-memory') {
         failures.push(`${manifest.name}: core imports feature package ${dependency}`);
       }
     }
   }
 
-  if (manifest.name.startsWith('@baldin/adapter-')) {
+  if (manifest.name.startsWith('@baldim/adapter-')) {
     for (const dependency of importedRuntime) {
-      if (dependency.startsWith('@baldin/adapter-') || dependency.startsWith('@baldin/plugin-')) {
+      if (dependency.startsWith('@baldim/adapter-') || dependency.startsWith('@baldim/plugin-')) {
         failures.push(`${manifest.name}: adapter imports feature package ${dependency}`);
       }
     }
@@ -187,7 +187,7 @@ for (const directory of packageDirectories) {
   for (const dependency of Object.keys(manifest.dependencies || {})) {
     const runtimeLoadedByName = importedRuntime.has(dependency);
     const runtimeLoadedByString = dependency === 'pino-pretty'
-      && manifest.name === '@baldin/core';
+      && manifest.name === '@baldim/core';
     if (!runtimeLoadedByName && !runtimeLoadedByString) {
       failures.push(`${manifest.name}: dependency ${dependency} is unused by src`);
     }

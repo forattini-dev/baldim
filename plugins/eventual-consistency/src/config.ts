@@ -3,7 +3,7 @@
  * @module eventual-consistency/config
  */
 
-import { createLogger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
 
 const logger = createLogger({ name: 'eventual-consistency' });
 

@@ -1,4 +1,4 @@
-# @baldin/plugin-cookie-farm
+# @baldim/plugin-cookie-farm
 
 ## 0.1.0
 
@@ -17,5 +17,5 @@
 - Updated dependencies [f686e95]
 - Updated dependencies [dfe0e73]
 - Updated dependencies [e150c2f]
-  - @baldin/core@0.2.0
-  - @baldin/plugin-puppeteer@0.1.0
+  - @baldim/core@0.2.0
+  - @baldim/plugin-puppeteer@0.1.0

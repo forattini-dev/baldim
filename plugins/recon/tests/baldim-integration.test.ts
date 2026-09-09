@@ -1,19 +1,19 @@
-import { MemoryClient } from '@baldin/adapter-memory';
-import { Baldin } from '@baldin/core';
+import { MemoryClient } from '@baldim/adapter-memory';
+import { Baldim } from '@baldim/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ReconPlugin } from '../src/index.js';
 
-const databases: Baldin[] = [];
+const databases: Baldim[] = [];
 
 afterEach(async () => {
   while (databases.length > 0) await databases.pop()!.disconnect();
 });
 
-describe('ReconPlugin with Baldin', () => {
+describe('ReconPlugin with Baldim', () => {
   it('initializes resources and manages persisted targets through its public API', async () => {
-    const database = new Baldin({
+    const database = new Baldim({
       client: new MemoryClient({
-        bucket: `baldin-recon-${Date.now()}-${Math.random()}`,
+        bucket: `baldim-recon-${Date.now()}-${Math.random()}`,
         keyPrefix: 'tests/',
         logLevel: 'silent',
       }),

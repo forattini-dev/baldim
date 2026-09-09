@@ -1,12 +1,12 @@
-# @baldin/plugin-ttl
+# @baldim/plugin-ttl
 
-Time-to-live policies for Baldin resources. The plugin supports indexed background cleanup and lazy expiration during reads.
+Time-to-live policies for Baldim resources. The plugin supports indexed background cleanup and lazy expiration during reads.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { TTLPlugin } from '@baldin/plugin-ttl';
+import { Baldim } from '@baldim/core';
+import { TTLPlugin } from '@baldim/plugin-ttl';
 
-const db = new Baldin({ connectionString: 'memory://sessions' });
+const db = new Baldim({ connectionString: 'memory://sessions' });
 await db.connect();
 await db.createResource({
   name: 'sessions',

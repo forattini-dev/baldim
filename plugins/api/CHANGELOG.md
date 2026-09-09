@@ -1,10 +1,10 @@
-# @baldin/plugin-api
+# @baldim/plugin-api
 
 ## 0.1.0
 
 ### Minor Changes
 
-- e9c3a78: Migrate the API plugin as an independent Raffel-based package with HTTP and WebSocket resource routes, authentication, OpenAPI/USD documentation, static files, health checks, and runtime inspection. Expose the core password helpers needed by authentication through the provider-neutral `@baldin/core/password` subpath.
+- e9c3a78: Migrate the API plugin as an independent Raffel-based package with HTTP and WebSocket resource routes, authentication, OpenAPI/USD documentation, static files, health checks, and runtime inspection. Expose the core password helpers needed by authentication through the provider-neutral `@baldim/core/password` subpath.
 - 6ed3bd3: Publish the remaining reusable utilities and explicit compatibility subpaths for core concerns and API guards/failban helpers.
 
 ### Patch Changes
@@ -20,4 +20,4 @@
 - Updated dependencies [6ed3bd3]
 - Updated dependencies [f686e95]
 - Updated dependencies [e150c2f]
-  - @baldin/core@0.2.0
+  - @baldim/core@0.2.0

@@ -1,5 +1,5 @@
 /**
- * Baldin CLI Spinner Component
+ * Baldim CLI Spinner Component
  *
  * Simple animated spinner for CLI operations using tuiuiu spinner styles
  */

@@ -6,7 +6,7 @@
     "verbatimModuleSyntax": false,
     "types": ["node"],
     "paths": {
-      "@baldin/plugin-kubernetes-inventory": ["./src/index.ts"]
+      "@baldim/plugin-kubernetes-inventory": ["./src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "tests/type-contract.ts"]

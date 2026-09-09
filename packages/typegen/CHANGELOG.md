@@ -1,4 +1,4 @@
-# @baldin/typegen
+# @baldim/typegen
 
 ## 0.1.0
 

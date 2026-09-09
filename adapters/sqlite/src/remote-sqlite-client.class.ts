@@ -4,17 +4,17 @@ import { Readable } from 'node:stream';
 import { createHash } from 'crypto';
 import { chunk } from 'lodash-es';
 
-import { tryFn } from '@baldin/core/adapter';
-import { idGenerator } from '@baldin/core/adapter';
-import { metadataEncode, metadataDecode } from '@baldin/core/adapter';
-import { normalizeEtagHeader } from '@baldin/core/adapter';
-import { createLogger } from '@baldin/core/adapter';
-import { DatabaseError, ResourceError, NoSuchKey } from '@baldin/core/adapter';
-import { TasksRunner } from '@baldin/core/adapter';
+import { tryFn } from '@baldim/core/adapter';
+import { idGenerator } from '@baldim/core/adapter';
+import { metadataEncode, metadataDecode } from '@baldim/core/adapter';
+import { normalizeEtagHeader } from '@baldim/core/adapter';
+import { createLogger } from '@baldim/core/adapter';
+import { DatabaseError, ResourceError, NoSuchKey } from '@baldim/core/adapter';
+import { TasksRunner } from '@baldim/core/adapter';
 import { LibsqlExecutor } from './libsql-executor.class.js';
 import { D1Executor } from './d1-executor.class.js';
 import type { D1DatabaseLike } from './d1-executor.class.js';
-import type { LogLevel } from '@baldin/core/adapter';
+import type { LogLevel } from '@baldim/core/adapter';
 import type {
   ClientConfig,
   StorageCopyObjectParams,
@@ -31,7 +31,7 @@ import type {
   QueueStats,
   StorageObject,
   TaskManager
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 import type { RemoteSqliteClientConfig } from './client-types.js';
 import type { SqlExecutor, SqlStatement } from './sql-executor.types.js';
 

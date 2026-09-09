@@ -1,4 +1,4 @@
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 export interface QueueErrorDetails {
   queueName?: string;
@@ -31,7 +31,7 @@ Common causes:
 Solution:
 Check queue configuration and message handler registration.
 
-Docs: https://github.com/forattini-dev/baldin/tree/main/plugins/s3-queue
+Docs: https://github.com/forattini-dev/baldim/tree/main/plugins/s3-queue
 `.trim();
     }
 

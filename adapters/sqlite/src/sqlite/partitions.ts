@@ -1,9 +1,9 @@
-import { tryFn } from '@baldin/core/adapter';
-import { DatabaseError } from '@baldin/core/adapter';
+import { tryFn } from '@baldim/core/adapter';
+import { DatabaseError } from '@baldim/core/adapter';
 import type {
   StorageListObjectsResponse,
   FilteredObjectsPageFilter
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 import type {
   DbRow,
   DbListRow,

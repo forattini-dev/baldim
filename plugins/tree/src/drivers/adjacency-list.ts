@@ -1,4 +1,4 @@
-import { TasksRunner } from '@baldin/core';
+import { TasksRunner } from '@baldim/core';
 import { InvalidParentError, TreeConfigurationError, NodeNotFoundError } from '../errors.js';
 import type { TreePlugin } from '../index.js';
 

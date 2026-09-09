@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ValidationError } from '@baldin/core';
+import { ValidationError } from '@baldim/core';
 import { ErrorClassifier, NON_RETRIABLE, RETRIABLE } from '../src/error-classifier.js';
 import { bytesToMB, getMemoryUsage, MemorySampler } from '../src/memory-profiler.js';
 import { decodeMoney, encodeMoney, formatMoney, getCurrencyDecimals } from '../src/money.js';

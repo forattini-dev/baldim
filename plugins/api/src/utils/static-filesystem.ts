@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 import path from 'path';
 import { createReadStream } from 'fs';
 import crypto from 'crypto';

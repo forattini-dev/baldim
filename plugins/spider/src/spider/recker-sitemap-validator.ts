@@ -156,7 +156,7 @@ export class ReckerSitemapValidator {
 
   constructor(config: SitemapParserConfig = {}) {
     this.config = {
-      userAgent: config.userAgent || 'baldin-spider',
+      userAgent: config.userAgent || 'baldim-spider',
       fetchTimeout: config.fetchTimeout || 30000,
       maxSitemaps: config.maxSitemaps || 50,
       maxUrls: config.maxUrls || 50000,

@@ -3,8 +3,8 @@
  * @module eventual-consistency/garbage-collection
  */
 
-import { TasksPool } from '@baldin/core';
-import { getCronManager, tryFn } from '@baldin/core/plugin';
+import { TasksPool } from '@baldim/core';
+import { getCronManager, tryFn } from '@baldim/core/plugin';
 import type { FieldHandler, Transaction } from './utils.js';
 import type { NormalizedConfig } from './config.js';
 import type { PluginStorage } from './locks.js';

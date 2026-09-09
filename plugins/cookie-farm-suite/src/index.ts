@@ -1,8 +1,8 @@
-import { Plugin, PluginError, tryFn } from '@baldin/core/plugin';
-import { PuppeteerPlugin } from '@baldin/plugin-puppeteer';
-import { CookieFarmPlugin } from '@baldin/plugin-cookie-farm';
-import { S3QueuePlugin } from '@baldin/plugin-s3-queue';
-import { TTLPlugin } from '@baldin/plugin-ttl';
+import { Plugin, PluginError, tryFn } from '@baldim/core/plugin';
+import { PuppeteerPlugin } from '@baldim/plugin-puppeteer';
+import { CookieFarmPlugin } from '@baldim/plugin-cookie-farm';
+import { S3QueuePlugin } from '@baldim/plugin-s3-queue';
+import { TTLPlugin } from '@baldim/plugin-ttl';
 
 function sanitizeNamespace(value: string): string {
   return (value || 'persona')

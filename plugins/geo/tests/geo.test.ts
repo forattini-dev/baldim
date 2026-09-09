@@ -1,4 +1,4 @@
-import { Baldin, MemoryClient, type Database, type Resource } from '@baldin/core';
+import { Baldim, MemoryClient, type Database, type Resource } from '@baldim/core';
 import { afterEach, describe, expect, test } from 'vitest';
 import { GeoError, GeoPlugin } from '../src/index.js';
 
@@ -6,7 +6,7 @@ let sequence = 0;
 const databases: Database[] = [];
 
 function createDatabase(label: string): Database {
-  const database = new Baldin({
+  const database = new Baldim({
     connectionString: `memory://plugin-geo-${label}-${++sequence}`,
     logLevel: 'silent',
   });
@@ -48,7 +48,7 @@ afterEach(async () => {
   MemoryClient.clearAllStorage();
 });
 
-describe('@baldin/plugin-geo', () => {
+describe('@baldim/plugin-geo', () => {
   test('encodes, decodes, and validates geohashes', () => {
     const geo = plugin();
     const hash = geo.encodeGeohash(-23.5505, -46.6333, 5);

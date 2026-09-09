@@ -1,7 +1,7 @@
 import { chunk } from 'lodash-es';
 
-import { tryFn } from '@baldin/core/adapter';
-import { mapStorageError, DatabaseError, BaseError } from '@baldin/core/adapter';
+import { tryFn } from '@baldim/core/adapter';
+import { mapStorageError, DatabaseError, BaseError } from '@baldim/core/adapter';
 import type {
   StorageListObjectsParams,
   GetKeysPageParams,
@@ -11,7 +11,7 @@ import type {
   StorageObject,
   StorageListObjectsResponse,
   StorageDeleteObjectsResponse
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 import type { DbListRow, DbCountRow, DbDeleteSummaryRow } from './types.js';
 import { SqliteClientCrud } from './crud.js';
 

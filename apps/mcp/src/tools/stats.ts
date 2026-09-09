@@ -1,7 +1,7 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
 import type { DbClearCacheArgs, ResourceGetStatsArgs, CacheGetStatsArgs } from '../types/index.js';
-import type { Baldin } from '@baldin/core';
-import type { CachePlugin } from '@baldin/plugin-cache';
+import type { Baldim } from '@baldim/core';
+import type { CachePlugin } from '@baldim/plugin-cache';
 
 export const statsTools = [
   {
@@ -62,9 +62,9 @@ export const statsTools = [
   }
 ];
 
-export function createStatsHandlers(server: BaldinMCPServer) {
+export function createStatsHandlers(server: BaldimMCPServer) {
   return {
-    async dbGetStats(args: {}, database: Baldin): Promise<any> {
+    async dbGetStats(args: {}, database: Baldim): Promise<any> {
       server.ensureConnected(database);
 
       const stats: any = {
@@ -120,7 +120,7 @@ export function createStatsHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async dbClearCache(args: DbClearCacheArgs, database: Baldin): Promise<any> {
+    async dbClearCache(args: DbClearCacheArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName } = args;
 
@@ -159,7 +159,7 @@ export function createStatsHandlers(server: BaldinMCPServer) {
       }
     },
 
-    async resourceGetStats(args: ResourceGetStatsArgs, database: Baldin): Promise<any> {
+    async resourceGetStats(args: ResourceGetStatsArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, includePartitionStats = true } = args;
       const resource = server.getResource(database, resourceName);
@@ -214,7 +214,7 @@ export function createStatsHandlers(server: BaldinMCPServer) {
       }
     },
 
-    async cacheGetStats(args: CacheGetStatsArgs, database: Baldin): Promise<any> {
+    async cacheGetStats(args: CacheGetStatsArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName } = args;
 

@@ -1,4 +1,4 @@
-# @baldin/plugin-tfstate
+# @baldim/plugin-tfstate
 
 ## 0.1.0
 
@@ -18,5 +18,5 @@
 - Updated dependencies [206ba95]
 - Updated dependencies [f686e95]
 - Updated dependencies [e150c2f]
-  - @baldin/core@0.2.0
-  - @baldin/adapter-s3@0.1.1
+  - @baldim/core@0.2.0
+  - @baldim/adapter-s3@0.1.1

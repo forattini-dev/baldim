@@ -4,13 +4,13 @@ import {
   type CloudInventoryPluginOptions,
   type CloudResource,
   type SyncResult,
-} from '@baldin/plugin-cloud-inventory';
+} from '@baldim/plugin-cloud-inventory';
 import {
   AwsInventoryDriver,
   BaseCloudDriver,
   getDriver,
   type CloudProviderName,
-} from '@baldin/plugin-cloud-inventory/drivers';
+} from '@baldim/plugin-cloud-inventory/drivers';
 
 const cloud: CloudDefinition = {
   id: 'production',

@@ -43,28 +43,28 @@ export interface McpConfig {
 }
 
 const ENV_MAP: Record<string, { path: string; type: 'string' | 'number' | 'boolean' }> = {
-  BALDIN_CONNECTION_STRING:           { path: 'connectionString', type: 'string' },
+  BALDIM_CONNECTION_STRING:           { path: 'connectionString', type: 'string' },
   S3_CONNECTION_STRING:             { path: 'connectionString', type: 'string' },
-  BALDIN_VERBOSE:                     { path: 'verbose', type: 'boolean' },
-  BALDIN_PARALLELISM:                 { path: 'parallelism', type: 'number' },
-  BALDIN_VERSIONING_ENABLED:          { path: 'versioningEnabled', type: 'boolean' },
+  BALDIM_VERBOSE:                     { path: 'verbose', type: 'boolean' },
+  BALDIM_PARALLELISM:                 { path: 'parallelism', type: 'number' },
+  BALDIM_VERSIONING_ENABLED:          { path: 'versioningEnabled', type: 'boolean' },
 
-  BALDIN_SECURITY_PASSPHRASE:         { path: 'security.passphrase', type: 'string' },
-  BALDIN_SECURITY_PEPPER:             { path: 'security.pepper', type: 'string' },
-  BALDIN_SECURITY_BCRYPT_ROUNDS:      { path: 'security.bcrypt.rounds', type: 'number' },
-  BALDIN_SECURITY_ARGON2:             { path: 'security.argon2', type: 'boolean' },
-  BALDIN_SECURITY_ARGON2_MEMORY_COST: { path: 'security.argon2.memoryCost', type: 'number' },
-  BALDIN_SECURITY_ARGON2_TIME_COST:   { path: 'security.argon2.timeCost', type: 'number' },
-  BALDIN_SECURITY_ARGON2_PARALLELISM: { path: 'security.argon2.parallelism', type: 'number' },
+  BALDIM_SECURITY_PASSPHRASE:         { path: 'security.passphrase', type: 'string' },
+  BALDIM_SECURITY_PEPPER:             { path: 'security.pepper', type: 'string' },
+  BALDIM_SECURITY_BCRYPT_ROUNDS:      { path: 'security.bcrypt.rounds', type: 'number' },
+  BALDIM_SECURITY_ARGON2:             { path: 'security.argon2', type: 'boolean' },
+  BALDIM_SECURITY_ARGON2_MEMORY_COST: { path: 'security.argon2.memoryCost', type: 'number' },
+  BALDIM_SECURITY_ARGON2_TIME_COST:   { path: 'security.argon2.timeCost', type: 'number' },
+  BALDIM_SECURITY_ARGON2_PARALLELISM: { path: 'security.argon2.parallelism', type: 'number' },
 
-  BALDIN_CACHE_ENABLED:               { path: 'cache.enabled', type: 'boolean' },
-  BALDIN_CACHE_DRIVER:                { path: 'cache.driver', type: 'string' },
-  BALDIN_CACHE_MAX_SIZE:              { path: 'cache.maxSize', type: 'number' },
-  BALDIN_CACHE_TTL:                   { path: 'cache.ttl', type: 'number' },
-  BALDIN_CACHE_DIRECTORY:             { path: 'cache.directory', type: 'string' },
-  BALDIN_CACHE_PREFIX:                { path: 'cache.prefix', type: 'string' },
+  BALDIM_CACHE_ENABLED:               { path: 'cache.enabled', type: 'boolean' },
+  BALDIM_CACHE_DRIVER:                { path: 'cache.driver', type: 'string' },
+  BALDIM_CACHE_MAX_SIZE:              { path: 'cache.maxSize', type: 'number' },
+  BALDIM_CACHE_TTL:                   { path: 'cache.ttl', type: 'number' },
+  BALDIM_CACHE_DIRECTORY:             { path: 'cache.directory', type: 'string' },
+  BALDIM_CACHE_PREFIX:                { path: 'cache.prefix', type: 'string' },
 
-  BALDIN_COSTS_ENABLED:               { path: 'costs.enabled', type: 'boolean' },
+  BALDIM_COSTS_ENABLED:               { path: 'costs.enabled', type: 'boolean' },
 
   MCP_TRANSPORT:                    { path: 'server.transport', type: 'string' },
   MCP_SERVER_HOST:                  { path: 'server.host', type: 'string' },
@@ -91,8 +91,8 @@ function setNested(obj: Record<string, unknown>, path: string, value: unknown): 
 }
 
 function loadConfigFile(): McpConfig {
-  const configPath = process.env.BALDIN_CONFIG
-    || resolve(process.cwd(), 'baldin.config.json');
+  const configPath = process.env.BALDIM_CONFIG
+    || resolve(process.cwd(), 'baldim.config.json');
 
   if (!existsSync(configPath)) return {};
 
@@ -144,7 +144,7 @@ const DEFAULTS: McpConfig = {
   parallelism: 10,
   versioningEnabled: false,
   security: { passphrase: 'secret', bcrypt: { rounds: 12 } },
-  cache: { enabled: true, driver: 'memory', maxSize: 1000, ttl: 300000, directory: './cache', prefix: 'baldin' },
+  cache: { enabled: true, driver: 'memory', maxSize: 1000, ttl: 300000, directory: './cache', prefix: 'baldim' },
   costs: { enabled: true },
   server: { transport: 'stdio', host: '0.0.0.0', port: 17500 },
 };

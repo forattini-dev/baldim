@@ -11,7 +11,7 @@ const gzipAsync = promisify(zlib.gzip);
 const gunzipAsync = promisify(zlib.gunzip);
 import { chunk } from 'lodash-es';
 
-import { MetadataLimitError, ResourceError, ValidationError, createLogger, getCronManager, idGenerator, normalizeEtagHeader, tryFn, type CronManager, type LogLevel } from '@baldin/core/adapter';
+import { MetadataLimitError, ResourceError, ValidationError, createLogger, getCronManager, idGenerator, normalizeEtagHeader, tryFn, type CronManager, type LogLevel } from '@baldim/core/adapter';
 import type { FileSystemStorageConfig, FileSystemStorageStats } from './types.js';
 import type {
   Logger,
@@ -25,7 +25,7 @@ import type {
   StorageDeleteObjectResponse,
   StorageDeleteObjectsResponse,
   StorageListObjectsResponse
-} from '@baldin/core/adapter';
+} from '@baldim/core/adapter';
 
 interface InternalStats {
   gets: number;

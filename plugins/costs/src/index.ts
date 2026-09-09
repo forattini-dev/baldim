@@ -1,4 +1,4 @@
-import { Plugin, type PluginOptions } from '@baldin/core/plugin';
+import { Plugin, type PluginOptions } from '@baldim/core/plugin';
 import {
   detectProvider,
   getPricingForProvider,

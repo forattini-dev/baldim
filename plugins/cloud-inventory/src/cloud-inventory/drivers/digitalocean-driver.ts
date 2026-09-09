@@ -1,5 +1,5 @@
 import { BaseCloudDriver, CloudResource, ListResourcesOptions } from './base-driver.js';
-import { PluginError } from '@baldin/core/plugin';
+import { PluginError } from '@baldim/core/plugin';
 
 interface DigitalOceanClient {
   droplets: { getAllDroplets: () => Promise<{ droplets: DODroplet[] }> };

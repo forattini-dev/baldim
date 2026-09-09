@@ -3,7 +3,7 @@ import { WebSocketPlugin } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './helpers/database.js';
 
 describe('WebSocket package contract', () => {
-  it('reports the bound port and Baldin readiness dependency', async () => {
+  it('reports the bound port and Baldim readiness dependency', async () => {
     const database = createMemoryDatabaseForTest(`websocket-contract-${Date.now()}`, {
       logLevel: 'silent',
     });
@@ -27,7 +27,7 @@ describe('WebSocket package contract', () => {
       const body = await response.json() as {
         checks: Record<string, { status: string }>;
       };
-      expect(body.checks.baldin).toEqual({ status: 'healthy' });
+      expect(body.checks.baldim).toEqual({ status: 'healthy' });
       expect(body.checks).not.toHaveProperty('s3db');
     } finally {
       await websocket.onStop();

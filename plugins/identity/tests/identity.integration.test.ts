@@ -1,5 +1,5 @@
-import Baldin from '@baldin/core';
-import { MemoryClient } from '@baldin/adapter-memory';
+import Baldim from '@baldim/core';
+import { MemoryClient } from '@baldim/adapter-memory';
 import { IdentityPlugin } from '../src/index.js';
 
 function createMockResponse() {
@@ -41,7 +41,7 @@ describe('IdentityPlugin integration metadata & tokens', () => {
 
   beforeAll(async () => {
     MemoryClient.clearAllStorage();
-    db = new Baldin({
+    db = new Baldim({
       client: new MemoryClient(),
       bucketName: 'identity-plugin-tests',
       encryptionKey: 'test-identity-key-32-characters!!',

@@ -1,4 +1,4 @@
-import type { Logger } from '@baldin/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 import type { Context } from '../http/http-runtime.js';
 
 export interface RawRateLimitRule {

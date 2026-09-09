@@ -160,7 +160,7 @@ export interface DbRemoveOrphanedPartitionsArgs {
 
 export interface DbClearCacheArgs { resourceName?: string }
 
-export interface BaldinSearchDocsArgs {
+export interface BaldimSearchDocsArgs {
   query?: string;
   pattern?: string;
   group?: string;
@@ -168,7 +168,7 @@ export interface BaldinSearchDocsArgs {
   maxResults?: number;
 }
 
-export interface BaldinListTopicsArgs {} // For list topics
+export interface BaldimListTopicsArgs {} // For list topics
 
 export interface TransportArgs {
   transport: string;

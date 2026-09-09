@@ -1,14 +1,14 @@
-# @baldin/plugin-vector
+# @baldim/plugin-vector
 
-Vector search, distance metrics, and k-means clustering for Baldin resources.
+Vector search, distance metrics, and k-means clustering for Baldim resources.
 Search uses a portable JavaScript implementation and automatically uses the
 optional `sqlite-vec` capability when the SQLite adapter exposes it.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import { VectorPlugin } from '@baldin/plugin-vector';
+import { Baldim } from '@baldim/core';
+import { VectorPlugin } from '@baldim/plugin-vector';
 
-const database = new Baldin({ connectionString: 'memory://vectors' });
+const database = new Baldim({ connectionString: 'memory://vectors' });
 await database.connect();
 
 const documents = await database.createResource({

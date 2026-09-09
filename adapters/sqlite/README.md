@@ -1,12 +1,12 @@
-# @baldin/adapter-sqlite
+# @baldim/adapter-sqlite
 
 Registers `sqlite:`, `sqlite+libsql:`, and `sqlite+d1:` storage protocols.
 
 ```ts
-import { Baldin } from '@baldin/core';
-import '@baldin/adapter-sqlite';
+import { Baldim } from '@baldim/core';
+import '@baldim/adapter-sqlite';
 
-const database = new Baldin({
+const database = new Baldim({
   connectionString: 'sqlite:./data/app.sqlite',
 });
 
@@ -23,8 +23,8 @@ Local tests run the complete storage contract through SQLite, the real libSQL
 client with a local database, and a D1-compatible binding. Deployed-provider
 contract runs use these environment variables:
 
-- `BALDIN_LIBSQL_TEST_URL` and optional `BALDIN_LIBSQL_AUTH_TOKEN`
-- `BALDIN_D1_ACCOUNT_ID`, `BALDIN_D1_DATABASE_ID`, and `BALDIN_D1_API_TOKEN`
+- `BALDIM_LIBSQL_TEST_URL` and optional `BALDIM_LIBSQL_AUTH_TOKEN`
+- `BALDIM_D1_ACCOUNT_ID`, `BALDIM_D1_DATABASE_ID`, and `BALDIM_D1_API_TOKEN`
 
-The read-only `s3db.js` v21 SQLite fixture verifies that Baldin can open existing
+The read-only `s3db.js` v21 SQLite fixture verifies that Baldim can open existing
 manifests, resources, documents, and partitions without changing the file.

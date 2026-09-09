@@ -44,7 +44,7 @@ export class FetchHttpClient implements HttpClient {
     const body = options.json ?? options.body;
     const headers: Record<string, string> = {
       'content-type': 'application/json',
-      'user-agent': 'baldin-cloud-inventory',
+      'user-agent': 'baldim-cloud-inventory',
       ...this.options.headers,
       ...options.headers,
     };

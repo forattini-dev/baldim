@@ -1,5 +1,5 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
-import type { Baldin } from '@baldin/core';
+import type { BaldimMCPServer } from '../entrypoint.js';
+import type { Baldim } from '@baldim/core';
 
 export const pluginTools = [
   // ============================================
@@ -646,7 +646,7 @@ export const pluginTools = [
   }
 ];
 
-function getPlugin(database: Baldin, pluginName: string): any {
+function getPlugin(database: Baldim, pluginName: string): any {
   const plugin = database.pluginList.find((candidate: any) =>
     candidate.name === pluginName ||
     candidate.constructor?.name?.toLowerCase() === `${pluginName.toLowerCase()}plugin`
@@ -657,12 +657,12 @@ function getPlugin(database: Baldin, pluginName: string): any {
   return plugin;
 }
 
-export function createPluginHandlers(server: BaldinMCPServer) {
+export function createPluginHandlers(server: BaldimMCPServer) {
   return {
     // ============================================
     // CACHE HANDLERS
     // ============================================
-    async cacheGet(args: { resourceName: string; key: string }, database: Baldin): Promise<any> {
+    async cacheGet(args: { resourceName: string; key: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const cache = resource._cache;
@@ -673,7 +673,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, data: value };
     },
 
-    async cacheSet(args: { resourceName: string; key: string; value: any; ttl?: number }, database: Baldin): Promise<any> {
+    async cacheSet(args: { resourceName: string; key: string; value: any; ttl?: number }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const cache = resource._cache;
@@ -684,7 +684,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, message: `Cached key '${args.key}'` };
     },
 
-    async cacheClear(args: { resourceName: string; pattern?: string }, database: Baldin): Promise<any> {
+    async cacheClear(args: { resourceName: string; pattern?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const cache = resource._cache;
@@ -695,7 +695,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, clearedCount: count };
     },
 
-    async cacheStats(args: { resourceName?: string }, database: Baldin): Promise<any> {
+    async cacheStats(args: { resourceName?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       if (args.resourceName) {
         const resource = server.getResource(database, args.resourceName);
@@ -711,7 +711,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // AUDIT HANDLERS
     // ============================================
-    async auditList(args: { resourceName: string; limit?: number; offset?: number; operation?: string }, database: Baldin): Promise<any> {
+    async auditList(args: { resourceName: string; limit?: number; offset?: number; operation?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'audit');
       const entries = await plugin.list(args.resourceName, {
@@ -722,14 +722,14 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, data: entries, count: entries.length };
     },
 
-    async auditGet(args: { resourceName: string; entryId: string }, database: Baldin): Promise<any> {
+    async auditGet(args: { resourceName: string; entryId: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'audit');
       const entry = await plugin.get(args.resourceName, args.entryId);
       return { success: true, data: entry };
     },
 
-    async auditSearch(args: { resourceName: string; query: string; startDate?: string; endDate?: string }, database: Baldin): Promise<any> {
+    async auditSearch(args: { resourceName: string; query: string; startDate?: string; endDate?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'audit');
       const entries = await plugin.search(args.resourceName, {
@@ -743,21 +743,21 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // TTL HANDLERS
     // ============================================
-    async ttlSet(args: { resourceName: string; id: string; expiresAt: string }, database: Baldin): Promise<any> {
+    async ttlSet(args: { resourceName: string; id: string; expiresAt: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'ttl');
       await plugin.setTTL(args.resourceName, args.id, new Date(args.expiresAt));
       return { success: true, message: `TTL set for ${args.id}`, expiresAt: args.expiresAt };
     },
 
-    async ttlGet(args: { resourceName: string; id: string }, database: Baldin): Promise<any> {
+    async ttlGet(args: { resourceName: string; id: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'ttl');
       const expiresAt = await plugin.getTTL(args.resourceName, args.id);
       return { success: true, data: { id: args.id, expiresAt } };
     },
 
-    async ttlCleanup(args: { resourceName: string; dryRun?: boolean }, database: Baldin): Promise<any> {
+    async ttlCleanup(args: { resourceName: string; dryRun?: boolean }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'ttl');
       const result = await plugin.cleanup(args.resourceName, { dryRun: args.dryRun });
@@ -767,7 +767,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // METRICS HANDLERS
     // ============================================
-    async metricsGet(args: { resourceName?: string }, database: Baldin): Promise<any> {
+    async metricsGet(args: { resourceName?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'metrics');
       const metrics = args.resourceName
@@ -776,14 +776,14 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, data: metrics };
     },
 
-    async metricsExport(args: { format: 'json' | 'prometheus' }, database: Baldin): Promise<any> {
+    async metricsExport(args: { format: 'json' | 'prometheus' }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'metrics');
       const exported = await plugin.export(args.format);
       return { success: true, format: args.format, data: exported };
     },
 
-    async metricsReset(args: { resourceName?: string }, database: Baldin): Promise<any> {
+    async metricsReset(args: { resourceName?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'metrics');
       await plugin.reset(args.resourceName);
@@ -793,14 +793,14 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // REPLICATOR HANDLERS
     // ============================================
-    async replicatorSync(args: { resourceName: string; target?: string }, database: Baldin): Promise<any> {
+    async replicatorSync(args: { resourceName: string; target?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'replicator');
       const result = await plugin.sync(args.resourceName, args.target);
       return { success: true, data: result };
     },
 
-    async replicatorStatus(args: { resourceName: string }, database: Baldin): Promise<any> {
+    async replicatorStatus(args: { resourceName: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'replicator');
       const status = await plugin.getStatus(args.resourceName);
@@ -810,7 +810,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // VECTOR HANDLERS
     // ============================================
-    async vectorSearch(args: { resourceName: string; embedding: number[]; k?: number; filter?: any }, database: Baldin): Promise<any> {
+    async vectorSearch(args: { resourceName: string; embedding: number[]; k?: number; filter?: any }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const results = await resource.vectorSearch?.(args.embedding, {
@@ -823,7 +823,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, data: results, count: results.length };
     },
 
-    async vectorUpsert(args: { resourceName: string; id: string; embedding: number[]; metadata?: any }, database: Baldin): Promise<any> {
+    async vectorUpsert(args: { resourceName: string; id: string; embedding: number[]; metadata?: any }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const result = await resource.vectorUpsert?.(args.id, args.embedding, args.metadata);
@@ -836,7 +836,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // FULLTEXT HANDLERS
     // ============================================
-    async fulltextSearch(args: { resourceName: string; query: string; fields?: string[]; limit?: number }, database: Baldin): Promise<any> {
+    async fulltextSearch(args: { resourceName: string; query: string; fields?: string[]; limit?: number }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const results = await resource.fulltextSearch?.(args.query, {
@@ -849,7 +849,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, data: results, count: results.length };
     },
 
-    async fulltextIndex(args: { resourceName: string; fields: string[] }, database: Baldin): Promise<any> {
+    async fulltextIndex(args: { resourceName: string; fields: string[] }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const result = await resource.fulltextIndex?.(args.fields);
@@ -862,7 +862,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // GEO HANDLERS
     // ============================================
-    async geoNear(args: { resourceName: string; lat: number; lng: number; maxDistanceKm: number; limit?: number }, database: Baldin): Promise<any> {
+    async geoNear(args: { resourceName: string; lat: number; lng: number; maxDistanceKm: number; limit?: number }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const results = await resource.geoNear?.(args.lat, args.lng, args.maxDistanceKm, {
@@ -877,14 +877,14 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // GRAPH HANDLERS
     // ============================================
-    async graphAddEdge(args: { resourceName: string; from: string; to: string; label?: string; properties?: any }, database: Baldin): Promise<any> {
+    async graphAddEdge(args: { resourceName: string; from: string; to: string; label?: string; properties?: any }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'graph');
       const result = await plugin.addEdge(args.resourceName, args.from, args.to, args.label, args.properties);
       return { success: true, data: result };
     },
 
-    async graphTraverse(args: { resourceName: string; startNode: string; depth?: number; direction?: string }, database: Baldin): Promise<any> {
+    async graphTraverse(args: { resourceName: string; startNode: string; depth?: number; direction?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'graph');
       const results = await plugin.traverse(args.resourceName, args.startNode, {
@@ -897,21 +897,21 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // BACKUP HANDLERS
     // ============================================
-    async backupCreate(args: { resourceName?: string; destination: string }, database: Baldin): Promise<any> {
+    async backupCreate(args: { resourceName?: string; destination: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'backup');
       const result = await plugin.create(args.destination, args.resourceName);
       return { success: true, data: result };
     },
 
-    async backupList(args: { destination: string }, database: Baldin): Promise<any> {
+    async backupList(args: { destination: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'backup');
       const backups = await plugin.list(args.destination);
       return { success: true, data: backups };
     },
 
-    async backupRestore(args: { backupPath: string; resourceName: string }, database: Baldin): Promise<any> {
+    async backupRestore(args: { backupPath: string; resourceName: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'backup');
       const result = await plugin.restore(args.backupPath, args.resourceName);
@@ -921,21 +921,21 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // SCHEDULER HANDLERS
     // ============================================
-    async schedulerCreate(args: { name: string; cron: string; action: any }, database: Baldin): Promise<any> {
+    async schedulerCreate(args: { name: string; cron: string; action: any }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'scheduler');
       const result = await plugin.schedule(args.name, args.cron, args.action);
       return { success: true, data: result };
     },
 
-    async schedulerList(args: Record<string, never>, database: Baldin): Promise<any> {
+    async schedulerList(args: Record<string, never>, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'scheduler');
       const tasks = await plugin.list();
       return { success: true, data: tasks };
     },
 
-    async schedulerCancel(args: { name: string }, database: Baldin): Promise<any> {
+    async schedulerCancel(args: { name: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'scheduler');
       await plugin.cancel(args.name);
@@ -945,21 +945,21 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // S3 QUEUE HANDLERS
     // ============================================
-    async s3QueuePush(args: { queueName: string; message: any }, database: Baldin): Promise<any> {
+    async s3QueuePush(args: { queueName: string; message: any }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 's3-queue');
       const result = await plugin.push(args.queueName, args.message);
       return { success: true, data: result };
     },
 
-    async s3QueuePop(args: { queueName: string }, database: Baldin): Promise<any> {
+    async s3QueuePop(args: { queueName: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 's3-queue');
       const message = await plugin.pop(args.queueName);
       return { success: true, data: message };
     },
 
-    async s3QueuePeek(args: { queueName: string }, database: Baldin): Promise<any> {
+    async s3QueuePeek(args: { queueName: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 's3-queue');
       const message = await plugin.peek(args.queueName);
@@ -969,7 +969,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // STATE MACHINE HANDLERS
     // ============================================
-    async stateMachineTransition(args: { resourceName: string; id: string; event: string; context?: Record<string, unknown> }, database: Baldin): Promise<any> {
+    async stateMachineTransition(args: { resourceName: string; id: string; event: string; context?: Record<string, unknown> }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const stateApi = resource.state;
@@ -980,7 +980,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, data: result };
     },
 
-    async stateMachineHistory(args: { resourceName: string; id: string; limit?: number; offset?: number }, database: Baldin): Promise<any> {
+    async stateMachineHistory(args: { resourceName: string; id: string; limit?: number; offset?: number }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const stateApi = resource.state;
@@ -997,7 +997,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // COORDINATOR HANDLERS
     // ============================================
-    async coordinatorGetLeader(args: { namespace?: string }, database: Baldin): Promise<any> {
+    async coordinatorGetLeader(args: { namespace?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const namespace = args.namespace || 'default';
       const coordinator = await database.getGlobalCoordinator?.(namespace);
@@ -1008,7 +1008,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, namespace, leader };
     },
 
-    async coordinatorCircuitBreaker(args: { namespace?: string }, database: Baldin): Promise<any> {
+    async coordinatorCircuitBreaker(args: { namespace?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const namespace = args.namespace || 'default';
       const coordinator = await database.getGlobalCoordinator?.(namespace);
@@ -1019,7 +1019,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, namespace, circuitBreaker: status || 'unknown' };
     },
 
-    async coordinatorMetrics(args: { namespace?: string }, database: Baldin): Promise<any> {
+    async coordinatorMetrics(args: { namespace?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const namespace = args.namespace || 'default';
       const coordinator = await database.getGlobalCoordinator?.(namespace);
@@ -1033,14 +1033,14 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // COSTS HANDLERS
     // ============================================
-    async costsEstimate(args: { resourceName: string; operations?: any }, database: Baldin): Promise<any> {
+    async costsEstimate(args: { resourceName: string; operations?: any }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'costs');
       const estimate = await plugin.estimate(args.resourceName, args.operations);
       return { success: true, data: estimate };
     },
 
-    async costsReport(args: { period?: string }, database: Baldin): Promise<any> {
+    async costsReport(args: { period?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'costs');
       const report = await plugin.report(args.period || 'month');
@@ -1050,7 +1050,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // SMTP HANDLERS
     // ============================================
-    async smtpSend(args: { to: string; subject: string; body: string; from?: string }, database: Baldin): Promise<any> {
+    async smtpSend(args: { to: string; subject: string; body: string; from?: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'smtp');
       const result = await plugin.send({
@@ -1062,7 +1062,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, data: result };
     },
 
-    async smtpTemplate(args: { to: string; template: string; variables: any }, database: Baldin): Promise<any> {
+    async smtpTemplate(args: { to: string; template: string; variables: any }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'smtp');
       const result = await plugin.sendTemplate(args.to, args.template, args.variables);
@@ -1072,7 +1072,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // TOURNAMENT HANDLERS
     // ============================================
-    async tournamentCreate(args: { name: string; type: string; participants: string[] }, database: Baldin): Promise<any> {
+    async tournamentCreate(args: { name: string; type: string; participants: string[] }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'tournament');
       const tournament = await plugin.create({
@@ -1083,7 +1083,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, data: tournament };
     },
 
-    async tournamentMatch(args: { tournamentId: string; matchId: string; winner: string; scores?: any }, database: Baldin): Promise<any> {
+    async tournamentMatch(args: { tournamentId: string; matchId: string; winner: string; scores?: any }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'tournament');
       const result = await plugin.recordMatch(args.tournamentId, args.matchId, {
@@ -1093,7 +1093,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       return { success: true, data: result };
     },
 
-    async tournamentStandings(args: { tournamentId: string }, database: Baldin): Promise<any> {
+    async tournamentStandings(args: { tournamentId: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const plugin = getPlugin(database, 'tournament');
       const standings = await plugin.getStandings(args.tournamentId);
@@ -1103,7 +1103,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // HOOK HANDLERS
     // ============================================
-    async hookList(args: { resourceName: string }, database: Baldin): Promise<any> {
+    async hookList(args: { resourceName: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const hooks = resource._hooks?.list?.() || [];
@@ -1121,7 +1121,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
     // ============================================
     // ID GENERATOR HANDLERS
     // ============================================
-    async idGeneratorInfo(args: { resourceName: string }, database: Baldin): Promise<any> {
+    async idGeneratorInfo(args: { resourceName: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const idGen = resource._idGenerator;
@@ -1135,7 +1135,7 @@ export function createPluginHandlers(server: BaldinMCPServer) {
       };
     },
 
-    async idGeneratorNext(args: { resourceName: string }, database: Baldin): Promise<any> {
+    async idGeneratorNext(args: { resourceName: string }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const resource = server.getResource(database, args.resourceName);
       const nextId = await resource._idGenerator?.next?.();

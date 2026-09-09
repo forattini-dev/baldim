@@ -10,7 +10,7 @@
  * - Concerns: Shared utilities (command runner, normalizer, report generator, etc.)
  */
 
-import { Plugin, type PluginOptions } from '@baldin/core/plugin';
+import { Plugin, type PluginOptions } from '@baldim/core/plugin';
 
 // Managers
 import { StorageManager } from './managers/storage-manager.js';

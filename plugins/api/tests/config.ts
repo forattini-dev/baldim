@@ -1,6 +1,6 @@
-import { Baldin, ProcessManager } from '@baldin/core';
-import { CronManager } from '@baldin/core/plugin';
-import { MemoryClient } from '@baldin/adapter-memory';
+import { Baldim, ProcessManager } from '@baldim/core';
+import { CronManager } from '@baldim/core/plugin';
+import { MemoryClient } from '@baldim/adapter-memory';
 
 let databaseCounter = 0;
 
@@ -11,7 +11,7 @@ export const sleep = (milliseconds: number): Promise<void> => (
 export function createMemoryDatabaseForTest(
   testName: string,
   options: Record<string, unknown> = {},
-): Baldin {
+): Baldim {
   databaseCounter += 1;
   const keyPrefix = [
     'suite=plugin-api',
@@ -19,9 +19,9 @@ export function createMemoryDatabaseForTest(
     `${Date.now()}-${databaseCounter}`,
   ].join('/');
 
-  return new Baldin({
+  return new Baldim({
     client: new MemoryClient({
-      bucket: 'baldin-tests',
+      bucket: 'baldim-tests',
       keyPrefix,
       logLevel: 'silent',
     }),
@@ -35,6 +35,6 @@ export function createMemoryDatabaseForTest(
 export function createDatabaseForTest(
   testName: string,
   options: Record<string, unknown> = {},
-): Baldin {
+): Baldim {
   return createMemoryDatabaseForTest(testName, options);
 }

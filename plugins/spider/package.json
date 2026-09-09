@@ -1,8 +1,8 @@
 {
-  "name": "@baldin/plugin-spider",
+  "name": "@baldim/plugin-spider",
   "version": "0.1.0",
   "type": "module",
-  "description": "Web crawling, discovery, browser analysis, and pluggable crawl backends for Baldin.",
+  "description": "Web crawling, discovery, browser analysis, and pluggable crawl backends for Baldim.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,7 +10,7 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "url": "git+https://github.com/forattini-dev/baldim.git",
     "directory": "plugins/spider"
   },
   "main": "./dist/index.js",
@@ -45,10 +45,10 @@
     "prepack": "pnpm run build"
   },
   "dependencies": {
-    "@baldin/plugin-puppeteer": "workspace:*",
-    "@baldin/plugin-queue-consumer": "workspace:*",
-    "@baldin/plugin-s3-queue": "workspace:*",
-    "@baldin/plugin-ttl": "workspace:*",
+    "@baldim/plugin-puppeteer": "workspace:*",
+    "@baldim/plugin-queue-consumer": "workspace:*",
+    "@baldim/plugin-s3-queue": "workspace:*",
+    "@baldim/plugin-ttl": "workspace:*",
     "recker": "1.0.103"
   },
   "optionalDependencies": {
@@ -60,11 +60,11 @@
     "puppeteer-core": "^24.29.1"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.2.0"
+    "@baldim/core": "^0.2.0"
   },
   "devDependencies": {
-    "@baldin/adapter-memory": "workspace:*",
-    "@baldin/core": "workspace:*",
+    "@baldim/adapter-memory": "workspace:*",
+    "@baldim/core": "workspace:*",
     "@types/node": "25.5.2",
     "typescript": "6.0.2"
   }

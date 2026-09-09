@@ -2,9 +2,9 @@ import path from 'path';
 import { Readable } from 'node:stream';
 import { createHash } from 'crypto';
 
-import { metadataEncode, metadataDecode } from '@baldin/core/adapter';
-import { DatabaseError, ResourceError, ValidationError } from '@baldin/core/adapter';
-import type { StorageObject } from '@baldin/core/adapter';
+import { metadataEncode, metadataDecode } from '@baldim/core/adapter';
+import { DatabaseError, ResourceError, ValidationError } from '@baldim/core/adapter';
+import type { StorageObject } from '@baldim/core/adapter';
 import type {
   DbRow,
   DbObjectHeaderRow,

@@ -1,6 +1,6 @@
 import type { StateMachinePluginContext, StateRecord, TriggerConfig, EntityInState, SchedulerJob, TriggerListenerRef, Lock, Resource } from './types.js';
 import { StateMachineError } from './errors.js';
-import { tryFn } from '@baldin/core/plugin';
+import { tryFn } from '@baldim/core/plugin';
 import { buildTriggerSubscriptionKey, getEventEntityId } from './helpers.js';
 
 export async function getEntitiesInState(plugin: StateMachinePluginContext, machineId: string, stateName: string): Promise<EntityInState[]> {
@@ -217,7 +217,7 @@ export async function setupTriggers(plugin: StateMachinePluginContext): Promise<
   }
 
   if (Object.keys(cronJobs).length > 0 && plugin.config.enableScheduler) {
-    const { SchedulerPlugin } = await import('@baldin/plugin-scheduler') as unknown as { SchedulerPlugin: SchedulerPluginClass };
+    const { SchedulerPlugin } = await import('@baldim/plugin-scheduler') as unknown as { SchedulerPlugin: SchedulerPluginClass };
     const schedulerPlugin = new SchedulerPlugin({
       jobs: cronJobs,
       persistJobs: false,

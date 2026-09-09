@@ -1,6 +1,6 @@
-import type { BaldinMCPServer } from '../entrypoint.js';
+import type { BaldimMCPServer } from '../entrypoint.js';
 import type { ResourceQueryArgs } from '../types/index.js';
-import type { Baldin } from '@baldin/core';
+import type { Baldim } from '@baldim/core';
 
 export const queryTools = [
   {
@@ -72,9 +72,9 @@ For partition-based filtering (O(1)), use resourceList with partition + partitio
   }
 ];
 
-export function createQueryHandlers(server: BaldinMCPServer) {
+export function createQueryHandlers(server: BaldimMCPServer) {
   return {
-    async resourceQuery(args: ResourceQueryArgs, database: Baldin): Promise<any> {
+    async resourceQuery(args: ResourceQueryArgs, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, filters, limit = 100, offset = 0 } = args;
       const resource = server.getResource(database, resourceName);
@@ -103,7 +103,7 @@ export function createQueryHandlers(server: BaldinMCPServer) {
       }
     },
 
-    async resourceSearch(args: { resourceName: string; searchText: string; fields?: string[]; caseSensitive?: boolean; limit?: number }, database: Baldin): Promise<any> {
+    async resourceSearch(args: { resourceName: string; searchText: string; fields?: string[]; caseSensitive?: boolean; limit?: number }, database: Baldim): Promise<any> {
       server.ensureConnected(database);
       const { resourceName, searchText, fields, caseSensitive = false, limit = 100 } = args;
       const resource = server.getResource(database, resourceName);

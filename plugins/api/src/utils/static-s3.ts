@@ -1,7 +1,7 @@
 import { GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import type { S3Client, HeadObjectCommandOutput, GetObjectCommandOutput } from '@aws-sdk/client-s3';
-import { createLogger } from '@baldin/core/plugin';
-import type { Logger } from '@baldin/core/plugin';
+import { createLogger } from '@baldim/core/plugin';
+import type { Logger } from '@baldim/core/plugin';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getContentType } from './mime-types.js';
 import { stripStaticMountPath } from './static-mount-path.js';
