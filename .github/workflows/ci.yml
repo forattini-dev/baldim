@@ -63,6 +63,7 @@ jobs:
           pnpm --filter @baldin/plugin-cache pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-state-machine pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-tree pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-importer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify packed packages in a clean consumer
@@ -87,6 +88,7 @@ jobs:
           cache_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cache-*.tgz)
           state_machine_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-state-machine-*.tgz)
           tree_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-tree-*.tgz)
+          importer_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-importer-*.tgz)
           testing_package=("$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz)
           typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz)
           test "${#core[@]}" -eq 1
@@ -108,6 +110,7 @@ jobs:
           test "${#cache_plugin[@]}" -eq 1
           test "${#state_machine_plugin[@]}" -eq 1
           test "${#tree_plugin[@]}" -eq 1
+          test "${#importer_plugin[@]}" -eq 1
           test "${#testing_package[@]}" -eq 1
           test "${#typegen_package[@]}" -eq 1
           if tar -tzf "${core[0]}" | grep -Eq 'package/dist/clients/(filesystem|memory|reddb|sqlite|remote-sqlite|d1|libsql)'; then
@@ -117,7 +120,7 @@ jobs:
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -136,10 +139,11 @@ jobs:
           import { CachePlugin } from '@baldin/plugin-cache';
           import { StateMachinePlugin } from '@baldin/plugin-state-machine';
           import { TreePlugin } from '@baldin/plugin-tree';
+          import { ImporterPlugin, Transformers } from '@baldin/plugin-importer';
           import { Factory, Seeder } from '@baldin/testing';
           import { printTypes } from '@baldin/typegen';
           import { MemoryClient } from '@baldin/adapter-memory';
-          import { mkdtemp, rm } from 'node:fs/promises';
+          import { mkdtemp, rm, writeFile } from 'node:fs/promises';
           import { tmpdir } from 'node:os';
           import path from 'node:path';
           import '@baldin/adapter-filesystem';
@@ -284,7 +288,23 @@ jobs:
           const root = await categories.tree.createRoot({ name: 'Root' });
           await categories.tree.addChild(root.id, { name: 'Child' });
           assert.equal((await categories.tree.getDescendants(root.id))[0]?.name, 'Child');
+          const importedUsers = await database.createResource({
+            name: 'imported-users',
+            attributes: { id: 'string|optional', name: 'string|required', email: 'string|required' },
+          });
+          const importer = new ImporterPlugin({
+            resource: 'imported-users',
+            format: 'csv',
+            transforms: { email: Transformers.toLowerCase() },
+          });
+          await database.usePlugin(importer);
+          const importDir = await mkdtemp(path.join(tmpdir(), 'baldin-pack-import-'));
+          const importFile = path.join(importDir, 'users.csv');
+          await writeFile(importFile, 'id,name,email\nu1,Ada,ADA@EXAMPLE.COM\n');
+          assert.equal((await importer.import(importFile)).inserted, 1);
+          assert.equal((await importedUsers.get('u1')).email, 'ada@example.com');
           await database.disconnect();
           await rm(backupDir, { recursive: true, force: true });
+          await rm(importDir, { recursive: true, force: true });
           assert.equal(queueStopped, true);
           JS
