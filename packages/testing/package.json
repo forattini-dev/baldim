@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "type": "module",
   "description": "Factories and seeders for Baldin applications and plugin test suites.",
-  "license": "Unlicense",
+  "license": "MIT",
   "engines": {
     "node": ">=24"
   },
@@ -25,7 +25,7 @@
   "files": [
     "dist",
     "README.md",
-    "UNLICENSE"
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"

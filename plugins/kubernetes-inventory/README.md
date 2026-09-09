@@ -23,4 +23,4 @@ The package owns `@kubernetes/client-node`, `node-cron`, and its data-processing
 
 ## License
 
-Unlicense.
+MIT.

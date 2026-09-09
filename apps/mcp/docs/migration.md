@@ -4,7 +4,7 @@
 
 Source: https://github.com/forattini-dev/s3db.js/tree/8264a009ce46b6f5b6e8a30a8916e9608fbffc11
 Local source: `~/workspace/s3db.js` (clean at extraction).
-Original project and data remain unchanged. Source license: Unlicense.
+Original project and data remain unchanged. The historical s3db.js source was released under the Unlicense; Baldin is distributed under the MIT License.
 
 ## Completed
 

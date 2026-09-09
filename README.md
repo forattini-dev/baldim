@@ -7,7 +7,7 @@
   <img alt="Node.js 24 or newer" src="https://img.shields.io/badge/Node.js-24%2B-4ade80?style=flat-square&amp;labelColor=0b1021">
   <img alt="43 public packages" src="https://img.shields.io/badge/packages-43-8b5cf6?style=flat-square&amp;labelColor=0b1021">
   <img alt="32 plugins" src="https://img.shields.io/badge/plugins-32-fbbf24?style=flat-square&amp;labelColor=0b1021">
-  <a href="UNLICENSE"><img alt="The Unlicense" src="https://img.shields.io/badge/license-Unlicense-f8fafc?style=flat-square&amp;labelColor=0b1021"></a>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-f8fafc?style=flat-square&amp;labelColor=0b1021"></a>
 </p>
 
 <p align="center">
@@ -25,6 +25,26 @@ Baldin gives every backend the same resource API: schemas, validation, CRUD, que
 | **A deliberately narrow core** | Provider SDKs, web frameworks, browser runtimes, and queue clients stay in the packages that use them. |
 | **Real multidatabase coordination** | `DatabaseManager` routes named connections and protects resource identity across databases. |
 | **A migration path from s3db.js** | Existing manifests, storage defaults, environment variables, and compatibility aliases remain understood. |
+
+## Documentation map
+
+- [Quick start](#quick-start)
+- [Resources and schemas](#work-with-resources)
+  - [Create a resource](#define-a-resource-and-its-schema)
+  - [CRUD](#write-read-update-and-delete)
+  - [Bulk operations](#work-in-batches)
+  - [Queries and lists](#query-and-list-documents)
+  - [Pagination](#paginate-large-resources)
+  - [Binary content](#attach-binary-content)
+  - [Hooks](#transform-data-with-hooks)
+- [Partitions](#index-access-paths-with-partitions)
+- [Storage adapters](#choose-storage-at-runtime)
+- [Multiple databases](#coordinate-multiple-databases)
+- [Plugins](#add-only-the-capabilities-you-need)
+- [CLI, MCP, and packages](#work-from-code-shell-or-an-agent)
+- [Repository architecture](#repository-architecture)
+- [Migration from s3db.js](#migrate-from-s3dbjs-without-rewriting-data)
+- [Development and releases](#develop-and-release-with-confidence)
 
 <img src="docs/readme/quickstart.svg" alt="Quick start — start with one bucket" width="100%">
 
@@ -65,15 +85,323 @@ const completed = await tasks.query({ done: true });
 await database.disconnect();
 ```
 
-Resources also support direct reads, deletes, pagination, indexed partitions, schema evolution, streams, hooks, and custom behaviors. Start with the [core package guide](core/README.md) and follow the [public API map](docs/public-api-mapping.md) when moving an existing s3db.js application.
+The connection string identifies the storage protocol and database location. `memory://my-app` survives reconnects inside the same process and is ideal for tests and examples. Applications should connect once during startup and disconnect during graceful shutdown.
 
 > Package versions are prepared in the repository. Publishing them to npm is the remaining registry release step.
+
+<img src="docs/readme/resources.svg" alt="Resource guide — the everyday resource API" width="100%">
+
+## Work with resources
+
+A `Database` owns named resources. A resource combines a persisted schema, an ID strategy, optional indexes, hooks, storage behavior, and the methods used to work with its documents.
+
+### Define a resource and its schema
+
+Call `createResource()` during application startup. The call creates a new definition or applies the current definition to a resource restored from storage, so it is safe to keep schema declarations in code.
+
+```ts
+const users = await database.createResource({
+  name: 'users',
+  timestamps: true,
+  attributes: {
+    email: 'email|required',
+    name: 'string|required|minlength:2|maxlength:120',
+    age: 'number|optional|min:0',
+    active: 'boolean|required|default:true',
+    roles: { type: 'array', items: 'string', optional: true },
+    profile: {
+      type: 'object',
+      optional: true,
+      properties: {
+        locale: 'string|optional',
+        timezone: 'string|optional',
+      },
+    },
+  },
+});
+```
+
+Schema strings use the `type|rule:value` form. Object definitions are useful for arrays, nested objects, defaults, and programmatic schemas. Common types include `string`, `number`, `boolean`, `date`, `email`, `array`, and `object`. Invalid writes reject before reaching storage.
+
+After `connect()`, persisted resources are also available by name:
+
+```ts
+const users = database.resources.users;
+const sameUsers = await database.getResource('users');
+
+const definitions = await database.listResources();
+const exists = database.resourceExists('users');
+```
+
+Useful resource options:
+
+| Option | Purpose |
+| --- | --- |
+| `attributes` | Declares the validated document schema. |
+| `timestamps` | Adds and maintains creation/update timestamps. |
+| `partitions` | Declares indexed equality access paths. |
+| `idGenerator` / `idSize` | Selects or customizes generated IDs. |
+| `behavior` | Chooses how attributes are divided between metadata and body storage. |
+| `hooks` / `middlewares` | Transforms or intercepts resource operations. |
+| `cache` | Enables a configured cache for the resource. |
+| `security` | Overrides password and secret-field settings. |
+| `compression` | Overrides compression behavior. |
+| `strictValidation` | Overrides database-level validation for this resource. |
+
+Available storage behaviors are `user-managed`, `enforce-limits`, `truncate-data`, `body-overflow`, and `body-only`. The default `user-managed` behavior follows the schema mapping. `body-only` is useful for typed nested data that should live entirely in the object body.
+
+### Write, read, update, and delete
+
+```ts
+const ada = await users.insert({
+  id: 'user_ada',       // optional when the resource generates IDs
+  email: 'ada@example.com',
+  name: 'Ada Lovelace',
+  active: true,
+});
+
+const userId = ada.id!;
+const byId = await users.get(userId);
+const maybeUser = await users.getOrNull('missing'); // null
+const userExists = await users.exists(userId);
+
+// Merges the supplied fields with the stored document.
+await users.update(userId, { active: false });
+
+// Partial update. Nested paths are accepted.
+await users.patch(userId, { 'profile.locale': 'pt-BR' });
+
+// Replaces the complete user payload while keeping the same ID.
+await users.replace(userId, {
+  email: 'ada@example.com',
+  name: 'Ada Lovelace',
+  active: true,
+});
+
+// Inserts when absent; updates when the ID already exists.
+await users.upsert({
+  id: 'user_grace',
+  email: 'grace@example.com',
+  name: 'Grace Hopper',
+  active: true,
+});
+
+await users.delete(userId);
+```
+
+| Operation | Result |
+| --- | --- |
+| `insert(data)` | Creates one document and rejects a duplicate ID. |
+| `get(id)` | Returns one document or throws when it cannot be read. |
+| `getOrNull(id)` | Returns one document or `null` when it does not exist. |
+| `exists(id)` | Checks existence without hydrating the document. |
+| `update(id, fields)` | Deep-merges fields into an existing document. |
+| `patch(id, fields)` | Applies a partial update and supports dotted nested paths. |
+| `replace(id, data)` | Validates and writes a complete replacement. |
+| `upsert({ id, ...data })` | Inserts or updates using a required ID. |
+| `delete(id)` | Deletes the document and its partition references. |
+
+Returned documents include their `id` and storage metadata such as `_etag`, `_lastModified`, `_hasContent`, and `_mimeType` when the selected adapter provides it.
+
+### Work in batches
+
+```ts
+const inserted = await users.insertMany([
+  { id: 'user_1', email: 'one@example.com', name: 'One', active: true },
+  { id: 'user_2', email: 'two@example.com', name: 'Two', active: true },
+]);
+
+const selected = await users.getMany(['user_1', 'user_2']);
+const result = await users.deleteMany(['user_1', 'user_2']);
+
+console.log(result.deleted, result.errors);
+```
+
+`getAll()` and `deleteAll()` are available when the complete resource is intentionally needed. Prefer bounded lists, queries, or pages for growing datasets.
+
+### Query and list documents
+
+`query()` performs equality matching. When the filter covers a partition, Baldin automatically chooses the best matching partition and only scans that path. Any remaining fields are applied as residual equality filters.
+
+```ts
+const activeUsers = await users.query(
+  { active: true, 'profile.locale': 'pt-BR' },
+  { limit: 50, offset: 0 },
+);
+
+const firstUsers = await users.list({ limit: 50, offset: 0 });
+const ids = await users.listIds({ limit: 50 });
+const total = await users.count();
+```
+
+`list()` returns hydrated documents. `listIds()` returns only IDs and avoids reading document bodies. `count()` counts the selected resource or partition.
+
+### Paginate large resources
+
+Cursor pagination is the default and avoids large offsets:
+
+```ts
+const firstPage = await users.page({ size: 25 });
+
+if (firstPage.nextCursor) {
+  const secondPage = await users.page({
+    size: 25,
+    cursor: firstPage.nextCursor,
+  });
+}
+```
+
+Page-number navigation is also available. Do not combine `page` and `cursor` in the same call.
+
+```ts
+const page = await users.page({ page: 3, size: 25 });
+
+console.log(page.items);
+console.log(page.hasMore, page.nextCursor);
+```
+
+The result contains `items`, `pageSize`, `hasMore`, and `nextCursor`. `page` is populated for page-number requests; totals remain `null` because pagination does not run an implicit count.
+
+### Attach binary content
+
+Attributes and binary content can live on the same document and be managed independently.
+
+```ts
+const assets = await database.createResource({
+  name: 'assets',
+  attributes: { filename: 'string|required' },
+});
+
+await assets.insert({ id: 'logo', filename: 'logo.svg' });
+await assets.setContent({
+  id: 'logo',
+  buffer: Buffer.from('<svg><!-- ... --></svg>'),
+  contentType: 'image/svg+xml',
+});
+
+const { buffer, contentType } = await assets.content('logo');
+const hasContent = await assets.hasContent('logo');
+await assets.deleteContent('logo');
+```
+
+### Transform data with hooks
+
+Hooks run around resource operations and may transform the value passed to the next stage.
+
+```ts
+const articles = await database.createResource({
+  name: 'articles',
+  attributes: {
+    title: 'string|required',
+    slug: 'string|required',
+  },
+  hooks: {
+    beforeInsert: [async (data) => {
+      const article = data as Record<string, unknown>;
+      return {
+        ...article,
+        slug: String(article.title).toLowerCase().replaceAll(' ', '-'),
+      };
+    }],
+  },
+});
+
+const removeHook = (data: unknown) => data;
+articles.addHook('afterGet', removeHook);
+articles.removeHook('afterGet', removeHook);
+```
+
+Supported hook pairs cover insert, update, patch, replace, delete, get, list, query, exists, count, `getMany`, and `deleteMany`. Plugins use the same lifecycle through the public plugin SDK.
+
+<img src="docs/readme/partitions.svg" alt="Partition indexes — design the path your queries take" width="100%">
+
+## Index access paths with partitions
+
+Partitions are secondary access paths stored through the selected adapter. They make common equality lookups direct and portable across memory, filesystem, SQLite, S3, and RedDB.
+
+Use the shorthand when each field needs its own partition:
+
+```ts
+const orders = await database.createResource({
+  name: 'orders',
+  attributes: {
+    tenantId: 'string|required',
+    status: 'string|required',
+    createdAt: 'string|required',
+    total: 'number|required|min:0',
+  },
+  partitions: ['tenantId', 'status'], // creates byTenantId and byStatus
+});
+```
+
+Use named definitions for compound access paths:
+
+```ts
+const orders = await database.createResource({
+  name: 'orders',
+  attributes: {
+    tenantId: 'string|required',
+    status: 'string|required',
+    createdAt: 'string|required',
+    total: 'number|required|min:0',
+  },
+  partitions: {
+    byTenant: {
+      fields: { tenantId: 'string' },
+    },
+    byTenantAndStatus: {
+      fields: {
+        tenantId: 'string',
+        status: 'string',
+      },
+    },
+    byDay: {
+      // The partition rule normalizes ISO timestamps to YYYY-MM-DD.
+      fields: { createdAt: 'date' },
+    },
+  },
+});
+```
+
+Query through a partition explicitly:
+
+```ts
+const pending = await orders.list({
+  partition: 'byTenantAndStatus',
+  partitionValues: {
+    tenantId: 'acme',
+    status: 'pending',
+  },
+  limit: 100,
+});
+
+const pendingIds = await orders.listIds({
+  partition: 'byTenantAndStatus',
+  partitionValues: { tenantId: 'acme', status: 'pending' },
+});
+
+const pendingCount = await orders.count({
+  partition: 'byTenantAndStatus',
+  partitionValues: { tenantId: 'acme', status: 'pending' },
+});
+```
+
+Or let the query planner select it from an equality filter:
+
+```ts
+const pending = await orders.query({
+  tenantId: 'acme',
+  status: 'pending',
+});
+```
+
+Baldin creates partition references on insert, moves them when indexed fields change, and removes them on delete. Every field used by a partition must exist in `attributes`. Use `asyncPartitions: false` when the write must wait for portable partition-reference maintenance; adapters with native transactional indexes can provide stronger behavior directly.
 
 <img src="docs/readme/storage.svg" alt="Storage adapters — pour data anywhere" width="100%">
 
 ## Choose storage at runtime
 
-Import an adapter once, then select it with the connection string. Loading the module registers its protocols in core; this explicit boundary keeps core from installing every provider SDK. Executable bundles such as the CLI load the official adapters for you.
+Install the adapter next to your application, import it once in the process entrypoint, then select it with the connection string. Loading the module registers its protocols in core. You do not repeat the import for every database or module. Executable bundles such as the CLI and MCP server load the official adapters for you.
 
 | Adapter | Protocols | Designed for |
 | --- | --- | --- |
@@ -98,7 +426,62 @@ const database = new Baldin({
 await database.connect();
 ```
 
-Changing the connection string changes storage; the resource code above remains the same. Adapter-specific credentials, endpoints, bindings, retries, and transport options stay with the adapter.
+The connection string selects the adapter while `clientOptions` carries provider configuration:
+
+```ts
+import { Baldin } from '@baldin/core';
+import '@baldin/adapter-s3';
+
+const database = new Baldin({
+  connectionString: 's3://application-data/prefix',
+  clientOptions: {
+    region: 'us-east-1',
+    endpoint: process.env.S3_ENDPOINT,
+    forcePathStyle: true,
+  },
+});
+```
+
+You can bypass protocol registration by constructing a client explicitly:
+
+```ts
+import { Baldin } from '@baldin/core';
+import { S3Client } from '@baldin/adapter-s3';
+
+const client = new S3Client({
+  connectionString: 's3://application-data/prefix',
+});
+
+const database = new Baldin({ client });
+```
+
+Changing storage does not change resource code. Adapter-specific credentials, endpoints, bindings, retries, and transport options stay with the adapter package that uses them.
+
+### Common database options
+
+```ts
+const database = new Baldin({
+  connectionString: process.env.BALDIN_CONNECTION_STRING!,
+  logLevel: 'info',
+  parallelism: 20,
+  strictValidation: true,
+  deferMetadataWrites: true,
+  metadataWriteDelay: 100,
+  versioningEnabled: false,
+  exitOnSignal: true,
+});
+```
+
+| Option | Purpose |
+| --- | --- |
+| `connectionString` | Selects the registered storage protocol and location. |
+| `client` | Uses an already constructed storage client. |
+| `clientOptions` | Passes provider-specific settings to the selected adapter. |
+| `parallelism` | Controls concurrent storage work. |
+| `strictValidation` | Rejects documents that violate the resource schema. |
+| `deferMetadataWrites` | Coalesces resource-definition writes. Call `flushMetadata()` before a controlled shutdown when needed. |
+| `logLevel` / `logger` | Configures built-in logging or supplies an application logger. |
+| `exitOnSignal` | Enables lifecycle cleanup for process signals. |
 
 <img src="docs/readme/manager.svg" alt="Multidatabase — one handle, many databases" width="100%">
 
@@ -112,9 +495,17 @@ import '@baldin/adapter-s3'; // registers s3:, http:, https:
 
 const databases = new DatabaseManager({
   default: 'primary',
+  defaults: {
+    logLevel: 'info',
+    strictValidation: true,
+    exitOnSignal: true,
+  },
   connections: {
     primary: { connectionString: 'memory://application' },
-    analytics: { connectionString: 's3://analytics-data' },
+    analytics: {
+      connectionString: 's3://analytics-data',
+      clientOptions: { region: 'us-east-1' },
+    },
   },
 });
 
@@ -133,15 +524,87 @@ await databases.createResource({
 
 const events = databases.resource('events');
 const analytics = databases.connection('analytics');
+
+console.log(databases.connectionNames); // ['primary', 'analytics']
+console.log(databases.getConnectionForResource('events')); // 'analytics'
+
+await databases.disconnect();
 ```
 
-Use the manager for cross-connection resource creation so duplicate names are rejected before metadata is written.
+`defaults` are merged into every connection; values inside a named connection win. Omitting `connection` from `createResource()` routes the resource to the configured default database.
+
+| Manager API | Purpose |
+| --- | --- |
+| `connect()` / `disconnect()` | Starts or stops every named database in parallel. Partial connection failures are rolled back. |
+| `connection(name)` | Returns one database for direct database-level work. |
+| `defaultConnection` | Returns the configured default database. |
+| `createResource(config)` | Creates a resource on `config.connection` or on the default. |
+| `resource(name)` | Finds a resource across all managed databases. |
+| `resources` | Returns the unified resource map. |
+| `connectionNames` | Lists configured connection names. |
+| `getConnectionForResource(name)` | Reports which connection owns a resource. |
+
+Resource names are globally unique inside one manager. Use `manager.createResource()` for cross-connection creation so duplicates are rejected before metadata is written. Events from child databases are forwarded with the connection name as a prefix, such as `primary:db:connected`.
 
 <img src="docs/readme/plugins.svg" alt="Capability packages — snap in what you need" width="100%">
 
 ## Add only the capabilities you need
 
 Every plugin is an independently publishable package with its own source, tests, manifest, and dependencies. Core exposes the plugin contract; plugins carry the cost of their own web frameworks, cloud SDKs, queues, browsers, ML runtimes, and provider clients.
+
+Install only the plugin packages used by the application:
+
+```sh
+pnpm add @baldin/core @baldin/plugin-fulltext @baldin/plugin-ttl
+```
+
+Attach a plugin with `database.usePlugin()`. Installation, startup, hooks, resource extensions, and cleanup then follow the database lifecycle.
+
+```ts
+import { Baldin } from '@baldin/core';
+import { FullTextPlugin } from '@baldin/plugin-fulltext';
+
+const database = new Baldin({ connectionString: 'memory://catalog' });
+await database.connect();
+
+const products = await database.createResource({
+  name: 'products',
+  attributes: {
+    name: 'string|required',
+    description: 'string|optional',
+  },
+});
+
+const fulltext = new FullTextPlugin({
+  fields: { products: ['name', 'description'] },
+});
+await database.usePlugin(fulltext);
+
+await products.insert({
+  id: 'blue-bucket',
+  name: 'Blue bucket',
+  description: 'Small, durable, and fast',
+});
+
+const matches = await fulltext.searchRecords(
+  'products',
+  'durable',
+);
+```
+
+Pass a second argument to give an instance its own registry name, which is useful when running the same plugin more than once:
+
+```ts
+const analyticsSearch = new FullTextPlugin({
+  fields: { products: ['name'] },
+});
+await database.usePlugin(analyticsSearch, 'analytics-search');
+const installed = database.plugins['analytics-search'];
+
+await database.uninstallPlugin('analytics-search', { purgeData: false });
+```
+
+Plugins may create their own namespaced resources, add hooks or middleware, and extend a resource with capability-specific APIs such as `resource.tree` or `resource.graph`. Each plugin README documents its constructor options and the API it adds.
 
 ### Indexing and data models
 
@@ -195,13 +658,29 @@ Every plugin is an independently publishable package with its own source, tests,
 | [`recon`](plugins/recon) | Passive, stealth, and active reconnaissance workflows. |
 | [`spider`](plugins/spider) | Crawling, discovery, browser analysis, and pluggable queue/storage backends. |
 
+For example, expose resources through the Raffel-based API plugin:
+
 ```ts
-import { Baldin } from '@baldin/core';
 import { ApiPlugin } from '@baldin/plugin-api';
 
-const database = new Baldin({ connectionString: 'memory://api' });
-await database.connect();
 await database.usePlugin(new ApiPlugin({ port: 3000 }));
+```
+
+Or add indexed and lazy expiration policies:
+
+```ts
+import { TTLPlugin } from '@baldin/plugin-ttl';
+
+await database.createResource({
+  name: 'sessions',
+  attributes: { token: 'string|required' },
+});
+
+await database.usePlugin(new TTLPlugin({
+  resources: {
+    sessions: { ttl: 3600, onExpire: 'hard-delete' },
+  },
+}));
 ```
 
 The API, Identity, WebSocket, and SMTP plugins each depend on Raffel directly because they use it directly. Core and every storage adapter remain Raffel-free.
@@ -250,15 +729,15 @@ baldin/
 
 ```mermaid
 flowchart LR
-  apps[Apps: CLI · MCP] --> core[@baldin/core]
-  apps --> adapters[Storage adapters]
-  apps --> plugins[Capability plugins]
-  apps --> packages[Shared packages]
+  apps["Apps: CLI · MCP"] --> core["@baldin/core"]
+  apps --> adapters["Storage adapters"]
+  apps --> plugins["Capability plugins"]
+  apps --> packages["Shared packages"]
   plugins --> core
   plugins --> packages
-  adapters --> contracts[Core adapter contract]
+  adapters --> contracts["Core adapter contract"]
   packages --> contracts
-  core --> memory[@baldin/adapter-memory]
+  core --> memory["@baldin/adapter-memory"]
 ```
 
 Core owns the engine, resource model, generic storage contracts, adapter registry, multidatabase manager, and plugin SDK. Adapters own storage implementations. Plugins own optional capabilities. Shared packages exist when multiple consumers need a stable public abstraction; they are not a dumping ground.
@@ -307,7 +786,7 @@ Changesets versions packages independently: a release changes only the packages 
 
 ## License
 
-[The Unlicense](UNLICENSE), preserving the license of the original s3db.js source.
+[MIT](LICENSE).
 
 <p align="center">
   <strong>Bring a bucket. Keep the API. Add only what the application deserves.</strong>

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Public HTTP, profiling, money, encoding, and error utilities for Baldin applications.",
-  "license": "Unlicense",
+  "license": "MIT",
   "engines": { "node": ">=24" },
   "sideEffects": false,
   "repository": {
@@ -22,7 +22,7 @@
     "./optimized-encoding": { "types": "./dist/optimized-encoding.d.ts", "import": "./dist/optimized-encoding.js" },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md", "UNLICENSE"],
+  "files": ["dist", "README.md", "LICENSE"],
   "publishConfig": { "access": "public" },
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",

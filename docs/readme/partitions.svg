@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 190" width="1200" height="190" role="img" aria-labelledby="title desc">
+  <title id="title">Design the path your queries take</title>
+  <desc id="desc">Create indexed equality paths that work across storage adapters.</desc>
+  <defs>
+    <linearGradient id="partitions-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#07111f"/><stop offset="0.55" stop-color="#0a1020"/><stop offset="1" stop-color="#090b16"/></linearGradient>
+    <radialGradient id="partitions-glow" cx="0.2" cy="0.15" r="0.85"><stop offset="0" stop-color="#fbbf24" stop-opacity="0.3"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
+    <radialGradient id="partitions-glow2" cx="0.8" cy="0.8" r="0.8"><stop offset="0" stop-color="#fb7185" stop-opacity="0.19"/><stop offset="1" stop-color="#fb7185" stop-opacity="0"/></radialGradient>
+    <linearGradient id="partitions-accent" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#fb7185"/></linearGradient>
+    <pattern id="partitions-grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#dbeafe" stroke-opacity="0.035"/></pattern>
+    <clipPath id="partitions-frame"><rect width="1200" height="190" rx="18"/></clipPath>
+  </defs>
+  <g clip-path="url(#partitions-frame)">
+    <rect width="1200" height="190" fill="url(#partitions-bg)"/><rect width="1200" height="190" fill="url(#partitions-grid)"/>
+    <ellipse cx="110" cy="20" rx="340" ry="220" fill="url(#partitions-glow)"/><ellipse cx="1110" cy="180" rx="330" ry="180" fill="url(#partitions-glow2)"/>
+    <circle cx="61" cy="95" r="15" fill="#fbbf24"/><circle cx="137" cy="52" r="15" fill="#050914" stroke="#fb7185" stroke-width="3"/><circle cx="137" cy="95" r="15" fill="#050914" stroke="#22d3ee" stroke-width="3"/><circle cx="137" cy="138" r="15" fill="#050914" stroke="#4ade80" stroke-width="3"/>
+    <path d="M76 95h19c18 0 18-43 36-43M95 95h27M95 95c18 0 18 43 36 43" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+    <g font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace">
+      <text x="215" y="54" font-size="13" font-weight="700" fill="#fbbf24" letter-spacing="2.8">PARTITION INDEXES</text>
+      <text x="215" y="105" font-size="40" font-weight="700" fill="#f8fafc" letter-spacing="-1.5">Design the path your queries take</text>
+      <text x="215" y="142" font-size="18" fill="#94a3b8">Indexed equality paths across every storage adapter.</text>
+      <rect x="921" y="132" width="67" height="30" rx="15" fill="#fff" fill-opacity="0.045" stroke="#fff" stroke-opacity="0.11"/><text x="934" y="152" font-size="13" fill="#cbd5e1">fast</text>
+      <rect x="1000" y="132" width="88" height="30" rx="15" fill="#fff" fill-opacity="0.045" stroke="#fff" stroke-opacity="0.11"/><text x="1013" y="152" font-size="13" fill="#cbd5e1">portable</text>
+    </g>
+    <path d="M900 24c58 0 58 38 116 38s58-38 116-38" fill="none" stroke="#fb7185" stroke-opacity="0.2" stroke-width="2"/>
+    <circle cx="900" cy="24" r="4" fill="#fbbf24"/><circle cx="1016" cy="62" r="4" fill="#fb7185"/><circle cx="1132" cy="24" r="4" fill="#22d3ee"/>
+    <rect y="186" width="1200" height="4" fill="url(#partitions-accent)"/>
+  </g>
+</svg>

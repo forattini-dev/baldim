@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "type": "module",
   "description": "SQLite, libSQL, and Cloudflare D1 storage adapters for Baldin.",
-  "license": "Unlicense",
+  "license": "MIT",
   "engines": {
     "node": ">=24"
   },
@@ -25,7 +25,7 @@
   "files": [
     "dist",
     "README.md",
-    "UNLICENSE"
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Web crawling, discovery, browser analysis, and pluggable crawl backends for Baldin.",
-  "license": "Unlicense",
+  "license": "MIT",
   "engines": {
     "node": ">=24"
   },
@@ -33,7 +33,7 @@
   "files": [
     "dist",
     "README.md",
-    "UNLICENSE"
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"

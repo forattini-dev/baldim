@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Command-line interface for Baldin databases.",
-  "license": "Unlicense",
+  "license": "MIT",
   "engines": { "node": ">=24" },
   "bin": { "baldin": "./dist/index.js" },
-  "files": ["dist", "README.md", "UNLICENSE"],
+  "files": ["dist", "README.md", "LICENSE"],
   "publishConfig": { "access": "public" },
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",

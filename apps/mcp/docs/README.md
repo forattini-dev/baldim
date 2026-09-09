@@ -123,4 +123,4 @@ the existing `S3DB_*` environment variables remain supported during migration.
 
 ## License
 
-[Unlicense](UNLICENSE), preserving the license of the original s3db.js source.
+[MIT](../LICENSE).

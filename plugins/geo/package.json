@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "type": "module",
   "description": "Geohash indexing and geospatial queries for Baldin resources.",
-  "license": "Unlicense",
+  "license": "MIT",
   "engines": {
     "node": ">=24"
   },
@@ -25,7 +25,7 @@
   "files": [
     "dist",
     "README.md",
-    "UNLICENSE"
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"

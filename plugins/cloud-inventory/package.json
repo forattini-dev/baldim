@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Multi-cloud resource discovery, snapshots, diffs, schedules, and Terraform export for Baldin.",
-  "license": "Unlicense",
+  "license": "MIT",
   "engines": { "node": ">=24" },
   "sideEffects": false,
   "repository": {
@@ -18,7 +18,7 @@
     "./drivers": { "types": "./dist/cloud-inventory/drivers/index.d.ts", "import": "./dist/cloud-inventory/drivers/index.js" },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md", "UNLICENSE"],
+  "files": ["dist", "README.md", "LICENSE"],
   "publishConfig": { "access": "public" },
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",

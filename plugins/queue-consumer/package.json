@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "type": "module",
   "description": "Queue consumers and publishers for Baldin with optional SQS, RabbitMQ, Redis, and BullMQ drivers.",
-  "license": "Unlicense",
+  "license": "MIT",
   "engines": {
     "node": ">=24"
   },
@@ -29,7 +29,7 @@
   "files": [
     "dist",
     "README.md",
-    "UNLICENSE"
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"

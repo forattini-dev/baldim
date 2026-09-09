@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 190" width="1200" height="190" role="img" aria-labelledby="title desc">
+  <title id="title">The everyday resource API</title>
+  <desc id="desc">Define schemas, write documents, query, paginate, and attach content.</desc>
+  <defs>
+    <linearGradient id="resources-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#07111f"/><stop offset="0.55" stop-color="#0a1020"/><stop offset="1" stop-color="#090b16"/></linearGradient>
+    <radialGradient id="resources-glow" cx="0.2" cy="0.15" r="0.85"><stop offset="0" stop-color="#4ade80" stop-opacity="0.3"/><stop offset="1" stop-color="#4ade80" stop-opacity="0"/></radialGradient>
+    <radialGradient id="resources-glow2" cx="0.8" cy="0.8" r="0.8"><stop offset="0" stop-color="#22d3ee" stop-opacity="0.2"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <linearGradient id="resources-accent" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4ade80"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+    <pattern id="resources-grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#dbeafe" stroke-opacity="0.035"/></pattern>
+    <clipPath id="resources-frame"><rect width="1200" height="190" rx="18"/></clipPath>
+  </defs>
+  <g clip-path="url(#resources-frame)">
+    <rect width="1200" height="190" fill="url(#resources-bg)"/><rect width="1200" height="190" fill="url(#resources-grid)"/>
+    <ellipse cx="110" cy="20" rx="340" ry="220" fill="url(#resources-glow)"/><ellipse cx="1110" cy="180" rx="330" ry="180" fill="url(#resources-glow2)"/>
+    <rect x="43" y="37" width="104" height="124" rx="15" fill="#050914" stroke="#4ade80" stroke-width="3"/>
+    <path d="M66 69h58M66 92h58M66 115h34" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="126" cy="130" r="22" fill="#4ade80" fill-opacity="0.18" stroke="#4ade80" stroke-width="3"/><path d="M116 130l7 7 14-17" fill="none" stroke="#4ade80" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace">
+      <text x="215" y="54" font-size="13" font-weight="700" fill="#4ade80" letter-spacing="2.8">RESOURCE GUIDE</text>
+      <text x="215" y="105" font-size="43" font-weight="700" fill="#f8fafc" letter-spacing="-1.5">The everyday resource API</text>
+      <text x="215" y="142" font-size="18" fill="#94a3b8">Schema, CRUD, queries, pages, content, and hooks.</text>
+      <rect x="918" y="132" width="70" height="30" rx="15" fill="#fff" fill-opacity="0.045" stroke="#fff" stroke-opacity="0.11"/><text x="931" y="152" font-size="13" fill="#cbd5e1">typed</text>
+      <rect x="1000" y="132" width="88" height="30" rx="15" fill="#fff" fill-opacity="0.045" stroke="#fff" stroke-opacity="0.11"/><text x="1013" y="152" font-size="13" fill="#cbd5e1">durable</text>
+    </g>
+    <path d="M900 24c58 0 58 38 116 38s58-38 116-38" fill="none" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="2"/>
+    <circle cx="900" cy="24" r="4" fill="#4ade80"/><circle cx="1016" cy="62" r="4" fill="#22d3ee"/><circle cx="1132" cy="24" r="4" fill="#fbbf24"/>
+    <rect y="186" width="1200" height="4" fill="url(#resources-accent)"/>
+  </g>
+</svg>
