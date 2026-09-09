@@ -18,7 +18,7 @@ describe('ApiPlugin runtime inspection', () => {
       });
 
       const apiPlugin = new ApiPlugin({
-        port: 4900 + Math.floor(Math.random() * 500),
+        port: 0,
         host: '127.0.0.1',
         logLevel: 'silent',
         logging: { enabled: false },

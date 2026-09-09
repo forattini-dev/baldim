@@ -9,6 +9,7 @@
 
 import { ApiPlugin } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './config.js';
+import { getApiPort } from './helpers/server.js';
 import { verifyPassword } from '@baldin/core/password';
 
 async function waitForServer(port, maxAttempts = 100) {
@@ -32,7 +33,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
   let port;
 
   beforeEach(async () => {
-    port = 3400 + Math.floor(Math.random() * 1000);
+    port = 0;
     const testName = `api-plugin-api-config-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
     db = createMemoryDatabaseForTest(testName, { logLevel: 'silent' });
@@ -87,6 +88,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const getResponse = await fetch(`http://127.0.0.1:${port}/users/user-1`);
@@ -129,6 +131,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/clicks`);
@@ -184,6 +187,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/events/event-1`);
@@ -243,6 +247,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const userResponse = await fetch(`http://127.0.0.1:${port}/members/member-1`);
@@ -287,6 +292,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/logs`, {
@@ -330,6 +336,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/profiles/profile-1`, {
@@ -373,6 +380,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/accounts/acc-1`, {
@@ -429,6 +437,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/accounts_with_secret/${account.id}`, {
@@ -507,6 +516,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const publicResponse = await fetch(`http://127.0.0.1:${port}/directories/directory-1`);
@@ -586,6 +596,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const forbiddenResponse = await fetch(`http://127.0.0.1:${port}/profiles/profile-1?view=admin`);
@@ -665,6 +676,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const userRejectedResponse = await fetch(`http://127.0.0.1:${port}/memberships/membership-1`, {
@@ -731,6 +743,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const rejectedResponse = await fetch(`http://127.0.0.1:${port}/contacts/contact-1`, {
@@ -803,6 +816,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/bulk_users/bulk?view=admin`, {
@@ -883,6 +897,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/bulk_memberships/bulk`, {
@@ -959,6 +974,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/bulk_contacts/bulk`, {
@@ -1028,6 +1044,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       // Without auth - should be forbidden
@@ -1067,6 +1084,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/items/item-1`);
@@ -1107,6 +1125,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       // Fetch OpenAPI spec
@@ -1162,6 +1181,7 @@ describe('API Plugin - resource.$schema.api configuration', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const response = await fetch(`http://127.0.0.1:${port}/openapi.json`);

@@ -7,6 +7,7 @@
 
 import { ApiPlugin } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './config.js';
+import { getApiPort } from './helpers/server.js';
 
 async function waitForServer(port, maxAttempts = 100) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -31,7 +32,7 @@ describe('API Plugin - resource configuration', () => {
   let port;
 
   beforeEach(async () => {
-    port = 3300 + Math.floor(Math.random() * 1000);
+    port = 0;
     const testName = `api-plugin-resources-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
     db = createMemoryDatabaseForTest(testName, { logLevel: 'silent' });
@@ -77,6 +78,7 @@ describe('API Plugin - resource configuration', () => {
     });
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const response = await fetch(`http://127.0.0.1:${port}/plg_internal_records`);
@@ -106,6 +108,7 @@ describe('API Plugin - resource configuration', () => {
     });
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const firstCursorPage = await fetch(`http://127.0.0.1:${port}/plg_internal_records?limit=3&cursor=`);
@@ -178,6 +181,7 @@ describe('API Plugin - resource configuration', () => {
     });
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const response = await fetch(`http://127.0.0.1:${port}/plg_internal_records`);
@@ -217,6 +221,7 @@ describe('API Plugin - resource configuration', () => {
     });
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const baseUrl = `http://127.0.0.1:${port}/api/v99/plg_internal_records`;

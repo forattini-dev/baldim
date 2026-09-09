@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ApiPlugin } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './config.js';
+import { getApiPort } from './helpers/server.js';
 
 async function waitForServer(port: number, maxAttempts = 100): Promise<void> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -21,7 +22,7 @@ async function waitForServer(port: number, maxAttempts = 100): Promise<void> {
 
 describe('ApiPlugin header-secret auth', () => {
   it('authenticates native routes with a shared header secret and admin identity', async () => {
-    const port = 4200 + Math.floor(Math.random() * 1000);
+    let port = 0;
     const testName = `api-plugin-header-secret-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const db = createMemoryDatabaseForTest(testName, { logLevel: 'silent' });
     let apiPlugin: ApiPlugin | null = null;
@@ -82,6 +83,7 @@ describe('ApiPlugin header-secret auth', () => {
       });
 
       await db.usePlugin(apiPlugin);
+      port = getApiPort(apiPlugin);
       await waitForServer(port);
 
       const unauthorizedResponse = await fetch(`http://127.0.0.1:${port}/users/user-1`);

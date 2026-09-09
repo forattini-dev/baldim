@@ -2,10 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Client, RaffelClient } from 'recker';
 import { ApiPlugin } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './config.js';
-
-function randomPort() {
-  return 7400 + Math.floor(Math.random() * 2000);
-}
+import { getApiPort } from './helpers/server.js';
 
 async function waitForServer(port: number, maxAttempts = 200): Promise<void> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -26,7 +23,7 @@ describe('API Plugin — RaffelClient full mode with channels + recker HTTP', ()
   let raffelClients: RaffelClient[] = [];
 
   beforeEach(async () => {
-    port = randomPort();
+    port = 0;
     db = createMemoryDatabaseForTest(`api-ws-channels-${Date.now()}-${Math.random().toString(16).slice(2)}`, {
       logLevel: 'silent'
     });
@@ -65,6 +62,7 @@ describe('API Plugin — RaffelClient full mode with channels + recker HTTP', ()
     } as any);
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     client = new Client({ baseUrl: `http://127.0.0.1:${port}` });

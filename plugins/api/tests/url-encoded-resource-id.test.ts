@@ -3,6 +3,7 @@ import { ApiPlugin } from '../src/index.js';
 import { createRelationalRoutes } from '../src/routes/resource-routes.js';
 import { HttpApp } from '../src/http/http-runtime.js';
 import { createMemoryDatabaseForTest } from './config.js';
+import { getApiPort } from './helpers/server.js';
 
 async function waitForServer(port: number, maxAttempts = 100): Promise<void> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -27,7 +28,7 @@ describe('API Plugin URL-encoded resource ids', () => {
   let port: number;
 
   beforeEach(async () => {
-    port = 5400 + Math.floor(Math.random() * 1000);
+    port = 0;
     db = createMemoryDatabaseForTest(`api-plugin-url-id-${Date.now()}-${Math.random().toString(16).slice(2)}`, {
       logLevel: 'silent'
     });
@@ -74,6 +75,7 @@ describe('API Plugin URL-encoded resource ids', () => {
     });
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const encodedId = encodeURIComponent(userId);
@@ -166,6 +168,7 @@ describe('API Plugin URL-encoded resource ids', () => {
     });
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const encodedId = encodeURIComponent(userId);

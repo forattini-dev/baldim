@@ -4,6 +4,7 @@ import os from 'os';
 
 import { ApiPlugin } from '../src/index.js';
 import { createMemoryDatabaseForTest } from './config.js';
+import { getApiPort } from './helpers/server.js';
 
 async function waitForServer(port: number, maxAttempts: number = 100): Promise<void> {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
@@ -29,7 +30,7 @@ describe('API Plugin static file routing', () => {
   let staticDir: string;
 
   beforeEach(async () => {
-    port = 4300 + Math.floor(Math.random() * 1000);
+    port = 0;
     staticDir = await mkdtemp(path.join(os.tmpdir(), 'baldin-static-assets-'));
     await mkdir(path.join(staticDir, 'heroes', 'icons'), { recursive: true });
     await writeFile(path.join(staticDir, 'index.html'), '<html>assets root</html>');
@@ -78,6 +79,7 @@ describe('API Plugin static file routing', () => {
     });
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const nestedAssetResponse = await fetch(`http://127.0.0.1:${port}/assets/heroes/icons/icon_218103810.txt`);
@@ -129,6 +131,7 @@ describe('API Plugin static file routing', () => {
     });
 
     await db.usePlugin(apiPlugin);
+    port = getApiPort(apiPlugin);
     await waitForServer(port);
 
     const apiResponse = await fetch(`http://127.0.0.1:${port}/api/users`);

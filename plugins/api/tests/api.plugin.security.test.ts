@@ -55,7 +55,7 @@ describe('API Plugin - Security Contracts', () => {
       });
 
       const result = await startApiPlugin(db, {
-        port: 3300 + Math.floor(Math.random() * 500),
+        port: 0,
         auth: {
           resource: authResourceName,
           registration: {
