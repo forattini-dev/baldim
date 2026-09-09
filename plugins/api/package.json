@@ -67,7 +67,7 @@
     "@baldim/adapter-memory": "workspace:*",
     "@baldim/core": "workspace:*",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "25.5.2",
+    "@types/node": "26.4.1",
     "typescript": "6.0.2"
   }
 }
