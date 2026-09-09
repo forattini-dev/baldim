@@ -1,0 +1,61 @@
+{
+  "name": "@baldin/plugin-vector",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Vector search, distance metrics, and clustering for Baldin resources.",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">=24"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "directory": "plugins/vector"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./distances": {
+      "types": "./dist/vector/distances.d.ts",
+      "import": "./dist/vector/distances.js"
+    },
+    "./kmeans": {
+      "types": "./dist/vector/kmeans.d.ts",
+      "import": "./dist/vector/kmeans.js"
+    },
+    "./metrics": {
+      "types": "./dist/vector/metrics.d.ts",
+      "import": "./dist/vector/metrics.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "UNLICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "peerDependencies": {
+    "@baldin/core": "^0.0.0"
+  },
+  "devDependencies": {
+    "@baldin/adapter-sqlite": "workspace:*",
+    "@baldin/core": "workspace:*",
+    "@types/node": "25.5.2",
+    "typescript": "6.0.2",
+    "vitest": "4.1.3"
+  }
+}

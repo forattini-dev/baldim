@@ -6,6 +6,7 @@ import { RemoteSqliteClient } from './remote-sqlite-client.class.js';
 
 export { SqliteClient } from './sqlite-client.class.js';
 export { RemoteSqliteClient } from './remote-sqlite-client.class.js';
+export { isNodeSqliteAvailable } from './sqlite-runtime.js';
 export type { SqliteClientConfig, RemoteSqliteClientConfig } from './client-types.js';
 
 function sqlitePathFromUrl(url: URL): string {
