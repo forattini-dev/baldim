@@ -74,6 +74,7 @@ jobs:
           pnpm --filter @baldin/plugin-api pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-identity pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-websocket pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-puppeteer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify S3 and Tfstate package isolation
@@ -178,6 +179,27 @@ jobs:
             await database.disconnect();
           }
           JS
+      - name: Verify Puppeteer package isolation
+        shell: bash
+        run: |
+          consumer="$(mktemp -d)"
+          cd "$consumer"
+          npm init -y
+          npm install --ignore-scripts --no-audit --no-fund \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-puppeteer-*.tgz
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { CookieManager, ProxyManager, PuppeteerPlugin } from '@baldin/plugin-puppeteer';
+
+          const plugin = new PuppeteerPlugin({ cookies: { enabled: false }, pool: { enabled: false } });
+          await plugin._importDependencies();
+          assert.equal(typeof plugin.puppeteer.launch, 'function');
+          assert.equal(typeof plugin.createGhostCursor, 'function');
+          assert.equal(typeof CookieManager, 'function');
+          assert.equal(typeof ProxyManager, 'function');
+          JS
       - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
@@ -210,6 +232,7 @@ jobs:
           api_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-api-*.tgz)
           identity_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-identity-*.tgz)
           websocket_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-websocket-*.tgz)
+          puppeteer_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-puppeteer-*.tgz)
           testing_package=("$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz)
           typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz)
           test "${#core[@]}" -eq 1
@@ -241,6 +264,7 @@ jobs:
           test "${#api_plugin[@]}" -eq 1
           test "${#identity_plugin[@]}" -eq 1
           test "${#websocket_plugin[@]}" -eq 1
+          test "${#puppeteer_plugin[@]}" -eq 1
           test "${#testing_package[@]}" -eq 1
           test "${#typegen_package[@]}" -eq 1
           if tar -tzf "${core[0]}" | grep -Eq 'package/dist/clients/(filesystem|memory|reddb|sqlite|remote-sqlite|d1|libsql)'; then
@@ -250,7 +274,7 @@ jobs:
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${api_plugin[0]}" "${identity_plugin[0]}" "${websocket_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${api_plugin[0]}" "${identity_plugin[0]}" "${websocket_plugin[0]}" "${puppeteer_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -281,6 +305,7 @@ jobs:
           import { ApiPlugin } from '@baldin/plugin-api';
           import { IdentityPlugin } from '@baldin/plugin-identity';
           import { WebSocketPlugin } from '@baldin/plugin-websocket';
+          import { PuppeteerPlugin } from '@baldin/plugin-puppeteer';
           import { Factory, Seeder } from '@baldin/testing';
           import { printTypes } from '@baldin/typegen';
           import { MemoryClient } from '@baldin/adapter-memory';
@@ -318,6 +343,7 @@ jobs:
             email: { enabled: false },
           }).getIntegrationMetadata, 'function');
           assert.equal(typeof new WebSocketPlugin({ startupBanner: false }).broadcastToChannel, 'function');
+          assert.equal(typeof new PuppeteerPlugin({ cookies: { enabled: false } }).withSession, 'function');
 
           const database = new Baldin({ connectionString: 'memory://pack-smoke', logLevel: 'silent' });
           await database.connect();
