@@ -1,0 +1,48 @@
+{
+  "name": "@baldin/plugin-replicator",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Baldin replication pipelines for databases, queues, and webhooks.",
+  "license": "Unlicense",
+  "engines": { "node": ">=24" },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "directory": "plugins/replicator"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md", "UNLICENSE"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.contract.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/client-sqs": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "@google-cloud/bigquery": "^8.1.1",
+    "@libsql/client": "^0.14.0",
+    "@planetscale/database": "^1.0.0",
+    "mongodb": "^6.0.0",
+    "mysql2": "^3.0.0",
+    "pg": "^8.0.0"
+  },
+  "peerDependencies": { "@baldin/core": "^0.1.0" },
+  "devDependencies": {
+    "@baldin/adapter-memory": "workspace:*",
+    "@baldin/core": "workspace:*",
+    "@types/node": "25.5.2",
+    "@types/pg": "8.15.5",
+    "typescript": "6.0.2",
+    "vitest": "4.1.3"
+  }
+}
