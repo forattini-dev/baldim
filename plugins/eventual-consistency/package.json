@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-eventual-consistency",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Eventually consistent counters, aggregations, analytics, and coordinated workers for Baldin.",
   "license": "Unlicense",
@@ -41,7 +41,7 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",

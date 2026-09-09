@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-identity",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "OAuth2 and OpenID Connect identity provider with sessions, MFA, onboarding, and administrative UI for Baldin.",
   "license": "Unlicense",
@@ -53,7 +53,7 @@
     "tuiuiu.js": "1.0.63"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",

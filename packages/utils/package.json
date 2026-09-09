@@ -1,6 +1,6 @@
 {
   "name": "@baldin/utils",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Public HTTP, profiling, money, encoding, and error utilities for Baldin applications.",
   "license": "Unlicense",
@@ -30,7 +30,7 @@
     "test": "vitest run",
     "prepack": "pnpm run build"
   },
-  "peerDependencies": { "@baldin/core": "^0.1.0" },
+  "peerDependencies": { "@baldin/core": "^0.2.0" },
   "devDependencies": {
     "@baldin/core": "workspace:*",
     "@baldin/adapter-memory": "workspace:*",

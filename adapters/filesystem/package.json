@@ -1,6 +1,6 @@
 {
   "name": "@baldin/adapter-filesystem",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Filesystem storage adapter for Baldin.",
   "license": "Unlicense",

@@ -1,5 +1,21 @@
 # @baldin/adapter-reddb
 
+## 0.2.0
+
+### Minor Changes
+
+- 206ba95: Use RedDB's public HTTP API directly, remove the accidental Recker/Raffel runtime chain, and cover the adapter with the shared storage contract.
+
+### Patch Changes
+
+- Updated dependencies [e8d2143]
+- Updated dependencies [e9c3a78]
+- Updated dependencies [6ed3bd3]
+- Updated dependencies [f686e95]
+- Updated dependencies [e150c2f]
+  - @baldin/core@0.2.0
+  - @baldin/utils@0.1.0
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-queue-consumer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Queue consumers and publishers for Baldin with optional SQS, RabbitMQ, Redis, and BullMQ drivers.",
   "license": "Unlicense",
@@ -42,7 +42,7 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-sqs": ">=3",
-    "@baldin/core": "^0.1.0",
+    "@baldin/core": "^0.2.0",
     "amqplib": ">=0.10",
     "bullmq": ">=5",
     "ioredis": ">=5"

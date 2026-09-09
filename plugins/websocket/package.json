@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-websocket",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Real-time resource CRUD, subscriptions, channels, authentication, and recovery for Baldin.",
   "license": "Unlicense",
@@ -41,7 +41,7 @@
     "raffel": "1.0.26"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-puppeteer",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Browser automation, proxy pools, cookies, monitoring, and anti-bot inspection for Baldin.",
   "license": "Unlicense",
@@ -46,7 +46,7 @@
     "puppeteer": "^24.29.1"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",
