@@ -43,7 +43,7 @@ export async function createTransaction(
   const cohortInfo = getCohortInfo(timestamp, config.cohort.timezone);
 
   const transaction: Partial<Transaction> = {
-    id: generateTransactionId(),
+    id: generateTransactionId(now.getTime()),
     originalId,
     field,
     value,

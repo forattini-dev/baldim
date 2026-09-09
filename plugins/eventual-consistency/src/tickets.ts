@@ -8,6 +8,7 @@ import {
   type Transaction,
   type TicketResource,
   type TransactionResource,
+  compareTransactionsByTimestamp,
   getNestedValue,
   setNestedValue
 } from './utils.js';
@@ -712,11 +713,7 @@ export async function processTicket(
         continue;
       }
 
-      const sortedTransactions = [...transactions].sort((a, b) => {
-        const aTs = new Date(a.timestamp).getTime();
-        const bTs = new Date(b.timestamp).getTime();
-        return aTs - bTs;
-      });
+      const sortedTransactions = [...transactions].sort(compareTransactionsByTimestamp);
 
       let hadUnsupportedOperation = false;
       let hasSet = false;
