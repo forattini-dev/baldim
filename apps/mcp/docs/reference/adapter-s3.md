@@ -1,0 +1,25 @@
+# @baldin/adapter-s3
+
+S3-compatible storage for Baldin. Importing the package registers the `s3:`,
+`http:`, and `https:` protocols with `@baldin/core`.
+
+```ts
+import { Baldin } from '@baldin/core';
+import '@baldin/adapter-s3';
+
+const database = new Baldin({
+  connectionString: process.env.BALDIN_URL!,
+});
+```
+
+The same adapter supports AWS S3, Cloudflare R2, MinIO, and other services that
+implement the S3 API. Endpoint, credentials, path-style addressing, retry, and
+transport options remain part of the connection string and `clientOptions`.
+
+You can also instantiate the client directly:
+
+```ts
+import { S3Client } from '@baldin/adapter-s3';
+
+const client = new S3Client({ connectionString: process.env.BALDIN_URL! });
+```

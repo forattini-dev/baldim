@@ -1,0 +1,155 @@
+import type { BaldinMCPServer } from '../entrypoint.js';
+import type { ResourceQueryArgs } from '../types/index.js';
+import type { Baldin } from '@baldin/core';
+
+export const queryTools = [
+  {
+    name: 'resourceQuery',
+    description: `Filter documents by field values. O(n) scan — for frequently queried fields, define partitions instead for O(1).
+
+Exact match: { status: "active" }
+Comparison: { age: { $gt: 18 } }, { price: { $lte: 100 } }
+Multiple: { status: "active", role: "admin" }
+
+For partition-based filtering (O(1)), use resourceList with partition + partitionValues instead.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        resourceName: {
+          type: 'string',
+          description: 'Name of the resource'
+        },
+        filters: {
+          type: 'object',
+          description: 'Filter object. Exact match: { field: "value" }. Operators: $gt, $gte, $lt, $lte, $ne, $in'
+        },
+        limit: {
+          type: 'number',
+          description: 'Max results (default: 100)',
+          default: 100
+        },
+        offset: {
+          type: 'number',
+          description: 'Skip N results',
+          default: 0
+        }
+      },
+      required: ['resourceName', 'filters']
+    }
+  },
+  {
+    name: 'resourceSearch',
+    description: 'Text search across string fields (in-memory scan). For production full-text search with stemming and indexing, consider FullTextPlugin instead.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        resourceName: {
+          type: 'string',
+          description: 'Name of the resource'
+        },
+        searchText: {
+          type: 'string',
+          description: 'Text to search for'
+        },
+        fields: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Fields to search in (if not specified, searches all string fields)'
+        },
+        caseSensitive: {
+          type: 'boolean',
+          description: 'Case-sensitive search',
+          default: false
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of results',
+          default: 100
+        }
+      },
+      required: ['resourceName', 'searchText']
+    }
+  }
+];
+
+export function createQueryHandlers(server: BaldinMCPServer) {
+  return {
+    async resourceQuery(args: ResourceQueryArgs, database: Baldin): Promise<any> {
+      server.ensureConnected(database);
+      const { resourceName, filters, limit = 100, offset = 0 } = args;
+      const resource = server.getResource(database, resourceName);
+
+      try {
+        // Use the query method from resource
+        const results = await resource.query(filters, { limit, offset });
+
+        return {
+          success: true,
+          data: results,
+          count: results.length,
+          filters,
+          pagination: {
+            limit,
+            offset,
+            hasMore: results.length === limit
+          }
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message,
+          filters
+        };
+      }
+    },
+
+    async resourceSearch(args: { resourceName: string; searchText: string; fields?: string[]; caseSensitive?: boolean; limit?: number }, database: Baldin): Promise<any> {
+      server.ensureConnected(database);
+      const { resourceName, searchText, fields, caseSensitive = false, limit = 100 } = args;
+      const resource = server.getResource(database, resourceName);
+
+      try {
+        // Get all documents and filter in memory
+        const allDocs = await resource.list({ limit: (limit || 100) * 2 }); // Fetch more to ensure we have enough after filtering
+
+        const searchString = caseSensitive ? searchText : searchText.toLowerCase();
+
+        // Determine fields to search
+        let searchFields = fields;
+        if (!searchFields || searchFields.length === 0) {
+          // Auto-detect string fields
+          searchFields = Object.keys(resource.attributes || {}).filter(key => {
+            const attr = resource.attributes[key];
+            const type = typeof attr === 'string' ? attr.split('|')[0] : (attr as any).type;
+            return type === 'string';
+          });
+        }
+
+        // Filter documents
+        const results = allDocs.filter((doc: any) => {
+          return searchFields.some(field => {
+            const value = doc[field];
+            if (!value) return false;
+            const valueString = caseSensitive ? String(value) : String(value).toLowerCase();
+            return valueString.includes(searchString);
+          });
+        }).slice(0, limit);
+
+        return {
+          success: true,
+          data: results,
+          count: results.length,
+          searchText,
+          searchFields,
+          caseSensitive
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message,
+          searchText
+        };
+      }
+    }
+  };
+}

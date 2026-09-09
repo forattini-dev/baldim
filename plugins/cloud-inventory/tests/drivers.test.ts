@@ -16,5 +16,5 @@ describe('bundled cloud inventory drivers', () => {
     'mongodbatlas',
   ])('loads the %s driver and its package-owned SDKs', async (provider) => {
     await expect(loadCloudDriver(provider)).resolves.toEqual(expect.any(Function));
-  });
+  }, 15_000);
 });

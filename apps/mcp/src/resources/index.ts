@@ -1,0 +1,356 @@
+import { readFileSync, readdirSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const docsDir = join(__dirname, '../../docs');
+
+export const resources = [
+  {
+    uri: 'baldin:///core-docs',
+    name: 'Core Documentation',
+    description: 'Baldin core concepts: database, resources, schema, behaviors, events, partitions, encryption, streaming',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'baldin:///plugins',
+    name: 'Plugin Catalog',
+    description: 'Complete catalog of Baldin plugins with configuration schemas and usage examples',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'baldin:///examples',
+    name: 'Examples Index',
+    description: 'Searchable index of 60+ Baldin examples covering all features',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'baldin:///field-types',
+    name: 'Field Types Reference',
+    description: 'All 30+ supported field types with encoding details, compression ratios, and usage',
+    mimeType: 'application/json'
+  },
+  {
+    uri: 'baldin:///benchmarks',
+    name: 'Performance Benchmarks',
+    description: 'Performance benchmark data comparing operations, strategies, and configurations',
+    mimeType: 'application/json'
+  }
+];
+
+const coreDocsContent = {
+  overview: 'Baldin transforms AWS S3 into a powerful document database with ORM-like interface',
+  sections: [
+    {
+      name: 'Baldin Instance',
+      path: 'core/database.md',
+      summary: 'Main database class for connecting to S3 and managing resources'
+    },
+    {
+      name: 'Resource',
+      path: 'core/resource.md',
+      summary: 'Data container with CRUD operations, validation, and hooks'
+    },
+    {
+      name: 'Schema & Validation',
+      path: 'core/schema.md',
+      summary: 'fastest-validator based schema with 30+ field types and schema registry for stable attribute mapping'
+    },
+    {
+      name: 'Behaviors',
+      path: 'core/behaviors.md',
+      summary: 'Strategies for handling S3 2KB metadata limit: body-overflow, body-only, truncate-data, enforce-limits, user-managed'
+    },
+    {
+      name: 'Events',
+      path: 'core/events.md',
+      summary: 'Lifecycle events: beforeInsert, afterInsert, beforeUpdate, afterUpdate, beforeDelete, afterDelete'
+    },
+    {
+      name: 'Partitions',
+      path: 'core/partitions.md',
+      summary: 'O(1) query optimization through field-based partitioning'
+    },
+    {
+      name: 'Encryption',
+      path: 'core/encryption.md',
+      summary: 'AES-256-GCM encryption for sensitive fields using "secret" type'
+    },
+    {
+      name: 'Security',
+      path: 'core/security (generated)',
+      summary: 'Security configuration: passphrase, pepper, bcrypt, argon2id, password hashing, SecurityConfig interface'
+    },
+    {
+      name: 'Streaming',
+      path: 'core/streaming.md',
+      summary: 'Memory-efficient streaming API for large datasets'
+    }
+  ],
+  internals: [
+    {
+      name: 'Distributed Lock',
+      path: 'core/internals/distributed-lock.md',
+      summary: 'S3-based distributed locking for coordination'
+    },
+    {
+      name: 'Distributed Sequence',
+      path: 'core/internals/distributed-sequence.md',
+      summary: 'Atomic sequence generation across instances'
+    },
+    {
+      name: 'JSON Recovery',
+      path: 'core/internals/json-recovery.md',
+      summary: 'Automatic recovery from corrupted JSON data'
+    },
+    {
+      name: 'Global Coordinator',
+      path: 'core/internals/global-coordinator.md',
+      summary: 'Leader election, circuit breaker, contention detection'
+    }
+  ]
+};
+
+const pluginCatalog = {
+  count: 40,
+  categories: {
+    performance: [
+      { name: 'CachePlugin', description: 'Multi-layer caching (memory, filesystem, S3)', config: { storage: 'memory|filesystem|s3', ttl: 'number' } },
+      { name: 'EventualConsistencyPlugin', description: 'Async operations with read-your-writes', config: { maxLag: 'number', conflictResolution: 'last-write-wins|merge' } },
+      { name: 'TTLPlugin', description: 'Auto-cleanup with O(1) partition-based expiration', config: { field: 'string', cleanup: { interval: 'number' } } }
+    ],
+    dataReplication: [
+      { name: 'ReplicatorPlugin', description: 'Sync to PostgreSQL, BigQuery, SQS, and more', config: { targets: 'array', batchSize: 'number' } },
+      { name: 'BackupPlugin', description: 'Incremental and full backups', config: { destination: 'string', schedule: 'cron' } },
+      { name: 'AuditPlugin', description: 'Track all data changes with actor info', config: { resourceName: 'string', actorField: 'string' } }
+    ],
+    searchML: [
+      { name: 'VectorPlugin', description: 'Vector similarity search (k-NN)', config: { dimensions: 'number', metric: 'cosine|euclidean' } },
+      { name: 'FulltextPlugin', description: 'Full-text search with ranking', config: { fields: 'array', language: 'string' } },
+      { name: 'MLPlugin', description: 'Machine learning integration', config: { model: 'string', backend: 'tensorflow|onnx' } },
+      { name: 'GeoPlugin', description: 'Geospatial queries', config: { latField: 'string', lngField: 'string' } },
+      { name: 'GraphPlugin', description: 'Graph relationships and traversal', config: { nodeField: 'string', edgeResource: 'string' } }
+    ],
+    queuesScheduling: [
+      { name: 'S3QueuePlugin', description: 'S3-backed queue with metadata, partitions, per-tenant counting', config: { resource: 'string', metadata: 'Record<string, string>', partitions: 'Record<string, PartitionConfig>' } },
+      { name: 'SchedulerPlugin', description: 'Cron-based task scheduling', config: { timezone: 'string' } },
+      { name: 'QueueConsumerPlugin', description: 'Consume from SQS/RabbitMQ/Redis/BullMQ with custom handlers', config: { drivers: 'DriverDefinition[]', startConcurrency: 'number' } },
+      { name: 'StateMachinePlugin', description: 'Workflow orchestration with states, guards, actions, triggers, retries, and history', config: { stateMachines: 'object', actions: 'object', guards: 'object' } }
+    ],
+    webScraping: [
+      { name: 'PuppeteerPlugin', description: 'Browser automation for scraping', config: { headless: 'boolean', timeout: 'number' } },
+      { name: 'SpiderPlugin', description: 'Web crawling with robots.txt respect', config: { userAgent: 'string', maxDepth: 'number' } },
+      { name: 'CookieFarmPlugin', description: 'Cookie session management', config: { rotationInterval: 'number' } }
+    ],
+    devops: [
+      { name: 'KubernetesInventoryPlugin', description: 'K8s resource inventory', config: { cluster: 'string', namespaces: 'array' } },
+      { name: 'TFStatePlugin', description: 'Terraform state management', config: { bucket: 'string' } },
+      { name: 'CostsPlugin', description: 'S3 cost tracking and estimation', config: { region: 'string' } }
+    ],
+    megaPlugins: [
+      { name: 'ApiPlugin', description: 'REST API with guards, OpenAPI docs, rate limiting', config: { port: 'number', auth: 'object' } },
+      { name: 'IdentityPlugin', description: 'OIDC authentication and authorization', config: { issuer: 'string', clientId: 'string' } },
+      { name: 'ReconPlugin', description: 'Security reconnaissance and OSINT', config: { targets: 'array', depth: 'number' } },
+      { name: 'CloudInventoryPlugin', description: 'Multi-cloud resource inventory', config: { providers: 'array' } }
+    ],
+    other: [
+      { name: 'MetricsPlugin', description: 'Performance metrics and monitoring', config: { prefix: 'string', exporters: 'array' } },
+      { name: 'SMTPPlugin', description: 'Email sending capabilities', config: { host: 'string', port: 'number' } },
+      { name: 'TournamentPlugin', description: 'Tournament and ranking systems', config: { type: 'elimination|round-robin' } },
+      { name: 'TreePlugin', description: 'Hierarchical data structures', config: { parentField: 'string' } },
+      { name: 'WebSocketPlugin', description: 'Real-time updates', config: { port: 'number', path: 'string' } }
+    ]
+  }
+};
+
+const fieldTypes = {
+  count: 42,
+  types: [
+    // Primitives
+    { name: 'string', encoding: 'utf8', compression: 'none', example: "'string|required'" },
+    { name: 'number', encoding: 'base62', compression: '~40%', example: "'number|min:0'" },
+    { name: 'boolean', encoding: '"1"/"0"', compression: '50%+', example: "'boolean|default:true'" },
+    { name: 'date', encoding: 'ISO8601', compression: 'none', example: "'date'" },
+    { name: 'datetime', encoding: 'ms→base62', compression: '~70%', example: "'datetime'" },
+    { name: 'dateonly', encoding: 'days→base62', compression: '~70%', example: "'dateonly'" },
+    { name: 'timeonly', encoding: 'ms-of-day→base62', compression: '~58%', example: "'timeonly'" },
+    { name: 'email', encoding: 'utf8', compression: 'none', example: "'email|required'" },
+    { name: 'url', encoding: 'utf8', compression: 'none', example: "'url'" },
+    { name: 'uuid', encoding: '4×32bit→base62', compression: '33%', example: "'uuid'" },
+    // Security
+    { name: 'password', encoding: 'bcrypt/argon2id', compression: 'one-way hash (56-76 chars)', example: "'password|required|min:8'" },
+    { name: 'secret', encoding: 'AES-256-GCM', compression: 'encrypted (reversible)', example: "'secret'" },
+    // Network
+    { name: 'mac', encoding: '48bit→base62', compression: '47%', example: "'mac'" },
+    { name: 'cidr', encoding: 'ip+prefix→base62', compression: '50%', example: "'cidr'" },
+    { name: 'ip4', encoding: 'uint32→base62', compression: '44%', example: "'ip4'" },
+    { name: 'ip6', encoding: 'uint128→base62', compression: '47%', example: "'ip6'" },
+    // Formats
+    { name: 'phone', encoding: 'E.164→base62', compression: '40%+', example: "'phone'" },
+    { name: 'semver', encoding: 'packed→base62', compression: '~20-40%', example: "'semver'" },
+    { name: 'color', encoding: '24bit→base62', compression: '29%', example: "'color'" },
+    { name: 'duration', encoding: 'ms→base62', compression: '~60%', example: "'duration'" },
+    { name: 'cron', encoding: 'validated', compression: 'none', example: "'cron'" },
+    { name: 'locale', encoding: 'validated', compression: 'none', example: "'locale'" },
+    { name: 'currency', encoding: 'validated', compression: 'none', example: "'currency'" },
+    { name: 'country', encoding: 'validated', compression: 'none', example: "'country'" },
+    { name: 'ean', encoding: 'EAN-8/UPC-A/EAN-13/GTIN-14→base62', compression: '~31%', example: "'ean'" },
+    // Numeric specializations
+    { name: 'money', encoding: 'fixed-point→base62', compression: '~40%', example: "'money' or 'money:4'" },
+    { name: 'crypto', encoding: 'fixed-point→base62', compression: '~40%', example: "'crypto' or 'crypto:18'" },
+    { name: 'decimal', encoding: 'fixed-point→base62', compression: '~40%', example: "'decimal:2'" },
+    // Geo
+    { name: 'geo:lat', encoding: 'base62', compression: '~40%', example: "'geo:lat' or 'geo:lat:8'" },
+    { name: 'geo:lon', encoding: 'base62', compression: '~40%', example: "'geo:lon' or 'geo:lon:8'" },
+    { name: 'geo:point', encoding: 'base62 pair', compression: '~50%', example: "'geo:point'" },
+    // Binary
+    { name: 'buffer', encoding: 'base64', compression: 'none', example: "'buffer'" },
+    { name: 'bits', encoding: 'bit-packed→base62', compression: '~83%', example: "'bits:32'" },
+    // ML/AI
+    { name: 'embedding:N', encoding: 'float32→uint8', compression: '77%', example: "'embedding:1536'" },
+    // Structured
+    { name: 'object', encoding: 'JSON', compression: 'none', example: "{ nested: 'string' }" },
+    { name: 'array', encoding: 'JSON/base62', compression: 'varies', example: "{ type: 'array', items: 'string' }" },
+    { name: 'json', encoding: 'JSON', compression: 'none', example: "'json'" },
+    { name: 'enum', encoding: 'string', compression: 'none', example: "'string|enum:a,b,c'" },
+    { name: 'any', encoding: 'as-is', compression: 'none', example: "'any'" },
+  ],
+  specialFeatures: {
+    password: 'One-way hash (bcrypt default, argon2id optional). Auto-hashes on write, verifyPassword() to check.',
+    secret: 'AES-256-GCM encryption with PBKDF2 key derivation. Auto-encrypt on write, auto-decrypt on read.',
+    embedding: '77% compression via quantization, preserves 99.9% cosine similarity accuracy.',
+    money: 'Fixed-point storage avoids floating-point errors. Default 2 decimals, crypto defaults to 8.',
+    'geo:point': 'Stores lat+lon as single base62 string. Accepts [lat,lon] array or {lat,lon} object.',
+    bits: 'Pack 32 boolean flags into 6 base62 chars. Ideal for permissions/feature flags.',
+    ip4: '32-bit integer in base62. 15 chars → 8 chars.',
+    ip6: '128-bit binary in base62. 39 chars → ~21 chars.',
+  }
+};
+
+const examplesIndex = {
+  count: 60,
+  categories: [
+    {
+      name: 'Getting Started',
+      examples: [
+        { id: 'e01', name: 'Basic CRUD', file: 'e01-basic-crud.js' },
+        { id: 'e02', name: 'Schema Validation', file: 'e02-schema-validation.js' },
+        { id: 'e03', name: 'Connection Strings', file: 'e03-connection-strings.js' }
+      ]
+    },
+    {
+      name: 'Advanced Features',
+      examples: [
+        { id: 'e10', name: 'Partitioning', file: 'e10-partitioning.js' },
+        { id: 'e11', name: 'Encryption', file: 'e11-encryption.js' },
+        { id: 'e12', name: 'Streaming', file: 'e12-streaming.js' },
+        { id: 'e13', name: 'Hooks and Guards', file: 'e13-hooks-guards.js' }
+      ]
+    },
+    {
+      name: 'Plugins',
+      examples: [
+        { id: 'e20', name: 'Cache Plugin', file: 'e20-cache-plugin.js' },
+        { id: 'e21', name: 'TTL Plugin', file: 'e21-ttl-plugin.js' },
+        { id: 'e22', name: 'Audit Plugin', file: 'e22-audit-plugin.js' },
+        { id: 'e23', name: 'Vector Search', file: 'e23-vector-search.js' },
+        { id: 'e24', name: 'Full-text Search', file: 'e24-fulltext-search.js' }
+      ]
+    },
+    {
+      name: 'Real-World Use Cases',
+      examples: [
+        { id: 'e40', name: 'E-commerce Catalog', file: 'e40-ecommerce.js' },
+        { id: 'e41', name: 'User Sessions', file: 'e41-sessions.js' },
+        { id: 'e42', name: 'IoT Sensor Data', file: 'e42-iot.js' },
+        { id: 'e43', name: 'Multi-tenant SaaS', file: 'e43-multitenancy.js' }
+      ]
+    }
+  ]
+};
+
+const benchmarksData = {
+  lastUpdated: '2024-12-01',
+  environment: {
+    region: 'us-east-1',
+    s3Class: 'STANDARD',
+    nodeVersion: '20.x'
+  },
+  operations: {
+    insert: {
+      single: { p50: '45ms', p95: '120ms', p99: '250ms' },
+      batch100: { p50: '180ms', p95: '350ms', p99: '600ms' },
+      batch1000: { p50: '1.2s', p95: '2.5s', p99: '4s' }
+    },
+    get: {
+      byId: { p50: '25ms', p95: '80ms', p99: '150ms' },
+      byPartition: { p50: '35ms', p95: '100ms', p99: '200ms' }
+    },
+    update: {
+      standard: { p50: '85ms', p95: '200ms', p99: '400ms', note: 'GET+PUT' },
+      patch: { p50: '45ms', p95: '120ms', p99: '250ms', note: 'HEAD+COPY, 40-60% faster' },
+      replace: { p50: '55ms', p95: '140ms', p99: '280ms', note: 'PUT only, 30-40% faster' }
+    },
+    list: {
+      noPartition100: { p50: '350ms', p95: '800ms', p99: '1.5s' },
+      withPartition100: { p50: '85ms', p95: '180ms', p99: '350ms' }
+    }
+  },
+  compression: {
+    embedding1536: { original: '6KB', compressed: '1.4KB', ratio: '77%' },
+    ip4: { original: '15B', compressed: '4B', ratio: '73%' },
+    ip6: { original: '39B', compressed: '16B', ratio: '59%' }
+  },
+  costs: {
+    storage: '$0.023/GB/month',
+    putRequest: '$0.005/1000',
+    getRequest: '$0.0004/1000',
+    example: {
+      scenario: '1M records, 2KB avg, 100k reads/day, 10k writes/day',
+      monthly: '$3.50'
+    }
+  }
+};
+
+export function getResourceContent(uri: string): { uri: string; mimeType: string; text: string } {
+  switch (uri) {
+    case 'baldin:///core-docs':
+      return {
+        uri,
+        mimeType: 'application/json',
+        text: JSON.stringify(coreDocsContent, null, 2)
+      };
+
+    case 'baldin:///plugins':
+      return {
+        uri,
+        mimeType: 'application/json',
+        text: JSON.stringify(pluginCatalog, null, 2)
+      };
+
+    case 'baldin:///examples':
+      return {
+        uri,
+        mimeType: 'application/json',
+        text: JSON.stringify(examplesIndex, null, 2)
+      };
+
+    case 'baldin:///field-types':
+      return {
+        uri,
+        mimeType: 'application/json',
+        text: JSON.stringify(fieldTypes, null, 2)
+      };
+
+    case 'baldin:///benchmarks':
+      return {
+        uri,
+        mimeType: 'application/json',
+        text: JSON.stringify(benchmarksData, null, 2)
+      };
+
+    default:
+      throw new Error(`Unknown resource: ${uri}`);
+  }
+}

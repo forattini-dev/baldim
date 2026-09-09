@@ -4,7 +4,7 @@ import path from 'node:path';
 import ts from 'typescript';
 
 const root = process.cwd();
-const packageRoots = ['core', 'adapters', 'plugins', 'packages'];
+const packageRoots = ['core', 'adapters', 'plugins', 'packages', 'apps'];
 const sourceExtensions = new Set(['.js', '.cjs', '.mjs', '.ts', '.tsx']);
 const builtins = new Set([
   ...builtinModules,

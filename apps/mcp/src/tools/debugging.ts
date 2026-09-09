@@ -1,0 +1,303 @@
+import type { BaldinMCPServer } from '../entrypoint.js';
+import type { DbInspectResourceArgs, ResourceValidateArgs, DbHealthCheckArgs, DbGetRawArgs } from '../types/index.js';
+import type { Baldin } from '@baldin/core';
+import { readBody } from '../read-body.js';
+
+export const debuggingTools = [
+  {
+    name: 'dbInspectResource',
+    description: 'Inspect full resource config: schema, partitions, behavior, hooks, S3 paths. Use to debug issues or understand how a resource is set up.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        resourceName: {
+          type: 'string',
+          description: 'Name of the resource to inspect'
+        }
+      },
+      required: ['resourceName']
+    }
+  },
+  {
+    name: 'dbGetMetadata',
+    description: 'Get raw metadata.json from the S3 bucket for debugging',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  },
+  {
+    name: 'resourceValidate',
+    description: 'Validate data against resource schema without inserting',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        resourceName: {
+          type: 'string',
+          description: 'Name of the resource'
+        },
+        data: {
+          type: 'object',
+          description: 'Data to validate'
+        }
+      },
+      required: ['resourceName', 'data']
+    }
+  },
+  {
+    name: 'dbHealthCheck',
+    description: 'Health check: detect orphaned partitions, verify connectivity, report resource configs. Run after schema changes or to diagnose issues.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        includeOrphanedPartitions: {
+          type: 'boolean',
+          description: 'Include orphaned partitions check',
+          default: true
+        }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'resourceGetRaw',
+    description: 'Get raw S3 object (metadata + body) for debugging. Shows whether data lives in metadata (HEAD) or body (GET). Use to diagnose behavior and encoding issues.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        resourceName: {
+          type: 'string',
+          description: 'Name of the resource'
+        },
+        id: {
+          type: 'string',
+          description: 'Document ID'
+        }
+      },
+      required: ['resourceName', 'id']
+    }
+  }
+];
+
+export function createDebuggingHandlers(server: BaldinMCPServer) {
+  return {
+    async dbInspectResource(args: DbInspectResourceArgs, database: Baldin): Promise<any> {
+      server.ensureConnected(database);
+      const { resourceName } = args;
+      const resource = server.getResource(database, resourceName);
+
+      const inspection = {
+        success: true,
+        resource: {
+          name: resource.name,
+          behavior: resource.behavior,
+          version: resource.version,
+          createdBy: resource.createdBy || 'user',
+
+          schema: {
+            attributes: resource.attributes,
+            attributeCount: Object.keys(resource.attributes || {}).length,
+            fieldTypes: {}
+          },
+
+          partitions: resource.config.partitions ? {
+            count: Object.keys(resource.config.partitions).length,
+            definitions: resource.config.partitions,
+            orphaned: resource.findOrphanedPartitions ? resource.findOrphanedPartitions() : null
+          } : null,
+
+          configuration: {
+            timestamps: resource.config.timestamps,
+            paranoid: resource.config.paranoid,
+            strictValidation: resource.strictValidation,
+            asyncPartitions: resource.config.asyncPartitions,
+            versioningEnabled: resource.config.versioningEnabled,
+            autoDecrypt: resource.config.autoDecrypt
+          },
+
+          hooks: resource.config.hooks ? {
+            beforeInsert: resource.config.hooks.beforeInsert?.length || 0,
+            afterInsert: resource.config.hooks.afterInsert?.length || 0,
+            beforeUpdate: resource.config.hooks.beforeUpdate?.length || 0,
+            afterUpdate: resource.config.hooks.afterUpdate?.length || 0,
+            beforeDelete: resource.config.hooks.beforeDelete?.length || 0,
+            afterDelete: resource.config.hooks.afterDelete?.length || 0
+          } : null,
+
+          s3Paths: {
+            metadataKey: 's3db.json',
+            resourcePrefix: `resource=${resourceName}/`
+          }
+        }
+      };
+
+      // Analyze field types
+      for (const [fieldName, fieldDef] of Object.entries(resource.attributes || {})) {
+        const typeStr = typeof fieldDef === 'string' ? fieldDef : (fieldDef as any).type;
+        (inspection.resource.schema.fieldTypes as any)[fieldName] = typeStr;
+      }
+
+      return inspection;
+    },
+
+    async dbGetMetadata(args: {}, database: Baldin): Promise<any> {
+      server.ensureConnected(database);
+
+      const metadataKey = 's3db.json';
+
+      try {
+        const response = await database.client.getObject(metadataKey);
+
+        const metadataContent = await readBody(response.Body);
+        const metadata = JSON.parse(metadataContent);
+
+        return {
+          success: true,
+          metadata,
+          s3Info: {
+            key: metadataKey,
+            bucket: database.bucket,
+            lastModified: response.LastModified,
+            size: response.ContentLength,
+            etag: response.ETag
+          }
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message,
+          key: metadataKey
+        };
+      }
+    },
+
+    async resourceValidate(args: ResourceValidateArgs, database: Baldin): Promise<any> {
+      server.ensureConnected(database);
+      const { resourceName, data } = args;
+      const resource = server.getResource(database, resourceName);
+
+      try {
+        const validationResult = await resource.validator.validate(data);
+
+        return {
+          success: true,
+          valid: validationResult.isValid,
+          errors: validationResult.errors,
+          data: validationResult.data
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          valid: false,
+          error: error.message,
+          data: data
+        };
+      }
+    },
+
+    async dbHealthCheck(args: DbHealthCheckArgs, database: Baldin): Promise<any> {
+      server.ensureConnected(database);
+      const { includeOrphanedPartitions = true } = args;
+
+      const health: {
+        success: boolean;
+        timestamp: string;
+        database: Record<string, unknown>;
+        resources: { total: number; list: string[]; details: Record<string, unknown> };
+        issues: Array<Record<string, unknown>>;
+        healthy?: boolean;
+      } = {
+        success: true,
+        timestamp: new Date().toISOString(),
+        database: {
+          connected: database.isConnected(),
+          bucket: database.bucket,
+          keyPrefix: database.keyPrefix,
+          version: database.s3dbVersion
+        },
+        resources: {
+          total: Object.keys(database.resources || {}).length,
+          list: Object.keys(database.resources || {}),
+          details: {}
+        },
+        issues: []
+      };
+
+      // Check each resource
+      for (const [name, resource] of Object.entries(database.resources || {})) {
+        const resourceHealth: any = {
+          name,
+          behavior: resource.behavior,
+          attributeCount: Object.keys(resource.attributes || {}).length,
+          partitionCount: resource.config.partitions ? Object.keys(resource.config.partitions).length : 0
+        };
+
+        // Check for orphaned partitions
+        if (includeOrphanedPartitions && (resource as any).findOrphanedPartitions) {
+          const orphaned = (resource as any).findOrphanedPartitions();
+          if (Object.keys(orphaned).length > 0) {
+            resourceHealth.orphanedPartitions = orphaned;
+            health.issues.push({
+              severity: 'warning',
+              resource: name,
+              type: 'orphaned_partitions',
+              message: `Resource '${name}' has ${Object.keys(orphaned).length} orphaned partition(s)`,
+              details: orphaned
+            });
+          }
+        }
+
+        (health.resources.details as any)[name] = resourceHealth;
+      }
+
+      health.healthy = health.issues.length === 0;
+
+      return health;
+    },
+
+    async resourceGetRaw(args: DbGetRawArgs, database: Baldin): Promise<any> {
+      server.ensureConnected(database);
+      const { resourceName, id } = args;
+      const resource = server.getResource(database, resourceName);
+
+      try {
+        const key = `resource=${resourceName}/id=${id}.json`;
+
+        const response = await database.client.getObject(key);
+
+        const body = await readBody(response.Body);
+        const bodyData = body ? JSON.parse(body) : null;
+
+        const unmapped = await resource.get(id);
+
+        return {
+          success: true,
+          unmapped,
+          raw: {
+            s3Object: {
+              key,
+              bucket: database.bucket,
+              metadata: response.Metadata || {},
+              contentLength: response.ContentLength,
+              lastModified: response.LastModified,
+              etag: response.ETag,
+              contentType: response.ContentType
+            },
+            data: {
+              metadata: response.Metadata,
+              body: bodyData
+            }
+          }
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message,
+          id,
+          resource: resourceName
+        };
+      }
+    }
+  };
+}
