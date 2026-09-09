@@ -46,7 +46,7 @@
   },
   "optionalDependencies": {
     "@maxmind/geoip2-node": "^6.3.4",
-    "argon2": "^0.44.0",
+    "argon2": "^0.45.1",
     "nodemailer": "^10.0.1",
     "otpauth": "^9.4.1",
     "qrcode": "^1.5.4",
