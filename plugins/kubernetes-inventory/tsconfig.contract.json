@@ -4,7 +4,10 @@
     "rootDir": ".",
     "noEmit": true,
     "verbatimModuleSyntax": false,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@baldin/plugin-kubernetes-inventory": ["./src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "tests/type-contract.ts"]
 }
