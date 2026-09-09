@@ -78,6 +78,7 @@ jobs:
           pnpm --filter @baldin/plugin-cookie-farm pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-cookie-farm-suite pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-kubernetes-inventory pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-ml pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify S3 and Tfstate package isolation
@@ -294,6 +295,31 @@ jobs:
           }), 'apps.v1.Deployment');
           await database.disconnect();
           JS
+      - name: Verify ML package isolation
+        shell: bash
+        run: |
+          consumer="$(mktemp -d)"
+          cd "$consumer"
+          npm init -y
+          npm install --ignore-scripts --no-audit --no-fund \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-adapter-memory-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-core-*.tgz \
+            "$GITHUB_WORKSPACE"/artifacts/baldin-plugin-ml-*.tgz
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import * as tf from '@tensorflow/tfjs';
+          import { MLPlugin, RegressionModel } from '@baldin/plugin-ml';
+
+          const plugin = new MLPlugin({ models: {} });
+          const model = new RegressionModel({
+            features: ['x'], target: 'y', minSamples: 2, logLevel: 'silent',
+            modelConfig: { epochs: 2, batchSize: 2, validationSplit: 0 },
+          });
+          await model.train([{ x: 0, y: 1 }, { x: 1, y: 3 }]);
+          assert.equal(typeof plugin.train, 'function');
+          assert.equal(tf.version_core.startsWith('4.'), true);
+          model.dispose();
+          JS
       - name: Verify packed packages in a clean consumer
         shell: bash
         run: |
@@ -330,6 +356,7 @@ jobs:
           cookie_farm_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cookie-farm-[0-9]*.tgz)
           cookie_farm_suite_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-cookie-farm-suite-*.tgz)
           kubernetes_inventory_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-kubernetes-inventory-*.tgz)
+          ml_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-ml-*.tgz)
           testing_package=("$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz)
           typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz)
           test "${#core[@]}" -eq 1
@@ -365,6 +392,7 @@ jobs:
           test "${#cookie_farm_plugin[@]}" -eq 1
           test "${#cookie_farm_suite_plugin[@]}" -eq 1
           test "${#kubernetes_inventory_plugin[@]}" -eq 1
+          test "${#ml_plugin[@]}" -eq 1
           test "${#testing_package[@]}" -eq 1
           test "${#typegen_package[@]}" -eq 1
           if tar -tzf "${core[0]}" | grep -Eq 'package/dist/clients/(filesystem|memory|reddb|sqlite|remote-sqlite|d1|libsql)'; then
@@ -374,7 +402,7 @@ jobs:
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${api_plugin[0]}" "${identity_plugin[0]}" "${websocket_plugin[0]}" "${puppeteer_plugin[0]}" "${cookie_farm_plugin[0]}" "${cookie_farm_suite_plugin[0]}" "${kubernetes_inventory_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${api_plugin[0]}" "${identity_plugin[0]}" "${websocket_plugin[0]}" "${puppeteer_plugin[0]}" "${cookie_farm_plugin[0]}" "${cookie_farm_suite_plugin[0]}" "${kubernetes_inventory_plugin[0]}" "${ml_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -409,6 +437,7 @@ jobs:
           import { CookieFarmPlugin } from '@baldin/plugin-cookie-farm';
           import { CookieFarmSuitePlugin } from '@baldin/plugin-cookie-farm-suite';
           import { KubernetesInventoryPlugin } from '@baldin/plugin-kubernetes-inventory';
+          import { MLPlugin } from '@baldin/plugin-ml';
           import { Factory, Seeder } from '@baldin/testing';
           import { printTypes } from '@baldin/typegen';
           import { MemoryClient } from '@baldin/adapter-memory';
@@ -450,6 +479,7 @@ jobs:
           assert.equal(typeof new CookieFarmPlugin({ warmup: { enabled: false } }).generatePersonas, 'function');
           assert.equal(typeof new CookieFarmSuitePlugin({ queue: { autoStart: false } }).enqueueJob, 'function');
           assert.equal(typeof new KubernetesInventoryPlugin({ clusters: [{ id: 'packed' }] }).syncCluster, 'function');
+          assert.equal(typeof new MLPlugin({ models: {} }).train, 'function');
 
           const database = new Baldin({ connectionString: 'memory://pack-smoke', logLevel: 'silent' });
           await database.connect();

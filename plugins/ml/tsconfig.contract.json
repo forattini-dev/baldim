@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "verbatimModuleSyntax": false,
+    "types": ["node"],
+    "paths": {
+      "@baldin/plugin-ml": ["./src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "tests/type-contract.ts"]
+}

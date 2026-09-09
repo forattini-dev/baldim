@@ -82,6 +82,7 @@ and dependency rules.
 | plugins/cookie-farm | @baldin/plugin-cookie-farm | Persistent browser personas, warmup, rotation, reputation, and export |
 | plugins/cookie-farm-suite | @baldin/plugin-cookie-farm-suite | Namespaced Puppeteer, CookieFarm, queue, and TTL workflows |
 | plugins/kubernetes-inventory | @baldin/plugin-kubernetes-inventory | Kubernetes discovery, snapshots, version history, diffs, and scheduled inventory |
+| plugins/ml | @baldin/plugin-ml | TensorFlow.js regression, classification, time-series, and neural-network models |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |
