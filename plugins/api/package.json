@@ -20,6 +20,14 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./guards": {
+      "types": "./dist/concerns/guards-helpers.d.ts",
+      "import": "./dist/concerns/guards-helpers.js"
+    },
+    "./failban": {
+      "types": "./dist/failban.d.ts",
+      "import": "./dist/failban.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

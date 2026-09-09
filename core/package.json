@@ -44,6 +44,18 @@
     "./coordinator": {
       "types": "./dist/coordinator-plugin.d.ts",
       "import": "./dist/coordinator-plugin.js"
+    },
+    "./concerns/*": {
+      "types": "./dist/concerns/*.d.ts",
+      "import": "./dist/concerns/*.js"
+    },
+    "./storage-errors": {
+      "types": "./dist/concerns/storage-errors.d.ts",
+      "import": "./dist/concerns/storage-errors.js"
+    },
+    "./storage-key": {
+      "types": "./dist/concerns/storage-key.d.ts",
+      "import": "./dist/concerns/storage-key.js"
     }
   },
   "files": [

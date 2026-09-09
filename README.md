@@ -5,9 +5,9 @@ A small document database for object storage — being rebuilt from s3db.js as a
 **Status: core migration.** The database engine behind the former `s3db.js/lite`
 entrypoint now runs as `@baldin/core`. Database CRUD, schemas, resources,
 multidatabase management, behaviors, streams, and concurrency are present. The S3
-adapters, all 32 standalone plugin families, the CLI, and the MCP server have been
-extracted. External provider contract coverage and remaining public utilities still
-need migration.
+adapters, all 32 standalone plugin families, the shared public utilities, the CLI,
+and the MCP server have been extracted. External provider contract coverage and
+persisted compatibility fixtures still need expansion.
 
 This is not yet a feature-complete replacement for `s3db.js`. The tracked gaps
 and completion criteria live in the [parity audit](docs/parity-audit.md).
@@ -90,6 +90,7 @@ and dependency rules.
 | plugins/recon | @baldin/plugin-recon | Passive, stealth, and active reconnaissance with RedBlue/Recker stages, reporting, scheduling, and uptime monitoring |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
+| packages/utils | @baldin/utils | HTTP, error classification, memory profiling, money, and encoding utilities |
 | apps/cli | @baldin/cli | Packaged `baldin` command with migrations, schema tools, console, and MCP launcher |
 | apps/mcp | @baldin/mcp | Packaged stdio/HTTP MCP server with bundled docs and database tools |
 
@@ -112,6 +113,8 @@ package releases; no automatic npm publishing is configured.
 Filesystem, SQLite, RedDB, and S3 load through the public adapter registry, and plugins use
 the public plugin SDK. See [the migration plan](docs/migration.md) for source
 provenance, compatibility guarantees and extraction order.
+Every former public subpath has a destination or explicit disposition in the
+[public API mapping](docs/public-api-mapping.md).
 
 `BuckieDB` and `S3db` remain as deprecated class aliases. The persisted `s3db.json` manifest and
 the existing `S3DB_*` environment variables remain supported during migration.

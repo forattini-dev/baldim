@@ -85,6 +85,7 @@ jobs:
           pnpm --filter @baldin/plugin-recon pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/utils pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/mcp pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/cli pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify S3 and Tfstate package isolation
@@ -507,6 +508,7 @@ jobs:
           recon_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-recon-*.tgz)
           testing_package=("$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz)
           typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz)
+          utils_package=("$GITHUB_WORKSPACE"/artifacts/baldin-utils-*.tgz)
           test "${#core[@]}" -eq 1
           test "${#memory[@]}" -eq 1
           test "${#filesystem[@]}" -eq 1
@@ -547,6 +549,7 @@ jobs:
           test "${#recon_plugin[@]}" -eq 1
           test "${#testing_package[@]}" -eq 1
           test "${#typegen_package[@]}" -eq 1
+          test "${#utils_package[@]}" -eq 1
           if tar -tzf "${core[0]}" | grep -Eq 'package/dist/clients/(filesystem|memory|reddb|sqlite|remote-sqlite|d1|libsql)'; then
             echo "Core tarball contains a storage adapter implementation"
             exit 1
@@ -554,12 +557,13 @@ jobs:
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${api_plugin[0]}" "${identity_plugin[0]}" "${websocket_plugin[0]}" "${puppeteer_plugin[0]}" "${cookie_farm_plugin[0]}" "${cookie_farm_suite_plugin[0]}" "${kubernetes_inventory_plugin[0]}" "${ml_plugin[0]}" "${replicator_plugin[0]}" "${cloud_inventory_plugin[0]}" "${spider_plugin[0]}" "${recon_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${tfstate_plugin[0]}" "${api_plugin[0]}" "${identity_plugin[0]}" "${websocket_plugin[0]}" "${puppeteer_plugin[0]}" "${cookie_farm_plugin[0]}" "${cookie_farm_suite_plugin[0]}" "${kubernetes_inventory_plugin[0]}" "${ml_plugin[0]}" "${replicator_plugin[0]}" "${cloud_inventory_plugin[0]}" "${spider_plugin[0]}" "${recon_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}" "${utils_package[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
           import { hasStorageAdapter } from '@baldin/core/adapter';
           import { encodeKey, decodeKey } from '@baldin/core/encoding';
+          import { StreamInserter } from '@baldin/core/concerns/high-performance-inserter';
           import { AuditPlugin } from '@baldin/plugin-audit';
           import { TTLPlugin } from '@baldin/plugin-ttl';
           import { SchedulerPlugin } from '@baldin/plugin-scheduler';
@@ -583,6 +587,8 @@ jobs:
           import { EventualConsistencyPlugin } from '@baldin/plugin-eventual-consistency';
           import { TfStatePlugin } from '@baldin/plugin-tfstate';
           import { ApiPlugin } from '@baldin/plugin-api';
+          import { requireAdmin } from '@baldin/plugin-api/guards';
+          import { FailbanManager } from '@baldin/plugin-api/failban';
           import { IdentityPlugin } from '@baldin/plugin-identity';
           import { WebSocketPlugin } from '@baldin/plugin-websocket';
           import { PuppeteerPlugin } from '@baldin/plugin-puppeteer';
@@ -596,6 +602,7 @@ jobs:
           import { ReconPlugin } from '@baldin/plugin-recon';
           import { Factory, Seeder } from '@baldin/testing';
           import { printTypes } from '@baldin/typegen';
+          import { createHttpClientSync, encodeMoney, optimizedDecode, optimizedEncode } from '@baldin/utils';
           import { MemoryClient } from '@baldin/adapter-memory';
           import { isNodeSqliteAvailable } from '@baldin/adapter-sqlite';
           import { mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -610,6 +617,10 @@ jobs:
           assert.equal(encodeKey(36), '10');
           assert.equal(decodeKey('10'), 36);
           assert.equal(typeof MemoryClient.clearAllStorage, 'function');
+          assert.equal(typeof StreamInserter, 'function');
+          assert.equal(typeof createHttpClientSync().get, 'function');
+          assert.equal(optimizedDecode(optimizedEncode('olá')), 'olá');
+          assert.equal(typeof encodeMoney(1.25, 'BRL'), 'string');
           assert.equal(hasStorageAdapter('file'), true);
           assert.equal(hasStorageAdapter('reddb'), true);
           assert.equal(hasStorageAdapter('sqlite'), true);
@@ -620,6 +631,8 @@ jobs:
           assert.ok(SMTPPlugin.getAvailableDrivers().includes('smtp'));
           assert.ok(getAvailableFormats().includes('single-elimination'));
           assert.equal(typeof new ApiPlugin({ startupBanner: false }).raffel.createRouter, 'function');
+          assert.equal(typeof requireAdmin, 'function');
+          assert.equal(typeof FailbanManager, 'function');
           assert.equal(typeof new IdentityPlugin({
             resources: {
               users: { name: 'users' },

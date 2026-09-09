@@ -45,6 +45,9 @@ Original project and data remain unchanged. Source license: Unlicense.
   contract runs against Memory, filesystem, SQLite, and MinIO in CI.
 - CI builds and tests every workspace package, then installs all public tarballs
   together in an empty consumer and exercises their public entrypoints.
+- Public HTTP, error-classification, memory-profiling, money, and optimized-encoding
+  helpers live in `@baldin/utils`. Every former public subpath is accounted for in
+  the [public API mapping](public-api-mapping.md).
 
 ## Next extraction stages
 
@@ -52,8 +55,7 @@ Original project and data remain unchanged. Source license: Unlicense.
 2. Extend the contract to RedDB and remote SQLite test services.
 3. Add baseline compatibility fixtures for S3-compatible and SQLite storage; the
    filesystem fixture already covers schema metadata, bodies, partitions, and manifest.
-4. Continue migrating shared utilities; testing and TypeScript generation are already public packages.
-5. Publish and migrate a real application after npm credentials are available. The
+4. Publish and migrate a real application after npm credentials are available. The
    CLI and MCP server are already standalone workspace applications.
 
 ## Dependency rules
@@ -77,8 +79,9 @@ dependencies and release independently.
 ## Status and limits
 
 The core, manager, storage adapters, all 32 standalone plugins, testing utilities,
-type generation, CLI, and MCP server are working package slices. Shared-utility and
-compatibility-suite migration remains incomplete. No npm package has been published.
+type generation, shared utilities, CLI, and MCP server are working package slices.
+External-provider and persisted-data compatibility coverage remains incomplete. No
+npm package has been published.
 
 ## Testing utilities
 

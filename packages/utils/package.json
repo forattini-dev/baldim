@@ -1,0 +1,41 @@
+{
+  "name": "@baldin/utils",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Public HTTP, profiling, money, encoding, and error utilities for Baldin applications.",
+  "license": "Unlicense",
+  "engines": { "node": ">=24" },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "directory": "packages/utils"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./error-classifier": { "types": "./dist/error-classifier.d.ts", "import": "./dist/error-classifier.js" },
+    "./http-client": { "types": "./dist/http-client.d.ts", "import": "./dist/http-client.js" },
+    "./memory-profiler": { "types": "./dist/memory-profiler.d.ts", "import": "./dist/memory-profiler.js" },
+    "./money": { "types": "./dist/money.d.ts", "import": "./dist/money.js" },
+    "./optimized-encoding": { "types": "./dist/optimized-encoding.d.ts", "import": "./dist/optimized-encoding.js" },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md", "UNLICENSE"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "peerDependencies": { "@baldin/core": "^0.1.0" },
+  "devDependencies": {
+    "@baldin/core": "workspace:*",
+    "@baldin/adapter-memory": "workspace:*",
+    "@types/node": "25.5.2",
+    "typescript": "6.0.2",
+    "vitest": "4.1.3"
+  }
+}

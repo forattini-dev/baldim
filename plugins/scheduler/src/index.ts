@@ -827,19 +827,6 @@ export class SchedulerPlugin extends CoordinatorPlugin {
     }
 
     const nextRun = this._calculateNextRun(schedule, config.timezone || this.config.timezone);
-
-    if (config.timezone) {
-      try {
-        const localized = nextRun.toLocaleString('en-US', { timeZone: config.timezone });
-        const tzDate = new Date(localized);
-        if (!Number.isNaN(tzDate.getTime())) {
-          return tzDate;
-        }
-      } catch (error) {
-        this.logger.warn({ timezone: config.timezone, error: (error as Error).message }, 'Failed to apply timezone adjustment');
-      }
-    }
-
     return nextRun;
   }
 

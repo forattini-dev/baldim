@@ -1141,6 +1141,7 @@ export type { HeaderSecretConfig } from './auth/header-secret-auth.js';
 export type { OAuth2Config, OAuth2User, OAuth2Handler } from './auth/oauth2-auth.js';
 export type { ClientCredentialsConfig, AuthRoutesConfig } from './routes/auth-routes.js';
 export * from './concerns/guards-helpers.js';
+export * from './failban.js';
 
 export { setupTemplateEngine, ejsEngine, pugEngine, jsxEngine } from './utils/template-engine.js';
 
