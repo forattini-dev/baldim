@@ -97,7 +97,7 @@
     "cloudflare": "^7.1.0",
     "digitalocean-js": "^2.1.0",
     "follow-redirects": "1.15.2",
-    "form-data": "4.0.0",
+    "form-data": "4.0.6",
     "hcloud-js": "^1.4.0",
     "is-buffer": "2.0.5",
     "mime-db": "1.51.0",

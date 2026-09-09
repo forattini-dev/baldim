@@ -6,3 +6,8 @@ packages:
   - 'apps/*'
 
 autoInstallPeers: false
+
+peerDependencyRules:
+  allowedVersions:
+    # digitalocean-js pins the vulnerable 4.0.0 exactly; 4.0.6 is API-compatible.
+    'digitalocean-js>form-data': '4.0.6'
