@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 190" width="1200" height="190" role="img" aria-labelledby="title desc">
+  <title id="title">One handle, many databases</title>
+  <desc id="desc">Coordinate named connections without losing resource identity.</desc>
+  <defs>
+    <linearGradient id="manager-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.55" stop-color="#0a1020"/>
+      <stop offset="1" stop-color="#090b16"/>
+    </linearGradient>
+    <radialGradient id="manager-glow" cx="0.2" cy="0.15" r="0.85">
+      <stop offset="0" stop-color="#a78bfa" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="manager-glow2" cx="0.8" cy="0.8" r="0.8">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="manager-accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <pattern id="manager-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M28 0H0V28" fill="none" stroke="#dbeafe" stroke-opacity="0.035" stroke-width="1"/>
+    </pattern>
+    <clipPath id="manager-frame"><rect width="1200" height="190" rx="18"/></clipPath>
+  </defs>
+  <g clip-path="url(#manager-frame)">
+    <rect width="1200" height="190" fill="url(#manager-bg)"/>
+    <rect width="1200" height="190" fill="url(#manager-grid)"/>
+    <ellipse cx="110" cy="20" rx="340" ry="220" fill="url(#manager-glow)"/>
+    <ellipse cx="1110" cy="180" rx="330" ry="180" fill="url(#manager-glow2)"/>
+
+    <rect x="86" y="76" width="40" height="40" rx="10" fill="#a78bfa" fill-opacity="0.2" stroke="#a78bfa" stroke-width="3"/>
+    <rect x="42" y="40" width="40" height="40" rx="10" fill="#050914" stroke="#8b5cf6" stroke-width="3"/>
+    <rect x="130" y="40" width="40" height="40" rx="10" fill="#050914" stroke="#fbbf24" stroke-width="3"/>
+    <rect x="42" y="122" width="40" height="40" rx="10" fill="#050914" stroke="#4ade80" stroke-width="3"/>
+    <rect x="130" y="122" width="40" height="40" rx="10" fill="#050914" stroke="#fb7185" stroke-width="3"/>
+    <path d="M86 83L80 76M126 83l8-7M86 110l-8 14M126 110l8 14" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
+    <g font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace">
+      <text x="215" y="54" font-size="13" font-weight="700" fill="#a78bfa" letter-spacing="2.8">MULTIDATABASE</text>
+      <text x="215" y="105" font-size="43" font-weight="700" fill="#f8fafc" letter-spacing="-1.5">One handle, many databases</text>
+      <text x="215" y="142" font-size="18" fill="#94a3b8">Coordinate named connections without losing resource identity.</text>
+      <rect x="892.8" y="132" width="83.39999999999999" height="30" rx="15" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.11"/><text x="905.8" y="152" font-size="13" fill="#cbd5e1">routing</text><rect x="988.2" y="132" width="99.8" height="30" rx="15" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.11"/><text x="1001.2" y="152" font-size="13" fill="#cbd5e1">lifecycle</text>
+    </g>
+    <path d="M900 24c58 0 58 38 116 38s58-38 116-38" fill="none" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="2"/>
+    <circle cx="900" cy="24" r="4" fill="#a78bfa"/><circle cx="1016" cy="62" r="4" fill="#22d3ee"/><circle cx="1132" cy="24" r="4" fill="#fbbf24"/>
+    <rect y="186" width="1200" height="4" fill="url(#manager-accent)"/>
+  </g>
+</svg>

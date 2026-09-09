@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 190" width="1200" height="190" role="img" aria-labelledby="title desc">
+  <title id="title">Snap in what you need</title>
+  <desc id="desc">Thirty-two plugins. Their code, their dependencies, their weight.</desc>
+  <defs>
+    <linearGradient id="plugins-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.55" stop-color="#0a1020"/>
+      <stop offset="1" stop-color="#090b16"/>
+    </linearGradient>
+    <radialGradient id="plugins-glow" cx="0.2" cy="0.15" r="0.85">
+      <stop offset="0" stop-color="#fbbf24" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="plugins-glow2" cx="0.8" cy="0.8" r="0.8">
+      <stop offset="0" stop-color="#8b5cf6" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="plugins-accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <pattern id="plugins-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M28 0H0V28" fill="none" stroke="#dbeafe" stroke-opacity="0.035" stroke-width="1"/>
+    </pattern>
+    <clipPath id="plugins-frame"><rect width="1200" height="190" rx="18"/></clipPath>
+  </defs>
+  <g clip-path="url(#plugins-frame)">
+    <rect width="1200" height="190" fill="url(#plugins-bg)"/>
+    <rect width="1200" height="190" fill="url(#plugins-grid)"/>
+    <ellipse cx="110" cy="20" rx="340" ry="220" fill="url(#plugins-glow)"/>
+    <ellipse cx="1110" cy="180" rx="330" ry="180" fill="url(#plugins-glow2)"/>
+
+    <rect x="45" y="48" width="52" height="52" rx="12" fill="#fbbf24" fill-opacity="0.22" stroke="#fbbf24" stroke-width="3"/>
+    <rect x="112" y="48" width="52" height="52" rx="12" fill="#8b5cf6" fill-opacity="0.2" stroke="#8b5cf6" stroke-width="3"/>
+    <rect x="45" y="113" width="52" height="52" rx="12" fill="#fbbf24" fill-opacity="0.18" stroke="#fbbf24" stroke-width="3"/>
+    <path d="M112 139h-15M138 100v13M71 100v13" stroke="#e2e8f0" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="138" cy="139" r="25" fill="#050914" stroke="#4ade80" stroke-width="3"/>
+    <path d="M126 139l8 8 16-18" fill="none" stroke="#4ade80" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace">
+      <text x="215" y="54" font-size="13" font-weight="700" fill="#fbbf24" letter-spacing="2.8">CAPABILITY PACKAGES</text>
+      <text x="215" y="105" font-size="43" font-weight="700" fill="#f8fafc" letter-spacing="-1.5">Snap in what you need</text>
+      <text x="215" y="142" font-size="18" fill="#94a3b8">Thirty-two plugins. Their code, their dependencies, their weight.</text>
+      <rect x="876.4" y="132" width="108" height="30" rx="15" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.11"/><text x="889.4" y="152" font-size="13" fill="#cbd5e1">32 plugins</text><rect x="996.4" y="132" width="91.6" height="30" rx="15" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.11"/><text x="1009.4" y="152" font-size="13" fill="#cbd5e1">isolated</text>
+    </g>
+    <path d="M900 24c58 0 58 38 116 38s58-38 116-38" fill="none" stroke="#8b5cf6" stroke-opacity="0.2" stroke-width="2"/>
+    <circle cx="900" cy="24" r="4" fill="#fbbf24"/><circle cx="1016" cy="62" r="4" fill="#8b5cf6"/><circle cx="1132" cy="24" r="4" fill="#fbbf24"/>
+    <rect y="186" width="1200" height="4" fill="url(#plugins-accent)"/>
+  </g>
+</svg>

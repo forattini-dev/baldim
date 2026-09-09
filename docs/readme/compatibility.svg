@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 190" width="1200" height="190" role="img" aria-labelledby="title desc">
+  <title id="title">Move without losing data</title>
+  <desc id="desc">Read established manifests and fixtures while imports evolve.</desc>
+  <defs>
+    <linearGradient id="compatibility-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.55" stop-color="#0a1020"/>
+      <stop offset="1" stop-color="#090b16"/>
+    </linearGradient>
+    <radialGradient id="compatibility-glow" cx="0.2" cy="0.15" r="0.85">
+      <stop offset="0" stop-color="#fb7185" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#fb7185" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="compatibility-glow2" cx="0.8" cy="0.8" r="0.8">
+      <stop offset="0" stop-color="#fbbf24" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="compatibility-accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fb7185"/>
+      <stop offset="1" stop-color="#fbbf24"/>
+    </linearGradient>
+    <pattern id="compatibility-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M28 0H0V28" fill="none" stroke="#dbeafe" stroke-opacity="0.035" stroke-width="1"/>
+    </pattern>
+    <clipPath id="compatibility-frame"><rect width="1200" height="190" rx="18"/></clipPath>
+  </defs>
+  <g clip-path="url(#compatibility-frame)">
+    <rect width="1200" height="190" fill="url(#compatibility-bg)"/>
+    <rect width="1200" height="190" fill="url(#compatibility-grid)"/>
+    <ellipse cx="110" cy="20" rx="340" ry="220" fill="url(#compatibility-glow)"/>
+    <ellipse cx="1110" cy="180" rx="330" ry="180" fill="url(#compatibility-glow2)"/>
+
+    <rect x="38" y="61" width="58" height="74" rx="12" fill="#050914" stroke="#64748b" stroke-width="3"/>
+    <text x="67" y="91" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace" font-size="12" fill="#94a3b8">s3db</text>
+    <text x="67" y="111" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace" font-size="11" fill="#64748b">.json</text>
+    <path d="M103 98h38" stroke="#fb7185" stroke-width="5" stroke-linecap="round"/>
+    <path d="M134 87l14 11-14 11" fill="none" stroke="#fb7185" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M151 63h28l-5 66c-1 11-8 17-18 17h-12c-10 0-17-6-18-17l-3-35" fill="#fb7185" fill-opacity="0.2" stroke="#fb7185" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M137 66c0-21 29-27 42-10" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+    <g font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace">
+      <text x="215" y="54" font-size="13" font-weight="700" fill="#fb7185" letter-spacing="2.8">S3DB.JS MIGRATION</text>
+      <text x="215" y="105" font-size="43" font-weight="700" fill="#f8fafc" letter-spacing="-1.5">Move without losing data</text>
+      <text x="215" y="142" font-size="18" fill="#94a3b8">Read established manifests and fixtures while imports evolve.</text>
+      <rect x="868.2" y="132" width="124.39999999999999" height="30" rx="15" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.11"/><text x="881.2" y="152" font-size="13" fill="#cbd5e1">v21 fixtures</text><rect x="1004.6" y="132" width="83.39999999999999" height="30" rx="15" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.11"/><text x="1017.6" y="152" font-size="13" fill="#cbd5e1">aliases</text>
+    </g>
+    <path d="M900 24c58 0 58 38 116 38s58-38 116-38" fill="none" stroke="#fbbf24" stroke-opacity="0.2" stroke-width="2"/>
+    <circle cx="900" cy="24" r="4" fill="#fb7185"/><circle cx="1016" cy="62" r="4" fill="#fbbf24"/><circle cx="1132" cy="24" r="4" fill="#fbbf24"/>
+    <rect y="186" width="1200" height="4" fill="url(#compatibility-accent)"/>
+  </g>
+</svg>

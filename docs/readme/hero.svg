@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 460" width="1200" height="460" role="img" aria-labelledby="hero-title hero-desc">
+  <title id="hero-title">Baldin — the modular document database</title>
+  <desc id="hero-desc">One document API across five storage adapters and thirty-two independent plugins.</desc>
+  <defs>
+    <linearGradient id="hero-bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#061525"/><stop offset="0.52" stop-color="#0b1021"/><stop offset="1" stop-color="#090914"/></linearGradient>
+    <radialGradient id="hero-cyan" cx="0.12" cy="0.08" r="0.8"><stop stop-color="#22d3ee" stop-opacity="0.32"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <radialGradient id="hero-violet" cx="0.86" cy="0.72" r="0.72"><stop stop-color="#8b5cf6" stop-opacity="0.32"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></radialGradient>
+    <linearGradient id="hero-line" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#22d3ee"/><stop offset="0.55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#fbbf24"/></linearGradient>
+    <linearGradient id="bucket-fill" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#22d3ee" stop-opacity="0.26"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0.2"/></linearGradient>
+    <pattern id="hero-grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#dbeafe" stroke-opacity="0.04"/></pattern>
+    <filter id="hero-shadow"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity="0.45"/></filter>
+    <clipPath id="hero-frame"><rect width="1200" height="460" rx="20"/></clipPath>
+  </defs>
+  <g clip-path="url(#hero-frame)">
+    <rect width="1200" height="460" fill="url(#hero-bg)"/><rect width="1200" height="460" fill="url(#hero-grid)"/>
+    <ellipse cx="110" cy="20" rx="500" ry="330" fill="url(#hero-cyan)"/><ellipse cx="1090" cy="430" rx="470" ry="330" fill="url(#hero-violet)"/>
+    <g font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace">
+      <text x="68" y="74" font-size="13" font-weight="700" fill="#67e8f9" letter-spacing="3.1">DOCUMENT DATABASE  /  MODULAR BY DESIGN</text>
+      <text x="66" y="176" font-size="100" font-weight="800" fill="#f8fafc" letter-spacing="-6">BALDIN</text>
+      <rect x="425" y="107" width="18" height="70" rx="4" fill="#fbbf24"/>
+      <text x="70" y="224" font-size="24" fill="#cbd5e1">One document API. Every storage backend.</text>
+      <text x="70" y="258" font-size="24" fill="#94a3b8">Add capabilities without making the core carry them.</text>
+      <g font-size="14">
+        <rect x="70" y="297" width="132" height="34" rx="17" fill="#22d3ee" fill-opacity="0.1" stroke="#22d3ee" stroke-opacity="0.5"/><text x="88" y="319" fill="#a5f3fc">43 packages</text>
+        <rect x="214" y="297" width="128" height="34" rx="17" fill="#8b5cf6" fill-opacity="0.11" stroke="#8b5cf6" stroke-opacity="0.52"/><text x="232" y="319" fill="#ddd6fe">5 adapters</text>
+        <rect x="354" y="297" width="126" height="34" rx="17" fill="#fbbf24" fill-opacity="0.1" stroke="#fbbf24" stroke-opacity="0.52"/><text x="372" y="319" fill="#fde68a">32 plugins</text>
+      </g>
+      <rect x="70" y="356" width="448" height="58" rx="12" fill="#020617" fill-opacity="0.72" stroke="#ffffff" stroke-opacity="0.09"/>
+      <text x="90" y="380" font-size="13" fill="#64748b">connectionString</text>
+      <text x="90" y="402" font-size="16" fill="#e2e8f0"><tspan fill="#67e8f9">memory</tspan>://today  →  <tspan fill="#c4b5fd">s3</tspan>://production</text>
+    </g>
+    <g filter="url(#hero-shadow)" font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace">
+      <path d="M812 158h272l-22 201c-2 22-18 35-40 35H874c-22 0-38-13-40-35z" fill="url(#bucket-fill)" stroke="#67e8f9" stroke-width="3"/>
+      <path d="M848 163c2-91 151-116 203-26" fill="none" stroke="#fbbf24" stroke-width="9" stroke-linecap="round"/>
+      <path d="M848 221h200M842 279h212M836 337h224" stroke="#e2e8f0" stroke-opacity="0.16" stroke-width="2"/>
+      <text x="861" y="207" font-size="14" fill="#67e8f9" letter-spacing="2">CORE</text><text x="970" y="207" font-size="13" fill="#94a3b8">resources + schema</text>
+      <text x="861" y="266" font-size="14" fill="#c4b5fd" letter-spacing="2">ADAPTERS</text><text x="970" y="266" font-size="13" fill="#94a3b8">storage</text>
+      <text x="861" y="324" font-size="14" fill="#fde68a" letter-spacing="2">PLUGINS</text><text x="970" y="324" font-size="13" fill="#94a3b8">capabilities</text>
+      <text x="861" y="369" font-size="13" fill="#64748b">each package owns its weight</text>
+    </g>
+    <g font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace" font-size="12">
+      <path d="M678 108h112l40 70M1106 113h-49l-25 60M676 370h154" fill="none" stroke="#22d3ee" stroke-opacity="0.45" stroke-width="2" stroke-dasharray="5 7"/>
+      <circle cx="663" cy="108" r="7" fill="#22d3ee"/><text x="602" y="86" fill="#94a3b8">MEMORY</text>
+      <circle cx="1121" cy="113" r="7" fill="#8b5cf6"/><text x="1090" y="89" fill="#94a3b8">S3 / R2</text>
+      <circle cx="663" cy="370" r="7" fill="#fbbf24"/><text x="601" y="396" fill="#94a3b8">SQLITE</text>
+    </g>
+    <rect y="455" width="1200" height="5" fill="url(#hero-line)"/>
+  </g>
+</svg>

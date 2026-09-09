@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 190" width="1200" height="190" role="img" aria-labelledby="title desc">
+  <title id="title">Built to stay light</title>
+  <desc id="desc">Core, adapters, plugins, packages — explicit boundaries.</desc>
+  <defs>
+    <linearGradient id="architecture-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.55" stop-color="#0a1020"/>
+      <stop offset="1" stop-color="#090b16"/>
+    </linearGradient>
+    <radialGradient id="architecture-glow" cx="0.2" cy="0.15" r="0.85">
+      <stop offset="0" stop-color="#8b5cf6" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="architecture-glow2" cx="0.8" cy="0.8" r="0.8">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="architecture-accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <pattern id="architecture-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M28 0H0V28" fill="none" stroke="#dbeafe" stroke-opacity="0.035" stroke-width="1"/>
+    </pattern>
+    <clipPath id="architecture-frame"><rect width="1200" height="190" rx="18"/></clipPath>
+  </defs>
+  <g clip-path="url(#architecture-frame)">
+    <rect width="1200" height="190" fill="url(#architecture-bg)"/>
+    <rect width="1200" height="190" fill="url(#architecture-grid)"/>
+    <ellipse cx="110" cy="20" rx="340" ry="220" fill="url(#architecture-glow)"/>
+    <ellipse cx="1110" cy="180" rx="330" ry="180" fill="url(#architecture-glow2)"/>
+
+    <path d="M105 38l66 28-66 28-66-28z" fill="#8b5cf6" fill-opacity="0.24" stroke="#8b5cf6" stroke-width="3"/>
+    <path d="M39 91l66 28 66-28M39 118l66 28 66-28" fill="none" stroke="#8b5cf6" stroke-width="3"/>
+    <path d="M39 145l66 28 66-28" fill="none" stroke="#fbbf24" stroke-width="3"/>
+    <circle cx="105" cy="66" r="7" fill="#f8fafc"/>
+    <g font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace">
+      <text x="215" y="54" font-size="13" font-weight="700" fill="#8b5cf6" letter-spacing="2.8">MONOREPO SHAPE</text>
+      <text x="215" y="105" font-size="43" font-weight="700" fill="#f8fafc" letter-spacing="-1.5">Built to stay light</text>
+      <text x="215" y="142" font-size="18" fill="#94a3b8">Core, adapters, plugins, packages — explicit boundaries.</text>
+      <rect x="876.4" y="132" width="108" height="30" rx="15" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.11"/><text x="889.4" y="152" font-size="13" fill="#cbd5e1">boundaries</text><rect x="996.4" y="132" width="91.6" height="30" rx="15" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.11"/><text x="1009.4" y="152" font-size="13" fill="#cbd5e1">own deps</text>
+    </g>
+    <path d="M900 24c58 0 58 38 116 38s58-38 116-38" fill="none" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="2"/>
+    <circle cx="900" cy="24" r="4" fill="#8b5cf6"/><circle cx="1016" cy="62" r="4" fill="#22d3ee"/><circle cx="1132" cy="24" r="4" fill="#fbbf24"/>
+    <rect y="186" width="1200" height="4" fill="url(#architecture-accent)"/>
+  </g>
+</svg>
