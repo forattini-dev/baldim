@@ -69,6 +69,7 @@ jobs:
           pnpm --filter @baldin/plugin-smtp pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-tournament pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/plugin-s3-queue pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter @baldin/plugin-eventual-consistency pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/testing pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter @baldin/typegen pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
       - name: Verify packed packages in a clean consumer
@@ -98,6 +99,7 @@ jobs:
           smtp_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-smtp-*.tgz)
           tournament_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-tournament-*.tgz)
           s3_queue_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-s3-queue-*.tgz)
+          eventual_consistency_plugin=("$GITHUB_WORKSPACE"/artifacts/baldin-plugin-eventual-consistency-*.tgz)
           testing_package=("$GITHUB_WORKSPACE"/artifacts/baldin-testing-*.tgz)
           typegen_package=("$GITHUB_WORKSPACE"/artifacts/baldin-typegen-*.tgz)
           test "${#core[@]}" -eq 1
@@ -124,6 +126,7 @@ jobs:
           test "${#smtp_plugin[@]}" -eq 1
           test "${#tournament_plugin[@]}" -eq 1
           test "${#s3_queue_plugin[@]}" -eq 1
+          test "${#eventual_consistency_plugin[@]}" -eq 1
           test "${#testing_package[@]}" -eq 1
           test "${#typegen_package[@]}" -eq 1
           if tar -tzf "${core[0]}" | grep -Eq 'package/dist/clients/(filesystem|memory|reddb|sqlite|remote-sqlite|d1|libsql)'; then
@@ -133,7 +136,7 @@ jobs:
           consumer="$(mktemp -d)"
           cd "$consumer"
           npm init -y
-          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
+          npm install --ignore-scripts --no-audit --no-fund "${memory[0]}" "${core[0]}" "${filesystem[0]}" "${reddb[0]}" "${sqlite[0]}" "${adapter[0]}" "${plugin[0]}" "${ttl_plugin[0]}" "${scheduler_plugin[0]}" "${fulltext_plugin[0]}" "${geo_plugin[0]}" "${graph_plugin[0]}" "${costs_plugin[0]}" "${metrics_plugin[0]}" "${queue_plugin[0]}" "${backup_plugin[0]}" "${cache_plugin[0]}" "${state_machine_plugin[0]}" "${tree_plugin[0]}" "${importer_plugin[0]}" "${vector_plugin[0]}" "${smtp_plugin[0]}" "${tournament_plugin[0]}" "${s3_queue_plugin[0]}" "${eventual_consistency_plugin[0]}" "${testing_package[0]}" "${typegen_package[0]}"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import { Baldin, encode, decode } from '@baldin/core';
@@ -159,6 +162,7 @@ jobs:
           import { TournamentPlugin } from '@baldin/plugin-tournament';
           import { getAvailableFormats } from '@baldin/plugin-tournament/toolkit';
           import { S3QueuePlugin } from '@baldin/plugin-s3-queue';
+          import { EventualConsistencyPlugin } from '@baldin/plugin-eventual-consistency';
           import { Factory, Seeder } from '@baldin/testing';
           import { printTypes } from '@baldin/typegen';
           import { MemoryClient } from '@baldin/adapter-memory';
@@ -359,9 +363,28 @@ jobs:
           }));
           await queuedJobs.enqueue({ task: 'packed' });
           assert.equal((await queuedJobs.queueStats()).pending, 1);
+          const counters = await database.createResource({
+            name: 'counters',
+            attributes: { value: 'number|default:0' },
+          });
+          const eventualConsistency = new EventualConsistencyPlugin({
+            logLevel: 'silent',
+            enableCoordinator: false,
+            resources: { counters: ['value'] },
+            consolidation: { mode: 'async', auto: false },
+          });
+          await database.usePlugin(eventualConsistency);
+          await counters.insert({ id: 'pack-counter', value: 0 });
+          await counters.add('pack-counter', 'value', 2);
+          assert.deepEqual(
+            await counters.consolidate('pack-counter', 'value'),
+            { success: true, recordsProcessed: 1, transactionsApplied: 1, errors: [] },
+          );
+          assert.equal((await counters.get('pack-counter')).value, 2);
           await database.disconnect();
           await rm(backupDir, { recursive: true, force: true });
           await rm(importDir, { recursive: true, force: true });
           assert.equal(queueStopped, true);
           assert.equal(queuedJobs.enqueue, undefined);
+          assert.equal(counters.add, undefined);
           JS

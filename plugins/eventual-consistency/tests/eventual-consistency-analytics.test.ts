@@ -1,0 +1,506 @@
+/**
+ * EventualConsistencyPlugin Analytics Tests
+ * Tests the analytics functionality (aggregations, roll-ups, queries)
+ */
+
+import { EventualConsistencyPlugin } from '../src/index.js';
+import { createDatabaseForTest } from './helpers.js';
+
+describe('EventualConsistencyPlugin Analytics', () => {
+  let database;
+  let wallets;
+  let plugin;
+  let testId = 0;
+
+  beforeEach(async () => {
+    // Add a unique test ID to prevent storage-prefix collisions.
+    database = await createDatabaseForTest(`eventual-consistency-analytics-${++testId}`);
+
+    // Create wallets resource
+    wallets = await database.createResource({
+      name: 'wallets',
+      attributes: {
+        id: 'string|optional',
+        userId: 'string|required',
+        balance: 'number|default:0'
+      }
+    });
+
+    // Add EventualConsistencyPlugin with analytics enabled
+    plugin = new EventualConsistencyPlugin({
+      logLevel: 'silent',
+      resources: {
+        wallets: ['balance']
+      },
+      consolidation: { mode: 'sync', auto: false },
+      analytics: { enabled: true }
+    });
+
+    await database.usePlugin(plugin);
+    await plugin.start();
+  });
+
+  afterEach(async () => {
+    if (database) {
+      await database.disconnect();
+    }
+  });
+
+  it('should create analytics resource when enabled', async () => {
+    const analyticsResourceName = 'plg_wallets_an_balance';
+    const analyticsResource = database.resources[analyticsResourceName];
+
+    expect(analyticsResource).toBeDefined();
+    expect(analyticsResource.behavior).toBe('body-only');
+
+    // Verify the handler has analytics resource
+    const fieldHandlers = plugin.fieldHandlers.get('wallets');
+    const handler = fieldHandlers.get('balance');
+    expect(handler.analyticsResource).toBe(analyticsResource);
+  });
+
+  it('should expose a typed plugin status summary', () => {
+    const status = plugin.getStatus();
+
+    expect(status).toMatchObject({
+      name: 'EventualConsistencyPlugin',
+      version: '1.0.0',
+      enableAnalytics: true,
+      workerId: expect.any(String),
+      handlers: {
+        wallets: ['balance']
+      }
+    });
+
+    expect(status.worker).toMatchObject({
+      enabled: expect.any(Boolean),
+      active: expect.any(Boolean),
+      running: expect.any(Boolean),
+      runs: expect.any(Number),
+      failures: expect.any(Number),
+      total: {
+        ticketsClaimed: expect.any(Number),
+        recordsProcessed: expect.any(Number),
+        transactionsApplied: expect.any(Number),
+        ticketsWithErrors: expect.any(Number),
+        handlerErrors: expect.any(Number)
+      }
+    });
+  });
+
+  it('should update analytics after consolidation', async () => {
+    // Insert wallet
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+
+    // Add transactions
+    await wallets.add('w1', 'balance', 100);
+    await wallets.add('w1', 'balance', 50);
+    await wallets.sub('w1', 'balance', 25);
+
+    // Consolidate (triggers analytics update)
+    await wallets.consolidate('w1', 'balance');
+
+    // Check analytics were created
+    const analyticsResource = database.resources.plg_wallets_an_balance;
+    const analytics = await analyticsResource.list();
+
+    expect(analytics.length).toBeGreaterThan(0);
+
+    // Find hourly analytics
+    const hourlyAnalytics = analytics.find(a => a.period === 'hour');
+    expect(hourlyAnalytics).toBeDefined();
+    expect(hourlyAnalytics.transactionCount).toBe(3);
+    expect(hourlyAnalytics.totalValue).toBe(125); // 100 + 50 - 25
+    expect(hourlyAnalytics.recordCount).toBe(1); // Single wallet
+  });
+
+  it('should aggregate metrics correctly', async () => {
+    // Insert wallets
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+    await wallets.insert({ id: 'w2', userId: 'u2', balance: 0 });
+
+    // Add transactions for w1
+    await wallets.add('w1', 'balance', 100);
+    await wallets.add('w1', 'balance', 200);
+
+    // Add transactions for w2
+    await wallets.add('w2', 'balance', 50);
+    await wallets.sub('w2', 'balance', 10);
+
+    await wallets.consolidate('w1', 'balance');
+    await wallets.consolidate('w2', 'balance');
+
+    // Query all analytics directly from resource
+    const analyticsResource = database.resources.plg_wallets_an_balance;
+    const allAnalytics = await analyticsResource.list();
+
+    expect(allAnalytics.length).toBeGreaterThan(0);
+
+    // Find hourly analytics
+    const hourlyAnalytics = allAnalytics.filter(a => a.period === 'hour');
+    expect(hourlyAnalytics.length).toBeGreaterThan(0);
+
+    // Check aggregate values (may be in one or multiple hourly buckets)
+    const totalTransactionCount = hourlyAnalytics.reduce((sum, a) => sum + a.transactionCount, 0);
+    const totalValue = hourlyAnalytics.reduce((sum, a) => sum + a.totalValue, 0);
+
+    expect(totalTransactionCount).toBe(4); // Total 4 transactions
+    expect(totalValue).toBe(340); // 100 + 200 + 50 - 10
+  });
+
+  it('should breakdown by operation', async () => {
+    // Insert wallet
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+
+    // Add different operations
+    await wallets.set('w1', 'balance', 1000);
+    await wallets.add('w1', 'balance', 100);
+    await wallets.add('w1', 'balance', 50);
+    await wallets.sub('w1', 'balance', 25);
+
+    await wallets.consolidate('w1', 'balance');
+
+    const analyticsResource = database.resources.plg_wallets_an_balance;
+    const allAnalytics = await analyticsResource.list();
+
+    expect(allAnalytics.length).toBeGreaterThan(0);
+
+    // Find hourly analytics
+    const hourlyAnalytics = allAnalytics.filter(a => a.period === 'hour');
+    expect(hourlyAnalytics.length).toBeGreaterThan(0);
+
+    // Aggregate operation counts and sums across all hourly buckets
+    let setCount = 0, setSum = 0;
+    let addCount = 0, addSum = 0;
+    let subCount = 0, subSum = 0;
+
+    for (const analytics of hourlyAnalytics) {
+      if (analytics.operations?.set) {
+        setCount += analytics.operations.set.count || 0;
+        setSum += analytics.operations.set.sum || 0;
+      }
+      if (analytics.operations?.add) {
+        addCount += analytics.operations.add.count || 0;
+        addSum += analytics.operations.add.sum || 0;
+      }
+      if (analytics.operations?.sub) {
+        subCount += analytics.operations.sub.count || 0;
+        subSum += analytics.operations.sub.sum || 0;
+      }
+    }
+
+    expect(setCount).toBe(1);
+    expect(setSum).toBe(1000);
+
+    expect(addCount).toBe(2);
+    expect(addSum).toBe(150);
+
+    expect(subCount).toBe(1);
+    expect(subSum).toBe(-25);
+  }, 30000); // 30 second timeout for analytics operations
+
+  it('should keep only hourly materialization and serve daily analytics lazily', async () => {
+    // Insert wallet
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+
+    // Add transactions
+    await wallets.add('w1', 'balance', 100);
+    await wallets.add('w1', 'balance', 50);
+    await wallets.consolidate('w1', 'balance');
+
+    const analyticsResource = database.resources.plg_wallets_an_balance;
+    const allAnalytics = await analyticsResource.list();
+
+    expect(allAnalytics.length).toBeGreaterThan(0);
+    expect(allAnalytics.every(a => a.period === 'hour')).toBe(true);
+
+    const today = new Date().toISOString().substring(0, 10);
+    const dailyAnalytics = await plugin.getAnalytics('wallets', 'balance', {
+      period: 'day',
+      date: today
+    });
+
+    expect(dailyAnalytics.length).toBe(1);
+
+    expect(dailyAnalytics[0].count).toBe(2);
+    expect(dailyAnalytics[0].sum).toBe(150);
+  });
+
+  it('should get top records by transaction count', async () => {
+    // Insert multiple wallets
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+    await wallets.insert({ id: 'w2', userId: 'u2', balance: 0 });
+    await wallets.insert({ id: 'w3', userId: 'u3', balance: 0 });
+
+    // w1: 5 transactions
+    await wallets.add('w1', 'balance', 10);
+    await wallets.add('w1', 'balance', 10);
+    await wallets.add('w1', 'balance', 10);
+    await wallets.add('w1', 'balance', 10);
+    await wallets.add('w1', 'balance', 10);
+
+    // w2: 2 transactions
+    await wallets.add('w2', 'balance', 100);
+    await wallets.add('w2', 'balance', 100);
+
+    // w3: 1 transaction
+    await wallets.add('w3', 'balance', 500);
+
+    const today = new Date().toISOString().substring(0, 10);
+    const topRecords = await plugin.getTopRecords('wallets', 'balance', {
+      period: 'day',
+      date: today,
+      metric: 'transactionCount',
+      limit: 3
+    });
+
+    expect(topRecords.length).toBe(3);
+    expect(topRecords[0].recordId).toBe('w1');
+    expect(topRecords[0].count).toBe(5);
+    expect(topRecords[1].recordId).toBe('w2');
+    expect(topRecords[1].count).toBe(2);
+    expect(topRecords[2].recordId).toBe('w3');
+    expect(topRecords[2].count).toBe(1);
+  }, 30000);
+
+  it('should get top records by total value', async () => {
+    // Insert wallets
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+    await wallets.insert({ id: 'w2', userId: 'u2', balance: 0 });
+    await wallets.insert({ id: 'w3', userId: 'u3', balance: 0 });
+
+    // w1: many small transactions
+    await wallets.add('w1', 'balance', 10);
+    await wallets.add('w1', 'balance', 10);
+    await wallets.add('w1', 'balance', 10);
+
+    // w2: few large transactions
+    await wallets.add('w2', 'balance', 500);
+    await wallets.add('w2', 'balance', 500);
+
+    // w3: single huge transaction
+    await wallets.add('w3', 'balance', 2000);
+
+    const today = new Date().toISOString().substring(0, 10);
+    const topRecords = await plugin.getTopRecords('wallets', 'balance', {
+      period: 'day',
+      date: today,
+      metric: 'totalValue',
+      limit: 3
+    });
+
+    expect(topRecords.length).toBe(3);
+    expect(topRecords[0].recordId).toBe('w3');
+    expect(topRecords[0].sum).toBe(2000);
+    expect(topRecords[1].recordId).toBe('w2');
+    expect(topRecords[1].sum).toBe(1000);
+    expect(topRecords[2].recordId).toBe('w1');
+    expect(topRecords[2].sum).toBe(30);
+  }, 30000);
+
+  it('should handle incremental analytics updates', async () => {
+    // Insert wallet
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+
+    // First batch
+    await wallets.add('w1', 'balance', 100);
+    await wallets.consolidate('w1', 'balance');
+
+    // Second batch
+    await wallets.add('w1', 'balance', 50);
+    await wallets.consolidate('w1', 'balance');
+
+    const analyticsResource = database.resources.plg_wallets_an_balance;
+    const allAnalytics = await analyticsResource.list();
+
+    expect(allAnalytics.length).toBeGreaterThan(0);
+
+    // Find hourly analytics
+    const hourlyAnalytics = allAnalytics.filter(a => a.period === 'hour');
+    expect(hourlyAnalytics.length).toBeGreaterThan(0);
+
+    // Aggregate hourly analytics (both transactions should be counted)
+    const totalCount = hourlyAnalytics.reduce((sum, a) => sum + (a.transactionCount || 0), 0);
+    const totalSum = hourlyAnalytics.reduce((sum, a) => sum + (a.totalValue || 0), 0);
+
+    expect(totalCount).toBe(2); // Both transactions
+    expect(totalSum).toBe(150); // Cumulative
+  });
+
+  it('should keep recordCount consistent for hourly materialization and lazy day reads', async () => {
+    // Insert wallet
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+
+    // First batch of two transactions in hour/day
+    await wallets.add('w1', 'balance', 100);
+    await wallets.add('w1', 'balance', 50);
+    const firstConsolidation = await wallets.consolidate('w1', 'balance');
+
+    // Second batch for same record (same bucket expected)
+    await wallets.add('w1', 'balance', 25);
+    const secondConsolidation = await wallets.consolidate('w1', 'balance');
+
+    const analyticsResource = database.resources.plg_wallets_an_balance;
+    const allAnalytics = await analyticsResource.list();
+    const txResource = database.resources.plg_wallets_tx_balance;
+    const txns = await txResource.list();
+
+    expect(firstConsolidation.success).toBe(true);
+    expect(secondConsolidation.success).toBe(true);
+
+    const byHour = new Map<string, number>();
+    const byDay = new Map<string, number>();
+
+    for (const txn of txns) {
+      byHour.set(txn.cohortHour, (byHour.get(txn.cohortHour) ?? 0) + 1);
+      byDay.set(txn.cohortDate, (byDay.get(txn.cohortDate) ?? 0) + 1);
+    }
+
+    for (const [hour, expectedTransactionCount] of byHour.entries()) {
+      const hourAnalytics = allAnalytics.find(a => a.period === 'hour' && a.cohort === hour);
+      expect(hourAnalytics).toBeDefined();
+      expect(hourAnalytics!.recordCount).toBe(1);
+      expect(hourAnalytics!.transactionCount).toBe(expectedTransactionCount);
+    }
+
+    for (const [day, expectedTransactionCount] of byDay.entries()) {
+      const dayAnalytics = await plugin.getAnalytics('wallets', 'balance', {
+        period: 'day',
+        date: day
+      });
+      expect(dayAnalytics).toHaveLength(1);
+      expect(dayAnalytics[0].recordCount).toBe(1);
+      expect(dayAnalytics[0].count).toBe(expectedTransactionCount);
+    }
+  });
+
+  it('should fill gaps in daily analytics', async () => {
+    // Insert wallet and add transactions only on specific days
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+
+    await wallets.add('w1', 'balance', 100);
+    await wallets.consolidate('w1', 'balance');
+
+    // Query last 7 days with fillGaps
+    const last7Days = await plugin.getLastNDays('wallets', 'balance', 7, {
+      fillGaps: true
+    });
+
+    // Should always return exactly 7 days
+    expect(last7Days.length).toBe(7);
+
+    // Check that all days are present
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const expectedDate = new Date(today);
+      expectedDate.setDate(today.getDate() - (6 - i));
+      const dateStr = expectedDate.toISOString().substring(0, 10);
+
+      expect(last7Days[i].cohort).toBe(dateStr);
+      expect(last7Days[i]).toHaveProperty('count');
+      expect(last7Days[i]).toHaveProperty('sum');
+    }
+
+    // Days without transactions should have zeros
+    const daysWithZeros = last7Days.filter(d => d.count === 0);
+    expect(daysWithZeros.length).toBeGreaterThan(0);
+  });
+
+  it('should fill gaps in hourly analytics', async () => {
+    // Insert wallet
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+
+    await wallets.add('w1', 'balance', 50);
+    await wallets.consolidate('w1', 'balance');
+
+    const today = new Date().toISOString().substring(0, 10);
+
+    // Query day by hour with fillGaps
+    const dayByHour = await plugin.getDayByHour('wallets', 'balance', today, {
+      fillGaps: true
+    });
+
+    // Should always return exactly 24 hours
+    expect(dayByHour.length).toBe(24);
+
+    // Check that all hours are present (00-23)
+    for (let hour = 0; hour < 24; hour++) {
+      const expectedCohort = `${today}T${hour.toString().padStart(2, '0')}`;
+      expect(dayByHour[hour].cohort).toBe(expectedCohort);
+    }
+
+    // Hours without transactions should have zeros
+    const hoursWithZeros = dayByHour.filter(h => h.count === 0);
+    expect(hoursWithZeros.length).toBeGreaterThan(0);
+  });
+
+  it('should fill gaps in monthly analytics', async () => {
+    // Insert wallet
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+
+    await wallets.add('w1', 'balance', 100);
+    await wallets.consolidate('w1', 'balance');
+
+    const currentYear = new Date().getFullYear();
+
+    // Query year by month with fillGaps
+    const yearByMonth = await plugin.getYearByMonth('wallets', 'balance', currentYear, {
+      fillGaps: true
+    });
+
+    // Should always return exactly 12 months
+    expect(yearByMonth.length).toBe(12);
+
+    // Check that all months are present (01-12)
+    for (let month = 1; month <= 12; month++) {
+      const expectedCohort = `${currentYear}-${month.toString().padStart(2, '0')}`;
+      expect(yearByMonth[month - 1].cohort).toBe(expectedCohort);
+    }
+
+    // Months without transactions should have zeros
+    const monthsWithZeros = yearByMonth.filter(m => m.count === 0);
+    expect(monthsWithZeros.length).toBeGreaterThan(0);
+  });
+
+  it('should fill gaps in month by day analytics', async () => {
+    // Insert wallet
+    await wallets.insert({ id: 'w1', userId: 'u1', balance: 0 });
+
+    await wallets.add('w1', 'balance', 100);
+    await wallets.consolidate('w1', 'balance');
+
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+
+    // Query month by day with fillGaps
+    const monthByDay = await plugin.getMonthByDay('wallets', 'balance', currentMonth, {
+      fillGaps: true
+    });
+
+    // Should return all days in the month
+    const year = parseInt(currentMonth.substring(0, 4));
+    const month = parseInt(currentMonth.substring(5, 7));
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    expect(monthByDay.length).toBe(daysInMonth);
+
+    // Check continuity
+    for (let day = 1; day <= daysInMonth; day++) {
+      const expectedCohort = `${currentMonth}-${day.toString().padStart(2, '0')}`;
+      expect(monthByDay[day - 1].cohort).toBe(expectedCohort);
+    }
+  });
+
+  it('should throw error when analytics disabled', async () => {
+    // Create new plugin without analytics
+    const pluginNoAnalytics = new EventualConsistencyPlugin({
+      logLevel: 'silent',
+      resources: {
+        wallets: ['balance']
+      }
+    });
+
+    await expect(() => pluginNoAnalytics.getAnalytics('wallets', 'balance')).rejects.toThrow(
+      'Analytics not enabled'
+    );
+  });
+});

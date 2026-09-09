@@ -1,0 +1,53 @@
+{
+  "name": "@baldin/plugin-eventual-consistency",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Eventually consistent counters, aggregations, analytics, and coordinated workers for Baldin.",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">=24"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "directory": "plugins/eventual-consistency"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./tickets": {
+      "types": "./dist/tickets.d.ts",
+      "import": "./dist/tickets.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "UNLICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "peerDependencies": {
+    "@baldin/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "@baldin/adapter-memory": "workspace:*",
+    "@baldin/core": "workspace:*",
+    "@types/node": "25.5.2",
+    "typescript": "6.0.2",
+    "vitest": "4.1.3"
+  }
+}

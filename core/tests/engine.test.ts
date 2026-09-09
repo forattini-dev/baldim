@@ -87,6 +87,39 @@ describe('Baldin core engine', () => {
       .toEqual(['ana']);
   });
 
+  it('keeps similarly named partition namespaces isolated during updates', async () => {
+    const database = await createDatabase('partition-prefixes');
+    const jobs = await database.createResource({
+      name: 'jobs',
+      timestamps: false,
+      asyncPartitions: false,
+      attributes: {
+        account: 'string|required',
+        active: 'boolean|required',
+      },
+      partitions: {
+        byAccount: { fields: { account: 'string' } },
+        byAccountAndActive: { fields: { account: 'string', active: 'boolean' } },
+      },
+    });
+
+    await jobs.insert({ id: 'job-1', account: 'acme', active: false });
+    await jobs.update('job-1', { active: true });
+
+    expect(await jobs.listIds({
+      partition: 'byAccount',
+      partitionValues: { account: 'acme' },
+    })).toEqual(['job-1']);
+    expect(await jobs.listIds({
+      partition: 'byAccountAndActive',
+      partitionValues: { account: 'acme', active: true },
+    })).toEqual(['job-1']);
+    expect(await jobs.listIds({
+      partition: 'byAccountAndActive',
+      partitionValues: { account: 'acme', active: false },
+    })).toEqual([]);
+  });
+
   it('stores typed nested values with the body-only behavior', async () => {
     const database = await createDatabase('body-only');
     const records = await database.createResource({

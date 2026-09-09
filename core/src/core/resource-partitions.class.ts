@@ -557,7 +557,7 @@ export class ResourcePartitions {
       const { results: cleanupResults, errors: cleanupErrors } = await mapWithConcurrency(
         Object.entries(partitions),
         async ([partitionName]) => {
-          const prefix = `resource=${this.resource.name}/partition=${partitionName}`;
+          const prefix = `resource=${this.resource.name}/partition=${partitionName}/`;
           const [okKeys, errKeys, keys] = await tryFn<string[]>(() => this.resource.client.getAllKeys({ prefix }));
           if (!okKeys || !keys) {
             return this._normalizePartitionError(errKeys, {

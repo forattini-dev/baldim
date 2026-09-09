@@ -73,6 +73,7 @@ and dependency rules.
 | plugins/smtp | @baldin/plugin-smtp | SMTP relay and server modes, templates, retries, and delivery webhooks |
 | plugins/tournament | @baldin/plugin-tournament | Tournament registration, formats, brackets, matches, and standings |
 | plugins/s3-queue | @baldin/plugin-s3-queue | Durable database-backed queues with coordinated workers and retries |
+| plugins/eventual-consistency | @baldin/plugin-eventual-consistency | Eventually consistent counters, consolidation, coordinated workers, and analytics |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |
