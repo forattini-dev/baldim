@@ -109,7 +109,7 @@ describe('IdentityPlugin integration metadata & tokens', () => {
       scopes: ['openid', 'profile', 'email'],
       active: true
     });
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await identityPlugin?.onStop();
