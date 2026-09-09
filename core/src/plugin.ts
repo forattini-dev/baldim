@@ -393,7 +393,13 @@ export function resolveResourceNames<T extends Record<string, ResourceNameDescri
 
 export { createLogger } from './concerns/logger.js';
 export type { Logger, LogLevel } from './concerns/logger.js';
-export type { CronManager } from './concerns/cron-manager.js';
+export {
+  CronManager,
+  createCronManager,
+  getCronManager,
+  resetCronManager,
+} from './concerns/cron-manager.js';
+export type { CronManagerOptions } from './concerns/cron-manager.js';
 export { tryFn } from './concerns/try-fn.js';
 export { mapWithConcurrency, forEachWithConcurrency } from './concerns/map-with-concurrency.js';
 export { idGenerator } from './concerns/id.js';

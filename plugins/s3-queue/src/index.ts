@@ -1,0 +1,3262 @@
+import { CoordinatorPlugin, type CoordinatorConfig } from '@baldin/core/coordinator';
+import {
+  createLogger,
+  getCronManager,
+  idGenerator,
+  resolveResourceName,
+  tryFn,
+  type LogLevel,
+} from '@baldin/core/plugin';
+import { QueueError } from './errors.js';
+
+interface Resource {
+  name: string;
+  get(id: string): Promise<QueueEntry>;
+  delete(id: string): Promise<void>;
+  insert(data: Record<string, unknown>): Promise<Record<string, unknown>>;
+  query(filter: Record<string, unknown>, options?: QueryOptions): Promise<QueueEntry[]>;
+  deleteMany?: (ids: string[]) => Promise<{ deleted: number; errors?: number }>;
+  count(filter?: Record<string, unknown>): Promise<number>;
+  updateConditional(id: string, data: Record<string, unknown>, options: { ifMatch: string }): Promise<{ success: boolean; data?: QueueEntry; etag?: string; error?: string }>;
+  enqueue?: (data: Record<string, unknown>, options?: EnqueueOptions) => Promise<Record<string, unknown>>;
+  queueStats?: () => Promise<QueueStats>;
+  startProcessing?: (handler: MessageHandler, options?: ProcessingOptions) => Promise<void>;
+  stopProcessing?: () => Promise<void>;
+  extendQueueVisibility?: (queueId: string, extraMilliseconds: number, options?: { lockToken?: string }) => Promise<boolean>;
+  renewQueueLock?: (queueId: string, lockToken: string, extraMilliseconds: number) => Promise<boolean>;
+  clearQueueCache?: () => void;
+  countQueue?: (status?: QueueMessageStatusQuery) => Promise<number>;
+  countQueueBy?: (filter: Record<string, unknown>) => Promise<number>;
+  queueStatsBy?: (filter: Record<string, unknown>) => Promise<QueueStats>;
+  truncateQueue?: (options?: QueuePurgeOptions) => Promise<QueuePurgeResult>;
+  deleteQueue?: (options?: QueueDeleteOptions) => Promise<QueueDeleteResult>;
+  estimateQueueUsage?: (options?: QueueUsageEstimateOptions) => QueueUsageEstimate;
+}
+
+interface ResourceConfig {
+  name: string;
+  attributes: Record<string, string>;
+  behavior?: string;
+  timestamps?: boolean;
+  asyncPartitions?: boolean;
+  partitions?: Record<string, PartitionConfig>;
+}
+
+interface PartitionConfig {
+  fields: Record<string, string>;
+}
+
+interface QueryOptions {
+  limit?: number;
+  offset?: number;
+}
+
+interface QueueEntry {
+  id: string;
+  originalId: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'dead';
+  visibleAt: number;
+  claimedBy?: string | null;
+  claimedAt?: number | null;
+  lockToken?: string | null;
+  attempts: number;
+  maxAttempts: number;
+  queuedAt: number;
+  error?: string | null;
+  result?: unknown;
+  createdAt: string;
+  completedAt?: string | null;
+  _etag?: string;
+  _queuedAt?: number;
+}
+
+interface EnqueueOptions {
+  maxAttempts?: number;
+  metadata?: Record<string, unknown>;
+}
+
+interface QueueStats {
+  total: number;
+  pending: number;
+  processing: number;
+  completed: number;
+  failed: number;
+  dead: number;
+}
+
+type QueueMessageStatusQuery = 'pending' | 'processing' | 'completed' | 'failed' | 'dead' | 'all';
+
+interface QueuePurgeOptions {
+  includeDeadLetter?: boolean;
+}
+
+interface QueuePurgeResult {
+  queueDeleted: number;
+  deadLetterDeleted: number;
+}
+
+interface QueueDeleteOptions extends QueuePurgeOptions {
+  stopProcessing?: boolean;
+  clearTickets?: boolean;
+}
+
+interface QueueDeleteResult extends QueuePurgeResult {
+  removedTickets: number;
+  queueResourceDeleted: boolean;
+  deadLetterResourceDeleted: boolean;
+}
+
+export interface QueueUsageEstimateOptions {
+  days?: number;
+  concurrency?: number;
+  processedMessagesPerSecond?: number;
+  retriesPerMessage?: number;
+  lockRenewalsPerMessage?: number;
+  statsCallsPerMinute?: number;
+}
+
+export interface QueueUsageEstimate {
+  windowDays: number;
+  windowSeconds: number;
+  assumptions: {
+    concurrency: number;
+    pollIntervalMs: number;
+    maxPollIntervalMs: number;
+    recoveryIntervalMs: number;
+    dispatchIntervalMs: number;
+    enableCoordinator: boolean;
+    orderingGuarantee: boolean;
+    processedMessagesPerSecond: number;
+    retriesPerMessage: number;
+    lockRenewalsPerMessage: number;
+    statsCallsPerMinute: number;
+    perMessageBaseRequests: number;
+    perRetryRequests: number;
+    perLockRenewalRequests: number;
+    perStatsCallRequests: number;
+  };
+  estimatedRequests: {
+    idle: number;
+    throughput: number;
+    stats: number;
+    total: number;
+    workerPolling: number;
+    coordinatorPolling: number;
+    recoveryPolling: number;
+  };
+}
+
+interface ProcessingOptions {
+  concurrency?: number;
+}
+
+interface MessageContext {
+  queueId: string;
+  attempts: number;
+  workerId: string;
+  lockToken: string;
+  visibleUntil: number;
+  renewLock: (extraMilliseconds?: number) => Promise<boolean>;
+  ack: (result?: unknown) => Promise<void>;
+  nack: (error?: Error | string) => Promise<void>;
+}
+
+type MessageHandler = (record: Record<string, unknown>, context: MessageContext) => Promise<unknown>;
+
+const QUEUE_HELPER_NAMES = [
+  'enqueue',
+  'queueStats',
+  'countQueue',
+  'startProcessing',
+  'stopProcessing',
+  'extendQueueVisibility',
+  'renewQueueLock',
+  'clearQueueCache',
+  'countQueueBy',
+  'queueStatsBy',
+  'truncateQueue',
+  'deleteQueue',
+  'estimateQueueUsage',
+] as const;
+
+type QueueHelperName = typeof QUEUE_HELPER_NAMES[number];
+
+interface QueueResourceBinding {
+  plugins: S3QueuePlugin[];
+  methods: Partial<Record<QueueHelperName, unknown>>;
+}
+
+const queueResourceBindings = new WeakMap<Resource, QueueResourceBinding>();
+
+interface ClaimedMessage {
+  queueId: string;
+  record: Record<string, unknown>;
+  attempts: number;
+  maxAttempts: number;
+  originalId: string;
+  lockToken: string;
+  visibleUntil: number;
+  etag?: string;
+  queuedAt: number;
+}
+
+interface PluginStorage {
+  get(key: string): Promise<unknown>;
+  set(key: string, data: unknown, options?: StorageSetOptions): Promise<void>;
+  getWithVersion(key: string): Promise<{ data: Record<string, unknown> | null; version: string | null }>;
+  setIfVersion(
+    key: string,
+    data: Record<string, unknown>,
+    version: string,
+    options?: StorageSetOptions
+  ): Promise<string | null>;
+  delete(key: string): Promise<void>;
+  deleteIfVersion?(key: string, version: string): Promise<boolean>;
+  listWithPrefix(prefix: string, options?: { limit?: number }): Promise<TicketData[]>;
+  listKeysWithPrefix?(prefix: string, options?: { limit?: number }): Promise<string[]>;
+  acquireLock(name: string, options: LockOptions): Promise<Lock | null>;
+  releaseLock(lock: Lock): Promise<void>;
+  getPluginKey(namespace: string | null, ...parts: string[]): string;
+}
+
+interface StorageSetOptions {
+  ttl?: number;
+  behavior?: string;
+}
+
+interface Lock {
+  name: string;
+  workerId: string;
+  acquired: number;
+}
+
+interface LockOptions {
+  ttl: number;
+  timeout: number;
+  workerId: string;
+}
+
+interface TicketData {
+  ticketId: string;
+  messageId: string;
+  originalId?: string;
+  queuedAt?: number;
+  orderIndex: number;
+  publishedAt: string;
+  publishedBy: string;
+  status: 'available' | 'claimed' | 'processed';
+  claimedBy: string | null;
+  claimedAt: number | null;
+  ticketTTL?: number;
+  _ttl?: number;
+}
+
+function normalizeTicketPublishedAt(value: unknown): string | null {
+  if (typeof value === 'string') {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return new Date(value).toISOString();
+  }
+
+  return null;
+}
+
+function asTicketData(value: unknown): TicketData | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const status = record.status;
+  const publishedAt = normalizeTicketPublishedAt(record.publishedAt);
+
+  if (typeof record.ticketId !== 'string'
+    || typeof record.messageId !== 'string'
+    || typeof record.orderIndex !== 'number'
+    || !publishedAt
+    || typeof record.publishedBy !== 'string'
+    || (status !== 'available' && status !== 'claimed' && status !== 'processed')
+  ) {
+    return null;
+  }
+
+  return {
+    ...record,
+    publishedAt
+  } as unknown as TicketData;
+}
+
+interface FailureStrategy {
+  mode: 'retry' | 'dead-letter' | 'hybrid';
+  maxRetries: number;
+  deadLetterQueue: string | null;
+}
+
+interface Worker {
+  id: string;
+  lastHeartbeat: number;
+  workerId: string;
+}
+
+export interface S3QueuePluginOptions extends CoordinatorConfig {
+  resource: string;
+  resourceNames?: { queue?: string; deadLetter?: string };
+  visibilityTimeout?: number;
+  pollInterval?: number;
+  maxAttempts?: number;
+  concurrency?: number;
+  deadLetterResource?: string | null;
+  autoStart?: boolean;
+  onMessage?: MessageHandler;
+  onError?: (error: Error, record: Record<string, unknown>) => void | Promise<void>;
+  onComplete?: (record: Record<string, unknown>, result: unknown) => void | Promise<void>;
+  pollBatchSize?: number;
+  recoveryInterval?: number;
+  recoveryBatchSize?: number;
+  processedCacheTTL?: number;
+  maxPollInterval?: number;
+  queueResource?: string;
+  orderingMode?: 'fifo' | 'lifo';
+  orderingGuarantee?: boolean;
+  orderingLockTTL?: number;
+  failureStrategy?: string | { mode?: string; maxRetries?: number; deadLetterQueue?: string };
+  lockTTL?: number;
+  heartbeatTTL?: number;
+  epochDuration?: number;
+  ticketBatchSize?: number;
+  dispatchInterval?: number;
+  consumerJitterMs?: number;
+  retryJitterMs?: number;
+  autoAcknowledge?: boolean;
+  metadata?: Record<string, string>;
+  partitions?: Record<string, PartitionConfig>;
+}
+
+interface S3QueueConfig {
+  resource: string;
+  visibilityTimeout: number;
+  pollInterval: number;
+  maxAttempts: number;
+  concurrency: number;
+  deadLetterResource: string | null;
+  autoStart: boolean;
+  onMessage?: MessageHandler;
+  onError?: (error: Error, record: Record<string, unknown>) => void | Promise<void>;
+  onComplete?: (record: Record<string, unknown>, result: unknown) => void | Promise<void>;
+  logLevel?: string;
+  orderingGuarantee: boolean;
+  orderingLockTTL: number;
+  orderingMode: 'fifo' | 'lifo';
+  failureStrategy: FailureStrategy;
+  lockTTL: number;
+  ticketBatchSize: number;
+  dispatchInterval: number;
+  pollBatchSize: number;
+  recoveryInterval: number;
+  recoveryBatchSize: number;
+  processedCacheTTL: number;
+  maxPollInterval: number;
+  queueResourceName: string;
+  enableCoordinator: boolean;
+  heartbeatTTL: number;
+  consumerJitterMs: number;
+  retryJitterMs: number;
+  autoAcknowledge: boolean;
+  metadata: Record<string, string>;
+  partitions: Record<string, PartitionConfig>;
+}
+
+export class S3QueuePlugin extends CoordinatorPlugin<S3QueuePluginOptions> {
+  declare logLevel: string;
+  declare workerId: string;
+  declare isCoordinator: boolean;
+  declare currentLeaderId: string | null;
+
+  config: S3QueueConfig;
+
+  _queueResourceDescriptor: { defaultName: string; override?: string };
+  queueResourceName: string;
+  _deadLetterDescriptor: { defaultName: string; override?: string } | null = null;
+  deadLetterResourceName: string | null = null;
+  queueResourceAlias: string;
+  deadLetterResourceAlias: string | null;
+
+  queueResource: Resource | null = null;
+  targetResource: Resource | null = null;
+  deadLetterResourceObj: Resource | null = null;
+  workers: Promise<void>[] = [];
+  isRunning = false;
+
+  processedCache: Map<string, number> = new Map();
+  cacheCleanupJobName: string | null = null;
+  messageLocks: Map<string, Lock> = new Map();
+  _lastRecovery = 0;
+  _recoveryInFlight = false;
+  _lastStalledTicketRecovery = 0;
+  _stalledTicketRecoveryInFlight = false;
+  _bestEffortNotified = false;
+  _dispatchIdleStreak = 0;
+  _nextDispatchAllowedAt = 0;
+
+  dispatchHandle: ReturnType<typeof setInterval> | null = null;
+  private _helperResource: Resource | null = null;
+
+  constructor(options: S3QueuePluginOptions) {
+    super({
+      ...options,
+      coordinatorWorkInterval: options.dispatchInterval || 100
+    } as S3QueuePluginOptions);
+
+    if (options.logger) {
+      this.logger = options.logger;
+    } else {
+      const logLevel = (this.logLevel || 'info') as LogLevel;
+      this.logger = createLogger({ name: 'S3QueuePlugin', level: logLevel });
+    }
+
+    const {
+      resource,
+      resourceNames = {},
+      visibilityTimeout = 30000,
+      pollInterval = 5000,
+      maxAttempts = 3,
+      concurrency = 1,
+      deadLetterResource = null,
+      autoStart = true,
+      onMessage,
+      onError,
+      onComplete,
+      pollBatchSize,
+      recoveryInterval = 5000,
+      recoveryBatchSize,
+      processedCacheTTL = 30000,
+      maxPollInterval,
+      queueResource,
+      orderingMode = 'fifo',
+      orderingGuarantee = true,
+      orderingLockTTL = 1500,
+      failureStrategy,
+      lockTTL = 5,
+      enableCoordinator = true,
+      heartbeatInterval = 10000,
+      heartbeatTTL = 30,
+      epochDuration = 300000,
+      ticketBatchSize = 10,
+      dispatchInterval = 100,
+      consumerJitterMs = 0,
+      retryJitterMs = 0,
+      autoAcknowledge = false,
+      metadata = {},
+      partitions = {},
+      ...rest
+    } = this.options;
+
+    if (!resource) {
+      throw new QueueError('S3QueuePlugin requires "resource" option', {
+        pluginName: 'S3QueuePlugin',
+        operation: 'constructor',
+        statusCode: 400,
+        retriable: false,
+        suggestion: 'Provide the target resource name: new S3QueuePlugin({ resource: "orders", ... }).'
+      });
+    }
+
+    const initialDeadLetter = deadLetterResource ?? (failureStrategy as { deadLetterQueue?: string })?.deadLetterQueue ?? null;
+    const normalizedFailureStrategy = this._normalizeFailureStrategy({
+      failureStrategy,
+      deadLetterResource: initialDeadLetter,
+      maxAttempts
+    });
+    const normalizedOrderingMode = this._normalizeOrderingMode(orderingMode);
+
+    this._queueResourceDescriptor = {
+      defaultName: `plg_s3queue_${resource}_queue`,
+      override: resourceNames.queue || queueResource
+    };
+    this.queueResourceName = this._resolveQueueResourceName();
+
+    if (normalizedFailureStrategy.deadLetterQueue || initialDeadLetter) {
+      this._deadLetterDescriptor = {
+        defaultName: `plg_s3queue_${resource}_dead`,
+        override: resourceNames.deadLetter || normalizedFailureStrategy.deadLetterQueue || initialDeadLetter || undefined
+      };
+    }
+
+    this.deadLetterResourceName = this._resolveDeadLetterResourceName();
+
+    this.config = {
+      ...rest,
+      resource,
+      visibilityTimeout,
+      pollInterval,
+      maxAttempts: normalizedFailureStrategy.maxRetries ?? maxAttempts,
+      concurrency,
+      deadLetterResource: this.deadLetterResourceName,
+      autoStart,
+      onMessage,
+      onError,
+      onComplete,
+      logLevel: this.logLevel,
+      orderingGuarantee: Boolean(orderingGuarantee),
+      orderingLockTTL: Math.max(250, orderingLockTTL),
+      orderingMode: normalizedOrderingMode,
+      failureStrategy: normalizedFailureStrategy,
+      lockTTL: Math.max(1, lockTTL),
+      ticketBatchSize: Math.max(1, ticketBatchSize),
+      dispatchInterval: Math.max(50, dispatchInterval),
+      pollBatchSize: pollBatchSize ?? Math.max(concurrency * 4, 16),
+      recoveryInterval,
+      recoveryBatchSize: recoveryBatchSize ?? Math.max(concurrency * 2, 10),
+      processedCacheTTL,
+      maxPollInterval: maxPollInterval ?? Math.max(pollInterval * 32, 30000),
+      queueResourceName: this.queueResourceName,
+      enableCoordinator,
+      heartbeatTTL,
+      consumerJitterMs: Math.max(0, Math.floor(consumerJitterMs)),
+      retryJitterMs: Math.max(0, Math.floor(retryJitterMs)),
+      autoAcknowledge,
+      metadata,
+      partitions
+    };
+
+    if (this.config.failureStrategy.deadLetterQueue) {
+      this.config.failureStrategy.deadLetterQueue = this.deadLetterResourceName;
+    }
+
+    this.queueResourceAlias = queueResource || `${resource}_queue`;
+    this.deadLetterResourceAlias = deadLetterResource || null;
+
+    this.on('plg:coordinator:elected', (event: unknown) => {
+      this.emit('plg:s3-queue:coordinator-elected', event);
+    });
+    this.on('plg:coordinator:epoch-renewed', (event: unknown) => {
+      this.emit('plg:s3-queue:coordinator-epoch-renewed', event);
+    });
+    this.on('plg:coordinator:cold-start-phase', (event: { phase: string }) => {
+      const phase = event.phase === 'preparation' ? 'tickets' : event.phase;
+      this.emit('plg:s3-queue:cold-start-phase', { ...event, phase });
+    });
+    this.on('plg:coordinator:cold-start-complete', (event: unknown) => {
+      this.emit('plg:s3-queue:cold-start-complete', event);
+    });
+  }
+
+  private _resolveQueueResourceName(): string {
+    return resolveResourceName('s3queue', this._queueResourceDescriptor, {
+      namespace: this.namespace ?? undefined
+    });
+  }
+
+  private _resolveDeadLetterResourceName(): string | null {
+    if (!this._deadLetterDescriptor) return null;
+    const { override, defaultName } = this._deadLetterDescriptor;
+    if (override) {
+      if (override.startsWith('plg_')) {
+        return resolveResourceName('s3queue', { override }, {
+          namespace: this.namespace ?? undefined,
+          applyNamespaceToOverrides: true
+        });
+      }
+      return override;
+    }
+    return resolveResourceName('s3queue', { defaultName }, {
+      namespace: this.namespace ?? undefined
+    });
+  }
+
+  override onNamespaceChanged(): void {
+    if (!this._queueResourceDescriptor) return;
+    this.queueResourceName = this._resolveQueueResourceName();
+    this.config.queueResourceName = this.queueResourceName;
+    this.deadLetterResourceName = this._resolveDeadLetterResourceName();
+    this.config.deadLetterResource = this.deadLetterResourceName;
+    if (this.config.failureStrategy.deadLetterQueue) {
+      this.config.failureStrategy.deadLetterQueue = this.deadLetterResourceName;
+    }
+  }
+
+  override async onInstall(): Promise<void> {
+    if (!this.database) return;
+
+    this.targetResource = (this.database.resources[this.config.resource] as Resource | undefined) ?? null;
+    if (!this.targetResource) {
+      throw new QueueError(`Resource '${this.config.resource}' not found`, {
+        pluginName: 'S3QueuePlugin',
+        operation: 'onInstall',
+        resourceName: this.config.resource,
+        statusCode: 404,
+        retriable: false,
+        suggestion: 'Create the resource before installing S3QueuePlugin or update the plugin configuration.',
+        availableResources: Object.keys(this.database.resources || {})
+      });
+    }
+
+    const queueName = this.queueResourceName;
+    const [ok, err] = await tryFn(() =>
+      this.database!.createResource({
+        name: queueName,
+        attributes: {
+          id: 'string|required',
+          originalId: 'string|required',
+          status: 'string|required',
+          visibleAt: 'number|required',
+          claimedBy: 'string|optional',
+          claimedAt: 'number|optional',
+          lockToken: 'string|optional',
+          attempts: 'number|default:0',
+          maxAttempts: 'number|default:3',
+          queuedAt: 'number|required',
+          error: 'string|optional',
+          result: 'json|optional',
+          createdAt: 'datetime|required',
+          completedAt: 'datetime|optional',
+          ...this.config.metadata
+        },
+        behavior: 'body-overflow',
+        timestamps: true,
+        asyncPartitions: true,
+        partitions: {
+          byStatus: { fields: { status: 'string' } },
+          ...this.config.partitions
+        }
+      })
+    );
+
+    if (ok) {
+      this.queueResource = (this.database.resources[queueName] as Resource | undefined) ?? null;
+    } else {
+      this.queueResource = (this.database.resources[queueName] as Resource | undefined) ?? null;
+      if (!this.queueResource) {
+        throw new QueueError(`Failed to create queue resource: ${(err as Error)?.message}`, {
+          pluginName: 'S3QueuePlugin',
+          operation: 'createQueueResource',
+          queueName,
+          statusCode: 500,
+          retriable: false,
+          suggestion: 'Check database permissions and ensure createResource() was successful.',
+          original: err
+        });
+      }
+    }
+    this.queueResourceName = this.queueResource!.name;
+
+    if (this.queueResourceAlias) {
+      const existing = this.database.resources[this.queueResourceAlias];
+      if (!existing || existing === (this.queueResource as unknown)) {
+        (this.database.resources as Record<string, unknown>)[this.queueResourceAlias] = this.queueResource;
+      }
+    }
+
+    this.addHelperMethods();
+
+    if (this.config.deadLetterResource) {
+      await this.createDeadLetterResource();
+    }
+
+    this.logger.debug(
+      { resource: this.config.resource, queueResource: this.queueResourceName },
+      `Setup completed for resource '${this.config.resource}'`
+    );
+  }
+
+  override async onStart(): Promise<void> {
+    if (this.config.autoStart && this.config.onMessage) {
+      await this.startProcessing();
+    }
+  }
+
+  override async onStop(): Promise<void> {
+    await this.stopProcessing();
+    this._removeHelperMethods();
+  }
+
+  addHelperMethods(): void {
+    const resource = this.targetResource!;
+    const existingBinding = queueResourceBindings.get(resource);
+    if (existingBinding) {
+      if (!existingBinding.plugins.includes(this)) existingBinding.plugins.push(this);
+      this._helperResource = resource;
+      return;
+    }
+
+    for (const helperName of QUEUE_HELPER_NAMES) {
+      if (helperName in resource) {
+        throw new QueueError(`Resource '${resource.name}' already defines '${helperName}'`, {
+          operation: 'addHelperMethods',
+          resourceName: resource.name,
+          statusCode: 409,
+          suggestion: 'Remove the conflicting resource extension or use a dedicated queue resource.',
+        });
+      }
+    }
+
+    const binding: QueueResourceBinding = { plugins: [this], methods: {} };
+    const activePlugin = (): S3QueuePlugin => binding.plugins[binding.plugins.length - 1]!;
+
+    binding.methods.enqueue = async function(data: Record<string, unknown>, options: EnqueueOptions = {}): Promise<Record<string, unknown>> {
+      const plugin = activePlugin();
+      const recordData = {
+        id: (data.id as string) || idGenerator(),
+        ...data
+      };
+
+      const record = await resource.insert(recordData);
+
+      const now = Date.now();
+      const maxAttemptsForMessage = options.maxAttempts ?? plugin._resolveMaxAttempts();
+
+      const queueEntry = {
+        id: idGenerator(),
+        originalId: record.id as string,
+        status: 'pending',
+        visibleAt: now,
+        attempts: 0,
+        maxAttempts: maxAttemptsForMessage,
+        queuedAt: now,
+        createdAt: new Date(now).toISOString(),
+        ...(options.metadata || {})
+      };
+
+      await plugin.queueResource!.insert(queueEntry);
+
+      plugin._dispatchIdleStreak = 0;
+      plugin._nextDispatchAllowedAt = 0;
+
+      plugin.emit('plg:s3-queue:message-enqueued', { id: record.id, queueId: queueEntry.id });
+
+      return record;
+    };
+
+    binding.methods.queueStats = async function(): Promise<QueueStats> {
+      return await activePlugin().getStats();
+    };
+
+    binding.methods.countQueue = async function(status: QueueMessageStatusQuery = 'pending'): Promise<number> {
+      return await activePlugin().countQueue(status);
+    };
+
+    binding.methods.startProcessing = async function(handler: MessageHandler, options: ProcessingOptions = {}): Promise<void> {
+      return await activePlugin().startProcessing(handler, options);
+    };
+
+    binding.methods.stopProcessing = async function(): Promise<void> {
+      return await activePlugin().stopProcessing();
+    };
+
+    binding.methods.extendQueueVisibility = async function(queueId: string, extraMilliseconds: number, options: { lockToken?: string } = {}): Promise<boolean> {
+      return await activePlugin().extendVisibility(queueId, extraMilliseconds, options);
+    };
+
+    binding.methods.renewQueueLock = async function(queueId: string, lockToken: string, extraMilliseconds: number): Promise<boolean> {
+      return await activePlugin().renewLock(queueId, lockToken, extraMilliseconds);
+    };
+
+    binding.methods.clearQueueCache = function(): void {
+      activePlugin().clearProcessedCache();
+    };
+
+    binding.methods.countQueueBy = async function(filter: Record<string, unknown>): Promise<number> {
+      return await activePlugin().countQueueBy(filter);
+    };
+
+    binding.methods.queueStatsBy = async function(filter: Record<string, unknown>): Promise<QueueStats> {
+      return await activePlugin().queueStatsBy(filter);
+    };
+
+    binding.methods.truncateQueue = async function(options: QueuePurgeOptions = {}): Promise<QueuePurgeResult> {
+      return await activePlugin().truncateQueue(options);
+    };
+
+    binding.methods.deleteQueue = async function(options: QueueDeleteOptions = {}): Promise<QueueDeleteResult> {
+      return await activePlugin().deleteQueue(options);
+    };
+
+    binding.methods.estimateQueueUsage = function(options: QueueUsageEstimateOptions = {}): QueueUsageEstimate {
+      return activePlugin().estimateUsage(options);
+    };
+
+    for (const [helperName, helper] of Object.entries(binding.methods)) {
+      Object.defineProperty(resource, helperName, {
+        configurable: true,
+        enumerable: false,
+        writable: false,
+        value: helper,
+      });
+    }
+    queueResourceBindings.set(resource, binding);
+    this._helperResource = resource;
+  }
+
+  private _removeHelperMethods(): void {
+    const resource = this._helperResource;
+    if (!resource) return;
+
+    const binding = queueResourceBindings.get(resource);
+    if (!binding) {
+      this._helperResource = null;
+      return;
+    }
+
+    binding.plugins = binding.plugins.filter(plugin => plugin !== this);
+    if (binding.plugins.length === 0) {
+      for (const helperName of QUEUE_HELPER_NAMES) {
+        if ((resource as unknown as Record<string, unknown>)[helperName] === binding.methods[helperName]) {
+          delete (resource as unknown as Record<string, unknown>)[helperName];
+        }
+      }
+      queueResourceBindings.delete(resource);
+    }
+    this._helperResource = null;
+  }
+
+  estimateUsage(options: QueueUsageEstimateOptions = {}): QueueUsageEstimate {
+    const windowDays = Number.isFinite(options.days) ? Math.max(1 / 24, Number(options.days)) : 30;
+    const windowSeconds = Math.max(1, Math.floor(windowDays * 24 * 60 * 60));
+    const concurrency = Number.isFinite(options.concurrency)
+      ? Math.max(1, Math.floor(Number(options.concurrency)))
+      : Math.max(1, this.config.concurrency);
+
+    const pollIntervalMs = Math.max(100, this.config.pollInterval);
+    const maxPollIntervalMs = Math.max(pollIntervalMs, this.config.maxPollInterval || pollIntervalMs);
+    const recoveryIntervalMs = Math.max(1000, this.config.recoveryInterval || 1000);
+    const dispatchIntervalMs = Math.max(50, this.config.dispatchInterval || 50);
+    const effectiveIdleIntervalMs = Math.max(maxPollIntervalMs, dispatchIntervalMs);
+    const idleCycleSeconds = effectiveIdleIntervalMs / 1000;
+
+    const workerCycles = (windowSeconds / idleCycleSeconds) * concurrency;
+    const workerRequestsPerCycle = this.config.enableCoordinator
+      ? (this.config.orderingGuarantee ? 2 : 1)
+      : 1;
+    const workerPolling = workerCycles * workerRequestsPerCycle;
+
+    const coordinatorCycles = this.config.enableCoordinator
+      ? (windowSeconds / idleCycleSeconds)
+      : 0;
+    const coordinatorPolling = this.config.enableCoordinator ? coordinatorCycles * 2 : 0;
+
+    const recoveryPolling = windowSeconds / (recoveryIntervalMs / 1000);
+
+    const processedMessagesPerSecond = Number.isFinite(options.processedMessagesPerSecond)
+      ? Math.max(0, Number(options.processedMessagesPerSecond))
+      : 0;
+    const retriesPerMessage = Number.isFinite(options.retriesPerMessage)
+      ? Math.max(0, Number(options.retriesPerMessage))
+      : 0;
+    const lockRenewalsPerMessage = Number.isFinite(options.lockRenewalsPerMessage)
+      ? Math.max(0, Number(options.lockRenewalsPerMessage))
+      : 0;
+    const statsCallsPerMinute = Number.isFinite(options.statsCallsPerMinute)
+      ? Math.max(0, Number(options.statsCallsPerMinute))
+      : 0;
+
+    const processedMessages = processedMessagesPerSecond * windowSeconds;
+    const perMessageBaseRequests = this.config.enableCoordinator ? 14 : 8;
+    const perRetryRequests = 2;
+    const perLockRenewalRequests = 2;
+    const perStatsCallRequests = 6;
+
+    const throughput = (
+      processedMessages * perMessageBaseRequests
+      + (processedMessages * retriesPerMessage) * perRetryRequests
+      + (processedMessages * lockRenewalsPerMessage) * perLockRenewalRequests
+    );
+
+    const statsCalls = (windowSeconds / 60) * statsCallsPerMinute;
+    const stats = statsCalls * perStatsCallRequests;
+
+    const idle = workerPolling + coordinatorPolling + recoveryPolling;
+    const total = idle + throughput + stats;
+
+    return {
+      windowDays,
+      windowSeconds,
+      assumptions: {
+        concurrency,
+        pollIntervalMs,
+        maxPollIntervalMs,
+        recoveryIntervalMs,
+        dispatchIntervalMs,
+        enableCoordinator: this.config.enableCoordinator,
+        orderingGuarantee: this.config.orderingGuarantee,
+        processedMessagesPerSecond,
+        retriesPerMessage,
+        lockRenewalsPerMessage,
+        statsCallsPerMinute,
+        perMessageBaseRequests,
+        perRetryRequests,
+        perLockRenewalRequests,
+        perStatsCallRequests
+      },
+      estimatedRequests: {
+        idle: Math.ceil(idle),
+        throughput: Math.ceil(throughput),
+        stats: Math.ceil(stats),
+        total: Math.ceil(total),
+        workerPolling: Math.ceil(workerPolling),
+        coordinatorPolling: Math.ceil(coordinatorPolling),
+        recoveryPolling: Math.ceil(recoveryPolling)
+      }
+    };
+  }
+
+  private _logCostForecast(concurrency: number): void {
+    const daily = this.estimateUsage({ days: 1, concurrency });
+    const monthly = this.estimateUsage({ days: 30, concurrency });
+    const payload = {
+      resource: this.config.resource,
+      queueResource: this.queueResourceName,
+      concurrency,
+      enableCoordinator: this.config.enableCoordinator,
+      orderingGuarantee: this.config.orderingGuarantee,
+      pollIntervalMs: this.config.pollInterval,
+      maxPollIntervalMs: this.config.maxPollInterval,
+      recoveryIntervalMs: this.config.recoveryInterval,
+      idleRequestsPerDay: daily.estimatedRequests.idle,
+      idleRequestsPerMonth: monthly.estimatedRequests.idle,
+      estimatedRequestsPerMonth: monthly.estimatedRequests.total
+    };
+
+    this.logger.debug(payload, 'S3 queue request usage estimate');
+    this.emit('plg:s3-queue:usage-estimate', payload);
+
+    if (monthly.estimatedRequests.idle >= 1_000_000) {
+      this.logger.warn(
+        {
+          ...payload,
+          suggestion: 'Increase maxPollInterval, reduce concurrency, or disable coordinator/order guarantee when strict FIFO is not required.'
+        },
+        'High idle request forecast for queue polling'
+      );
+    }
+  }
+
+  async truncateQueue({ includeDeadLetter = false }: QueuePurgeOptions = {}): Promise<QueuePurgeResult> {
+    const queueDeleted = await this._truncateResource(this.queueResource, this.queueResourceName);
+    const deadLetterDeleted = includeDeadLetter
+      ? await this._truncateResource(this.deadLetterResourceObj, this.deadLetterResourceName || 'dead-letter')
+      : 0;
+
+    return {
+      queueDeleted,
+      deadLetterDeleted
+    };
+  }
+
+  async deleteQueue({
+    includeDeadLetter = true,
+    stopProcessing = true,
+    clearTickets = true
+  }: QueueDeleteOptions = {}): Promise<QueueDeleteResult> {
+    if (stopProcessing && this.isRunning) {
+      await this.stopProcessing();
+    }
+
+    const [baseResult, removedTickets] = await Promise.all([
+      this.truncateQueue({ includeDeadLetter }),
+      clearTickets ? this._clearAllTickets() : Promise.resolve(0)
+    ]);
+
+    const [queueResourceDeleted, deadLetterResourceDeleted] = await Promise.all([
+      this._deletePhysicalQueueResource({
+        name: this.queueResourceName,
+        aliases: [this.queueResourceAlias]
+      }),
+      includeDeadLetter
+        ? this._deletePhysicalQueueResource({
+          name: this.deadLetterResourceName,
+          aliases: this.deadLetterResourceAlias ? [this.deadLetterResourceAlias] : []
+        })
+        : Promise.resolve(false)
+    ]);
+
+    this.clearProcessedCache();
+    this.messageLocks.clear();
+
+    this.queueResource = null;
+    if (includeDeadLetter) {
+      this.deadLetterResourceObj = null;
+      this.deadLetterResourceName = null;
+    }
+
+    return {
+      ...baseResult,
+      removedTickets,
+      queueResourceDeleted,
+      deadLetterResourceDeleted
+    };
+  }
+
+  private async _deletePhysicalQueueResource({
+    name,
+    aliases
+  }: {
+    name: string | null;
+    aliases: string[];
+  }): Promise<boolean> {
+    if (!this.database || !name) {
+      return false;
+    }
+
+    const candidates = Array.from(new Set([name, ...aliases].filter((entry): entry is string => !!entry)));
+
+    let deletedInStore = false;
+    const db = this.database as unknown as {
+      deleteResource?: (name: string) => Promise<void>;
+    };
+
+    if (typeof db.deleteResource === 'function') {
+      for (const candidate of candidates) {
+        const [ok, err] = await tryFn(() => db.deleteResource!(candidate));
+        if (ok) {
+          deletedInStore = true;
+          continue;
+        }
+
+        if (err && (err as { code?: string }).code !== 'NoSuchKey' && (err as { code?: string }).code !== 'NotFound') {
+          this.logger.warn(
+            { resourceName: candidate, error: (err as Error).message || err },
+            `Failed to delete queue resource '${candidate}' from database`
+          );
+        }
+      }
+    }
+
+    let deletedFromMemory = false;
+    for (const candidate of candidates) {
+      if ((this.database._resourcesMap as Record<string, unknown>)[candidate]) {
+        delete (this.database._resourcesMap as Record<string, unknown>)[candidate];
+        deletedFromMemory = true;
+      }
+      if ((this.database.resources as Record<string, unknown>)[candidate]) {
+        delete (this.database.resources as Record<string, unknown>)[candidate];
+        deletedFromMemory = true;
+      }
+    }
+
+    return deletedInStore || deletedFromMemory;
+  }
+
+  private async _clearAllTickets(): Promise<number> {
+    const prefix = 'tickets/';
+    const [okTickets, errTickets, ticketKeys] = await tryFn(() => this._listTicketKeys(prefix));
+    if (!okTickets && errTickets && (errTickets as { code?: string }).code !== 'NoSuchKey' && (errTickets as { code?: string }).code !== 'NotFound') {
+      this.logger.warn(
+        { error: (errTickets as Error).message || errTickets },
+        `Failed to list queue tickets: ${(errTickets as Error).message || errTickets}`
+      );
+    }
+
+    const storage = this.getStorage() as unknown as PluginStorage;
+    let removed = 0;
+    for (const key of okTickets && ticketKeys ? ticketKeys : []) {
+      const ticketId = key.split('/').pop() || key;
+      const [okDelete, errDelete] = await tryFn(() => storage.delete(key));
+      if (okDelete) {
+        removed++;
+      } else if (errDelete && (errDelete as { code?: string }).code !== 'NoSuchKey' && (errDelete as { code?: string }).code !== 'NotFound') {
+        this.logger.warn(
+          { ticketId, error: (errDelete as Error).message || errDelete },
+          `Failed to delete queue ticket: ${(errDelete as Error).message || errDelete}`
+        );
+      }
+    }
+
+    const [okIndex, errIndex, availabilityKeys] = await tryFn(() => this._listAvailableTicketKeys());
+    if (okIndex && availabilityKeys && availabilityKeys.length > 0) {
+      const storage = this.getStorage() as unknown as PluginStorage;
+      for (const key of availabilityKeys) {
+        const [okDelete, errDelete] = await tryFn(() => storage.delete(key));
+        if (!okDelete && errDelete && (errDelete as { code?: string }).code !== 'NoSuchKey' && (errDelete as { code?: string }).code !== 'NotFound') {
+          this.logger.warn(
+            { key, error: (errDelete as Error).message || errDelete },
+            `Failed to delete ticket availability entry: ${(errDelete as Error).message || errDelete}`
+          );
+        }
+      }
+    } else if (!okIndex && errIndex && (errIndex as { code?: string }).code !== 'NoSuchKey' && (errIndex as { code?: string }).code !== 'NotFound') {
+      this.logger.warn(
+        { error: (errIndex as Error).message || errIndex },
+        `Failed to list ticket availability entries: ${(errIndex as Error).message || errIndex}`
+      );
+    }
+
+    return removed;
+  }
+
+  private async _truncateResource(resource: Resource | null, label: string): Promise<number> {
+    if (!resource) return 0;
+
+    let total = 0;
+    const batchSize = Math.max(1, this.config.pollBatchSize * 2);
+    const hasDeleteMany = typeof (resource.deleteMany as unknown) === 'function';
+
+    while (true) {
+      const [ok, err, rows] = await tryFn(() =>
+        resource!.query({}, { limit: batchSize })
+      );
+
+      if (!ok) {
+        this.logger.warn(
+          { resourceName: label, error: (err as Error).message || err },
+          `Failed to list queue entries for truncation: ${(err as Error).message || err}`
+        );
+        return total;
+      }
+
+      if (!rows || rows.length === 0) {
+        return total;
+      }
+
+      const ids = rows
+        .map((row) => row.id)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0);
+
+      if (ids.length === 0) {
+        return total;
+      }
+
+      let deletedThisBatch = 0;
+
+      if (hasDeleteMany) {
+        const [okDelete, errDelete, result] = await tryFn(() =>
+          (resource as unknown as { deleteMany: (ids: string[]) => Promise<{ deleted: number; errors: number }> }).deleteMany(ids)
+        );
+
+        if (okDelete) {
+          if (typeof result?.deleted === 'number') {
+            deletedThisBatch = result.deleted;
+            total += deletedThisBatch;
+          } else {
+            deletedThisBatch = ids.length;
+            total += deletedThisBatch;
+          }
+        } else {
+          deletedThisBatch = await this._deleteResourceEntriesByIds(resource, ids);
+          total += deletedThisBatch;
+
+          if (errDelete && (errDelete as { code?: string }).code !== 'NoSuchKey' && (errDelete as { code?: string }).code !== 'NotFound') {
+            this.logger.warn(
+              { resourceName: label, error: (errDelete as Error).message || errDelete },
+              `deleteMany failed during truncation for '${label}'; fallback per-id deletion used`
+            );
+          }
+        }
+      } else {
+        deletedThisBatch = await this._deleteResourceEntriesByIds(resource, ids);
+        total += deletedThisBatch;
+      }
+
+      await this._clearProcessedMarkers(ids);
+
+      if (deletedThisBatch === 0) {
+        this.logger.warn(
+          { resourceName: label },
+          `No entries were deleted during truncation batch for '${label}'; stopping to avoid infinite loop`
+        );
+        return total;
+      }
+
+      if (rows.length < batchSize) {
+        return total;
+      }
+    }
+  }
+
+  private async _deleteResourceEntriesByIds(resource: Resource, ids: string[]): Promise<number> {
+    let deleted = 0;
+    for (const id of ids) {
+      const [okDelete, errDelete] = await tryFn(() => resource.delete(id));
+      if (!okDelete) {
+        if (errDelete && (errDelete as { code?: string }).code !== 'NoSuchKey' && (errDelete as { code?: string }).code !== 'NotFound') {
+          this.logger.warn(
+            { resourceName: resource.name, id, error: (errDelete as Error).message || errDelete },
+            `Failed to delete queue entry '${id}' during truncation`
+          );
+        }
+        continue;
+      }
+
+      deleted++;
+    }
+    return deleted;
+  }
+
+  private async _clearProcessedMarkers(ids: string[]): Promise<void> {
+    await Promise.all(ids.map((id) => this._clearProcessedMarker(id)));
+  }
+
+  private async _listTicketKeys(prefix: string, options: { limit?: number } = {}): Promise<string[]> {
+    const storage = this.getStorage() as unknown as PluginStorage;
+
+    if (typeof storage.listKeysWithPrefix === 'function') {
+      return await storage.listKeysWithPrefix(prefix, options);
+    }
+
+    const tickets = await storage.listWithPrefix(prefix, options);
+    return tickets
+      .map((ticket) => {
+        const ticketData = asTicketData(ticket);
+        if (!ticketData?.ticketId) return null;
+        return storage.getPluginKey(null, 'tickets', ticketData.ticketId);
+      })
+      .filter((key): key is string => typeof key === 'string' && key.length > 0);
+  }
+
+  private _normalizeTicketOrderIndex(orderIndex: number): string {
+    const normalized = Number.isFinite(orderIndex)
+      ? Math.max(0, Math.floor(orderIndex))
+      : 0;
+    return String(normalized).padStart(16, '0');
+  }
+
+  private _ticketAvailabilityKey(ticketId: string, orderIndex: number): string {
+    const storage = this.getStorage() as unknown as PluginStorage;
+    return storage.getPluginKey(
+      null,
+      'tickets-available',
+      `${this._normalizeTicketOrderIndex(orderIndex)}-${ticketId}`
+    );
+  }
+
+  private async _markTicketAvailable(ticket: TicketData): Promise<void> {
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const key = this._ticketAvailabilityKey(ticket.ticketId, ticket.orderIndex || 0);
+    const [ok, err] = await tryFn(() =>
+      storage.set(key, {
+        ...ticket,
+        status: 'available',
+        claimedBy: null,
+        claimedAt: null
+      }, {
+        ttl: ticket.ticketTTL || ticket._ttl || 60,
+        behavior: 'body-only'
+      })
+    );
+
+    if (!ok && err && (err as { code?: string }).code !== 'NoSuchKey' && (err as { code?: string }).code !== 'NotFound') {
+      this.logger.warn(
+        { ticketId: ticket.ticketId, error: (err as Error).message || err },
+        `Failed to update ticket availability index for ${ticket.ticketId}`
+      );
+    }
+  }
+
+  private async _unmarkTicketAvailable(ticket: Pick<TicketData, 'ticketId' | 'orderIndex'>): Promise<void> {
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const key = this._ticketAvailabilityKey(ticket.ticketId, ticket.orderIndex || 0);
+    const [ok, err] = await tryFn(() => storage.delete(key));
+    if (!ok && err && (err as { code?: string }).code !== 'NoSuchKey' && (err as { code?: string }).code !== 'NotFound') {
+      this.logger.warn(
+        { ticketId: ticket.ticketId, error: (err as Error).message || err },
+        `Failed to remove ticket availability index for ${ticket.ticketId}`
+      );
+    }
+  }
+
+  private async _listAvailableTicketKeys(options: { limit?: number } = {}): Promise<string[]> {
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const prefix = 'tickets-available/';
+    if (typeof storage.listKeysWithPrefix === 'function') {
+      return await storage.listKeysWithPrefix(prefix, options);
+    }
+
+    const tickets = await storage.listWithPrefix(prefix, options);
+    return tickets
+      .map((ticket) => {
+        const ticketData = asTicketData(ticket);
+        if (!ticketData?.ticketId) return null;
+        return this._ticketAvailabilityKey(ticketData.ticketId, ticketData.orderIndex || 0);
+      })
+      .filter((key): key is string => typeof key === 'string' && key.length > 0);
+  }
+
+  async _publishTickets(): Promise<number> {
+    if (!this.isCoordinator) return 0;
+
+    const [okQuery, errQuery, pendingMessages] = await tryFn(async () => {
+      return await this.queueResource!.query({
+        status: 'pending'
+      }, {
+        limit: this.config.ticketBatchSize
+      });
+    });
+
+    if (!okQuery || !pendingMessages || pendingMessages.length === 0) {
+      if (!okQuery && errQuery) {
+        this.logger.warn(
+          { error: (errQuery as Error)?.message },
+          `Failed to query pending messages for initial publish: ${(errQuery as Error)?.message}`
+        );
+      }
+      return 0;
+    }
+
+    const orderedMessages = this._prepareAvailableMessages(pendingMessages, Date.now());
+    if (orderedMessages.length === 0) {
+      return 0;
+    }
+
+    return await this.publishDispatchTickets(orderedMessages);
+  }
+
+  override async onBecomeCoordinator(): Promise<void> {
+    this.logger.debug(
+      { workerId: this.workerId, resource: this.config.resource },
+      'Global coordinator elected this worker as leader - publishing initial tickets'
+    );
+
+    const count = await this._publishTickets();
+
+    if (count > 0) {
+      this.logger.debug(
+        { ticketCount: count, workerId: this.workerId },
+        `Published ${count} initial ticket(s)`
+      );
+
+      this.emit('plg:s3-queue:tickets-published', {
+        coordinatorId: this.workerId,
+        count,
+        timestamp: Date.now()
+      });
+    }
+
+    this.emit('plg:s3-queue:coordinator-promoted', {
+      workerId: this.workerId,
+      timestamp: Date.now()
+    });
+  }
+
+  override async onStopBeingCoordinator(): Promise<void> {
+    this.logger.debug(
+      { workerId: this.workerId, resource: this.config.resource },
+      'Global coordinator demoted this worker from leader'
+    );
+
+    this._dispatchIdleStreak = 0;
+    this._nextDispatchAllowedAt = 0;
+
+    this.emit('plg:s3-queue:coordinator-demoted', {
+      workerId: this.workerId,
+      timestamp: Date.now()
+    });
+  }
+
+  override async coordinatorWork(): Promise<void> {
+    await this.coordinatorDispatchLoop();
+  }
+
+  async startProcessing(handler: MessageHandler | null = null, options: ProcessingOptions = {}): Promise<void> {
+    if (this.isRunning) {
+      this.logger.debug({ resource: this.config.resource }, 'Already running');
+      return;
+    }
+
+    const messageHandler = handler || this.config.onMessage;
+    if (!messageHandler) {
+      throw new QueueError('onMessage handler required', {
+        pluginName: 'S3QueuePlugin',
+        operation: 'startProcessing',
+        queueName: this.queueResourceName,
+        statusCode: 400,
+        retriable: false,
+        suggestion: 'Pass a handler: resource.startProcessing(async msg => {...}) or configure onMessage in plugin options.'
+      });
+    }
+
+    this.isRunning = true;
+    const concurrency = options.concurrency || this.config.concurrency;
+    this._logCostForecast(concurrency);
+
+    const cronManager = getCronManager();
+    const jobName = `queue-cache-cleanup-${this.workerId}`;
+    await cronManager.scheduleInterval(
+      5000,
+      () => {
+        const now = Date.now();
+
+        for (const [queueId, expiresAt] of this.processedCache.entries()) {
+          if (!Number.isFinite(expiresAt) || expiresAt <= now) {
+            this.processedCache.delete(queueId);
+          }
+        }
+      },
+      jobName
+    );
+    this.cacheCleanupJobName = jobName;
+
+    this._lastRecovery = 0;
+
+    await this.startCoordination();
+
+    for (let i = 0; i < concurrency; i++) {
+      const worker = this.createWorker(messageHandler, i);
+      this.workers.push(worker);
+    }
+
+    this.logger.debug(
+      { concurrency, workerId: this.workerId, resource: this.config.resource },
+      `Started ${concurrency} workers`
+    );
+
+    this.emit('plg:s3-queue:workers-started', { concurrency, workerId: this.workerId });
+  }
+
+  async stopProcessing(): Promise<void> {
+    if (!this.isRunning) return;
+
+    this.isRunning = false;
+
+    if (this.cacheCleanupJobName) {
+      const cronManager = getCronManager();
+      cronManager.stop(this.cacheCleanupJobName);
+      this.cacheCleanupJobName = null;
+    }
+
+    if (this.dispatchHandle) {
+      clearInterval(this.dispatchHandle);
+      this.dispatchHandle = null;
+
+      this.logger.debug({ workerId: this.workerId }, 'Stopped coordinator dispatch loop');
+    }
+
+    await this.stopCoordination();
+
+    await Promise.all(this.workers);
+    this.workers = [];
+
+    this.processedCache.clear();
+
+    this.logger.debug({ workerId: this.workerId }, 'Stopped all workers');
+
+    this.emit('plg:s3-queue:workers-stopped', { workerId: this.workerId });
+  }
+
+  createWorker(handler: MessageHandler, workerIndex: number): Promise<void> {
+    return (async () => {
+      let idleStreak = 0;
+      while (this.isRunning) {
+        try {
+          const message = await this.claimMessage();
+
+          if (message) {
+            idleStreak = 0;
+            await this.processMessage(message, handler);
+          } else {
+            idleStreak = Math.min(idleStreak + 1, 10);
+            const delay = this._computeIdleDelay(idleStreak);
+            await this._sleep(delay);
+          }
+        } catch (error) {
+          this.logger.warn(
+            { workerIndex, error: (error as Error).message, workerId: this.workerId },
+            `Worker ${workerIndex} error: ${(error as Error).message}`
+          );
+          await this._sleep(1000);
+        }
+      }
+    })();
+  }
+
+  async claimMessage(): Promise<ClaimedMessage | null> {
+    const now = Date.now();
+
+    if (this.config.enableCoordinator) {
+      const tickets = await this.getAvailableTickets();
+      if (tickets && tickets.length > 0) {
+        for (const ticket of tickets) {
+          const message = await this.claimFromTicket(ticket);
+          if (message) {
+            return message;
+          }
+        }
+      }
+
+      let activeCoordinatorId = this.currentLeaderId;
+      if (!activeCoordinatorId) {
+        activeCoordinatorId = await this.getLeader();
+      }
+      if (activeCoordinatorId && this.config.orderingGuarantee) {
+        await this._sleep(Math.min(this.config.dispatchInterval, 200));
+
+        const retryTickets = await this.getAvailableTickets();
+        for (const ticket of retryTickets) {
+          const message = await this.claimFromTicket(ticket);
+          if (message) {
+            return message;
+          }
+        }
+
+        return null;
+      }
+    }
+
+    await this.recoverStalledMessages(now);
+
+    const [ok, err, allMessages] = await tryFn(() =>
+      this.queueResource!.query({
+        status: 'pending'
+      }, {
+        limit: this.config.pollBatchSize * 2
+      })
+    );
+
+    if (!ok || !allMessages || allMessages.length === 0) {
+      return null;
+    }
+
+    const messages = allMessages.filter(msg => msg.visibleAt <= now).slice(0, this.config.pollBatchSize);
+
+    if (messages.length === 0) {
+      return null;
+    }
+
+    const available = this._prepareAvailableMessages(messages, now);
+    if (available.length === 0) {
+      return null;
+    }
+
+    if (!this.config.orderingGuarantee || !this.config.enableCoordinator) {
+      this._notifyBestEffortOrdering();
+      return await this._attemptMessagesInOrder(available);
+    }
+
+    const releaseOrderingLock = await this._acquireOrderingLock();
+    if (!releaseOrderingLock) {
+      return null;
+    }
+
+    try {
+      const next = available[0];
+      if (!next) return null;
+      return await this.attemptClaim(next, { enforceOrder: true });
+    } finally {
+      await releaseOrderingLock();
+    }
+  }
+
+  private _prepareAvailableMessages(messages: QueueEntry[], now: number): QueueEntry[] {
+    const prepared: QueueEntry[] = [];
+    for (const message of messages) {
+      if (!message || message.visibleAt > now) continue;
+      const queuedAt = this._ensureQueuedAt(message);
+      prepared.push({
+        ...message,
+        _queuedAt: queuedAt
+      });
+    }
+    return this._sortMessages(prepared);
+  }
+
+  private _ensureQueuedAt(message: QueueEntry): number {
+    if (typeof message.queuedAt === 'number' && Number.isFinite(message.queuedAt)) {
+      return message.queuedAt;
+    }
+    if (message.createdAt) {
+      const parsed = Date.parse(message.createdAt);
+      if (!Number.isNaN(parsed)) {
+        return parsed;
+      }
+    }
+    if (typeof message.visibleAt === 'number') {
+      return message.visibleAt;
+    }
+    return Date.now();
+  }
+
+  private _sortMessages(messages: QueueEntry[]): QueueEntry[] {
+    const mode = this.config.orderingMode;
+    const sorted = [...messages];
+    const comparator = mode === 'lifo'
+      ? (a: QueueEntry, b: QueueEntry) => ((b._queuedAt || 0) - (a._queuedAt || 0)) || a.id.localeCompare(b.id)
+      : (a: QueueEntry, b: QueueEntry) => ((a._queuedAt || 0) - (b._queuedAt || 0)) || a.id.localeCompare(b.id);
+    sorted.sort(comparator);
+    return sorted;
+  }
+
+  private async _attemptMessagesInOrder(messages: QueueEntry[]): Promise<ClaimedMessage | null> {
+    for (const msg of messages) {
+      const claimed = await this.attemptClaim(msg);
+      if (claimed) return claimed;
+    }
+    return null;
+  }
+
+  private _generateLockToken(): string {
+    return `lt-${idGenerator()}`;
+  }
+
+  private _notifyBestEffortOrdering(): void {
+    if (this._bestEffortNotified) return;
+    this._bestEffortNotified = true;
+    this.emit('plg:s3-queue:ordering-best-effort', {
+      queue: this.queueResourceName,
+      orderingMode: this.config.orderingMode,
+      orderingGuarantee: this.config.orderingGuarantee
+    });
+  }
+
+  private _orderingLockName(): string {
+    return `order-${this.queueResourceName}`;
+  }
+
+  private async _acquireOrderingLock(): Promise<(() => Promise<void>) | null> {
+    const storage = this.getStorage() as unknown as PluginStorage;
+    try {
+      const ttlSeconds = Math.max(1, Math.ceil(this.config.orderingLockTTL / 1000));
+      const lock = await storage.acquireLock(this._orderingLockName(), {
+        ttl: ttlSeconds,
+        timeout: 0,
+        workerId: this.workerId
+      });
+
+      if (!lock) {
+        return null;
+      }
+
+      return async () => {
+        try {
+          await storage.releaseLock(lock);
+        } catch (releaseErr) {
+          this.logger.warn(
+            { error: (releaseErr as Error)?.message || releaseErr, lockName: lock.name },
+            `Failed to release ordering lock: ${(releaseErr as Error)?.message || releaseErr}`
+          );
+        }
+      };
+    } catch (error) {
+      this.logger.warn(
+        { error: (error as Error)?.message || error, lockName: this._orderingLockName() },
+        `Ordering lock acquisition failed: ${(error as Error)?.message || error}`
+      );
+      return null;
+    }
+  }
+
+  private _lockNameForMessage(messageId: string): string {
+    return `msg-${messageId}`;
+  }
+
+  async acquireLock(messageId: string): Promise<Lock | null> {
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const lockName = this._lockNameForMessage(messageId);
+
+    try {
+      const lock = await storage.acquireLock(lockName, {
+        ttl: this.config.lockTTL,
+        timeout: 0,
+        workerId: this.workerId
+      });
+
+      if (lock) {
+        this.messageLocks.set(lock.name, lock);
+      }
+
+      return lock;
+    } catch (error) {
+      this.logger.debug(
+        { error: (error as Error).message, messageId, lockName },
+        `acquireLock error: ${(error as Error).message}`
+      );
+      return null;
+    }
+  }
+
+  async releaseLock(lockOrMessageId: Lock | string): Promise<void> {
+    const storage = this.getStorage() as unknown as PluginStorage;
+    let lock: Lock | null = null;
+
+    if (lockOrMessageId && typeof lockOrMessageId === 'object') {
+      lock = lockOrMessageId;
+    } else {
+      const lockName = this._lockNameForMessage(lockOrMessageId as string);
+      lock = this.messageLocks.get(lockName) || null;
+    }
+
+    if (!lock) {
+      return;
+    }
+
+    try {
+      await storage.releaseLock(lock);
+    } catch (error) {
+      this.logger.debug(
+        { error: (error as Error).message, lockName: lock.name },
+        `Failed to release lock '${lock.name}': ${(error as Error).message}`
+      );
+    } finally {
+      if (lock?.name) {
+        this.messageLocks.delete(lock.name);
+      }
+    }
+  }
+
+  async attemptClaim(msg: QueueEntry, options: { enforceOrder?: boolean } = {}): Promise<ClaimedMessage | null> {
+    const now = Date.now();
+    const { enforceOrder = false } = options;
+
+    const lock = await this.acquireLock(msg.id);
+
+    if (!lock) {
+      return null;
+    }
+
+    try {
+      const alreadyProcessed = await this._isRecentlyProcessed(msg.id);
+      if (alreadyProcessed) {
+        this.logger.debug(
+          { messageId: msg.id, workerId: this.workerId },
+          `Message ${msg.id} already processed (in cache)`
+        );
+        return null;
+      }
+
+      await this._markMessageProcessed(msg.id);
+    } finally {
+      await this.releaseLock(lock);
+    }
+
+    const [okGet, errGet, msgWithETag] = await tryFn(() =>
+      this.queueResource!.get(msg.id)
+    );
+
+    if (!okGet || !msgWithETag) {
+      await this._clearProcessedMarker(msg.id);
+      this.logger.debug(
+        { messageId: msg.id, error: (errGet as Error)?.message },
+        `Message ${msg.id} not found or error: ${(errGet as Error)?.message}`
+      );
+      return null;
+    }
+
+    if (msgWithETag.status !== 'pending' || msgWithETag.visibleAt > now) {
+      this.processedCache.delete(msg.id);
+      this.logger.debug(
+        { messageId: msg.id, status: msgWithETag.status, visibleAt: msgWithETag.visibleAt, now },
+        `Message ${msg.id} not claimable: status=${msgWithETag.status}, visibleAt=${msgWithETag.visibleAt}, now=${now}`
+      );
+      return null;
+    }
+
+    msgWithETag.queuedAt = this._ensureQueuedAt(msgWithETag);
+
+    if (enforceOrder && msg._queuedAt !== undefined && msgWithETag.queuedAt !== msg._queuedAt) {
+      this.processedCache.delete(msg.id);
+      return null;
+    }
+
+    this.logger.debug(
+      { messageId: msg.id, etag: msgWithETag._etag, workerId: this.workerId },
+      `Attempting to claim ${msg.id} with ETag: ${msgWithETag._etag}`
+    );
+
+    const lockToken = this._generateLockToken();
+    const nextVisibleAt = now + this.config.visibilityTimeout;
+
+    const [ok, err, result] = await tryFn(() =>
+      this.queueResource!.updateConditional(msgWithETag.id, {
+        status: 'processing',
+        claimedBy: this.workerId,
+        claimedAt: now,
+        lockToken,
+        visibleAt: nextVisibleAt,
+        attempts: msgWithETag.attempts + 1
+      }, {
+        ifMatch: msgWithETag._etag!
+      })
+    );
+
+    if (!ok || !result?.success) {
+      this.processedCache.delete(msg.id);
+      this.logger.debug(
+        { messageId: msg.id, error: (err as Error)?.message || result?.error, workerId: this.workerId },
+        `Failed to claim ${msg.id}: ${(err as Error)?.message || result?.error}`
+      );
+      return null;
+    }
+
+    this.logger.debug(
+      { messageId: msg.id, workerId: this.workerId },
+      `Successfully claimed ${msg.id}`
+    );
+
+    const [okRecord, errRecord, record] = await tryFn(() =>
+      (this.targetResource as unknown as { get(id: string): Promise<Record<string, unknown>> }).get(msgWithETag.originalId)
+    );
+
+    if (!okRecord) {
+      await this.failMessage({
+        queueId: msgWithETag.id,
+        lockToken,
+        attempts: msgWithETag.attempts + 1,
+        maxAttempts: msgWithETag.maxAttempts,
+        record: null as unknown as Record<string, unknown>,
+        originalId: msgWithETag.originalId,
+        visibleUntil: nextVisibleAt,
+        queuedAt: msgWithETag.queuedAt
+      }, 'Original record not found');
+      return null;
+    }
+
+    const claimedData = result.data || msgWithETag;
+
+    return {
+      queueId: msgWithETag.id,
+      record: record as Record<string, unknown>,
+      attempts: msgWithETag.attempts + 1,
+      maxAttempts: msgWithETag.maxAttempts,
+      originalId: (record as Record<string, unknown>).id as string,
+      lockToken,
+      visibleUntil: nextVisibleAt,
+      etag: result.etag || claimedData._etag,
+      queuedAt: msgWithETag.queuedAt
+    };
+  }
+
+  async processMessage(message: ClaimedMessage, handler: MessageHandler): Promise<void> {
+    const startTime = Date.now();
+    await this._sleepWithJitter(this.config.consumerJitterMs, this.config.visibilityTimeout - 1);
+
+    let settled = false;
+
+    const markFailure = async (error: Error): Promise<string> => {
+      if (settled) {
+        return 'failed';
+      }
+
+      settled = true;
+      const finalStatus = await this._handleProcessingFailure(message, error);
+      this._emitOutcome(finalStatus, message, {
+        error: error.message
+      });
+
+      if (this.config.onError) {
+        await this.config.onError(error, message.record);
+      }
+
+      return finalStatus;
+    };
+
+    const markCompleted = async (result: unknown): Promise<void> => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      await this.completeMessage(message, result);
+
+      const duration = Date.now() - startTime;
+      const eventPayload = {
+        queueId: message.queueId,
+        originalId: message.record.id,
+        duration,
+        attempts: message.attempts,
+        finalStatus: 'processed'
+      };
+
+      this.emit('plg:s3-queue:message-completed', eventPayload);
+      this._emitOutcome('processed', message, { duration });
+
+      if (this.config.onComplete) {
+        await this.config.onComplete(message.record, result);
+      }
+    };
+
+    const context: MessageContext = {
+      queueId: message.queueId,
+      attempts: message.attempts,
+      workerId: this.workerId,
+      lockToken: message.lockToken,
+      visibleUntil: message.visibleUntil,
+      renewLock: async (extraMilliseconds?: number) => {
+        return await this.renewLock(message.queueId, message.lockToken, extraMilliseconds);
+      },
+      ack: async (result?: unknown) => {
+        await markCompleted(result);
+      },
+      nack: async (error?: Error | string) => {
+        await markFailure(
+          error instanceof Error ? error : new Error(error || 'Message processing rejected by handler')
+        );
+      }
+    };
+
+    try {
+      const result = await handler(message.record, context);
+      if (this.config.autoAcknowledge) {
+        await markCompleted(result);
+      } else if (!settled) {
+        await markFailure(new QueueError('Message not acknowledged', {
+          pluginName: 'S3QueuePlugin',
+          operation: 'onMessage',
+          queueName: this.config.resource,
+          statusCode: 409,
+          retriable: true,
+          suggestion: 'Call context.ack() when autoAcknowledge=false, or enable autoAcknowledge in plugin options.'
+        }));
+      }
+    } catch (error) {
+      if (settled) {
+        return;
+      }
+
+      await markFailure(error as Error);
+    }
+  }
+
+  async completeMessage(message: ClaimedMessage, result: unknown): Promise<void> {
+    await this._updateQueueEntryWithLock(message, {
+      status: 'completed',
+      completedAt: new Date().toISOString(),
+      result,
+      claimedBy: this.workerId,
+      claimedAt: Date.now(),
+      lockToken: null,
+      error: null
+    });
+  }
+
+  async failMessage(message: ClaimedMessage, error: string): Promise<void> {
+    await this._updateQueueEntryWithLock(message, {
+      status: 'failed',
+      error,
+      claimedBy: null,
+      claimedAt: Date.now(),
+      lockToken: null
+    }, { clearProcessedMarker: true });
+  }
+
+  async retryMessage(message: ClaimedMessage, attempts: number, error: string): Promise<void> {
+    const backoff = Math.min(Math.pow(2, attempts) * 1000, 30000);
+    const jitter = this._nextJitterDelay(this.config.retryJitterMs);
+
+    await this._updateQueueEntryWithLock(message, {
+      status: 'pending',
+      visibleAt: Date.now() + backoff + jitter,
+      claimedBy: null,
+      claimedAt: null,
+      lockToken: null,
+      error
+    }, { clearProcessedMarker: true });
+  }
+
+  private _nextJitterDelay(maxDelayMs: number): number {
+    const maxDelay = Math.max(0, Math.floor(maxDelayMs));
+    if (!Number.isFinite(maxDelay) || maxDelay <= 0) {
+      return 0;
+    }
+    return Math.floor(Math.random() * (maxDelay + 1));
+  }
+
+  private async _sleepWithJitter(maxDelayMs: number, capMs?: number): Promise<void> {
+    const resolvedCap = Math.max(0, capMs ?? maxDelayMs);
+    const delay = Math.min(this._nextJitterDelay(maxDelayMs), resolvedCap);
+    if (delay <= 0) {
+      return;
+    }
+    await this._sleep(delay);
+  }
+
+  async moveToDeadLetter(message: ClaimedMessage, error: string): Promise<void> {
+    if (this.config.deadLetterResource && this.deadLetterResourceObj) {
+      const msg = await this.queueResource!.get(message.queueId);
+
+      const dataPayload = message.record ?? { id: message.originalId, _missing: true };
+
+      await this.deadLetterResourceObj.insert({
+        id: idGenerator(),
+        originalId: message.originalId ?? (dataPayload as Record<string, unknown>).id,
+        queueId: message.queueId,
+        data: dataPayload,
+        error,
+        attempts: msg?.attempts ?? message.attempts,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    await this._updateQueueEntryWithLock(message, {
+      status: 'dead',
+      error,
+      claimedBy: null,
+      claimedAt: Date.now(),
+      lockToken: null
+    }, { clearProcessedMarker: true });
+  }
+
+  async getStats(): Promise<QueueStats> {
+    if (!this.queueResource) {
+      return {
+        total: 0,
+        pending: 0,
+        processing: 0,
+        completed: 0,
+        failed: 0,
+        dead: 0
+      };
+    }
+
+    const statusKeys: Array<'pending' | 'processing' | 'completed' | 'failed' | 'dead'> = ['pending', 'processing', 'completed', 'failed', 'dead'];
+    const stats: QueueStats = {
+      total: 0,
+      pending: 0,
+      processing: 0,
+      completed: 0,
+      failed: 0,
+      dead: 0
+    };
+
+    const counts = await Promise.all(
+      statusKeys.map(status => tryFn(() => this.queueResource!.count({ status })))
+    );
+
+    let derivedTotal = 0;
+
+    counts.forEach(([ok, err, count], index) => {
+      const status = statusKeys[index]!;
+      if (ok) {
+        stats[status] = (count as number) || 0;
+        derivedTotal += (count as number) || 0;
+      } else {
+        this.logger.warn(
+          { status, error: (err as Error)?.message },
+          `Failed to count status '${status}': ${(err as Error)?.message}`
+        );
+      }
+    });
+
+    const [totalOk, totalErr, totalCount] = await tryFn(() => this.queueResource!.count());
+    if (totalOk) {
+      stats.total = (totalCount as number) || 0;
+    } else {
+      stats.total = derivedTotal;
+      this.logger.warn(
+        { error: (totalErr as Error)?.message },
+        `Failed to count total messages: ${(totalErr as Error)?.message}`
+      );
+    }
+
+    return stats;
+  }
+
+  async countQueue(status: QueueMessageStatusQuery = 'pending'): Promise<number> {
+    if (!this.queueResource) {
+      return 0;
+    }
+
+    const filter = status === 'all' ? undefined : { status };
+    const [ok, err, count] = await tryFn(() =>
+      this.queueResource!.count(filter || {})
+    );
+
+    if (!ok) {
+      this.logger.warn(
+        { status, error: (err as Error).message },
+        `Failed to count queue messages with status ${status}: ${(err as Error).message}`
+      );
+      return 0;
+    }
+
+    return (count as number) || 0;
+  }
+
+  private _resolveFilterToPartition(filter: Record<string, unknown>): { partition: string; partitionValues: Record<string, unknown> } | null {
+    const allPartitions: Record<string, PartitionConfig> = {
+      byStatus: { fields: { status: 'string' } },
+      ...this.config.partitions
+    };
+
+    const filterKeys = Object.keys(filter).sort();
+
+    let bestMatch: { partition: string; partitionValues: Record<string, unknown> } | null = null;
+    let bestMatchSize = 0;
+
+    for (const [partitionName, partitionDef] of Object.entries(allPartitions)) {
+      const partitionFields = Object.keys(partitionDef.fields).sort();
+      const allFieldsPresent = partitionFields.every(f => f in filter);
+
+      if (allFieldsPresent && partitionFields.length > bestMatchSize) {
+        const partitionValues: Record<string, unknown> = {};
+        for (const f of partitionFields) {
+          partitionValues[f] = filter[f];
+        }
+        bestMatch = { partition: partitionName, partitionValues };
+        bestMatchSize = partitionFields.length;
+      }
+    }
+
+    return bestMatch;
+  }
+
+  async countQueueBy(filter: Record<string, unknown>): Promise<number> {
+    if (!this.queueResource) {
+      return 0;
+    }
+
+    const resolved = this._resolveFilterToPartition(filter);
+    const countArgs = resolved
+      ? { partition: resolved.partition, partitionValues: resolved.partitionValues }
+      : {};
+
+    const [ok, err, count] = await tryFn(() =>
+      this.queueResource!.count(countArgs as Record<string, unknown>)
+    );
+
+    if (!ok) {
+      this.logger.warn(
+        { filter, error: (err as Error).message },
+        `Failed to count queue messages with filter: ${(err as Error).message}`
+      );
+      return 0;
+    }
+
+    return (count as number) || 0;
+  }
+
+  async queueStatsBy(filter: Record<string, unknown>): Promise<QueueStats> {
+    if (!this.queueResource) {
+      return { total: 0, pending: 0, processing: 0, completed: 0, failed: 0, dead: 0 };
+    }
+
+    const statusKeys: Array<'pending' | 'processing' | 'completed' | 'failed' | 'dead'> = ['pending', 'processing', 'completed', 'failed', 'dead'];
+    const stats: QueueStats = { total: 0, pending: 0, processing: 0, completed: 0, failed: 0, dead: 0 };
+
+    const counts = await Promise.all(
+      statusKeys.map(status => {
+        const statusFilter = { ...filter, status };
+        const resolved = this._resolveFilterToPartition(statusFilter);
+        const countArgs = resolved
+          ? { partition: resolved.partition, partitionValues: resolved.partitionValues }
+          : {};
+        return tryFn(() => this.queueResource!.count(countArgs as Record<string, unknown>));
+      })
+    );
+
+    let derivedTotal = 0;
+    counts.forEach(([ok, err, count], index) => {
+      const status = statusKeys[index]!;
+      if (ok) {
+        stats[status] = (count as number) || 0;
+        derivedTotal += (count as number) || 0;
+      } else {
+        this.logger.warn(
+          { status, filter, error: (err as Error)?.message },
+          `Failed to count status '${status}' with filter: ${(err as Error)?.message}`
+        );
+      }
+    });
+
+    const resolved = this._resolveFilterToPartition(filter);
+    const totalArgs = resolved
+      ? { partition: resolved.partition, partitionValues: resolved.partitionValues }
+      : {};
+    const [totalOk, , totalCount] = await tryFn(() =>
+      this.queueResource!.count(totalArgs as Record<string, unknown>)
+    );
+
+    stats.total = totalOk ? ((totalCount as number) || 0) : derivedTotal;
+
+    return stats;
+  }
+
+  async createDeadLetterResource(): Promise<void> {
+    if (!this.config.deadLetterResource || !this.database) return;
+
+    const resourceName = this.config.deadLetterResource;
+    const [ok, err] = await tryFn(() =>
+      this.database!.createResource({
+        name: resourceName,
+        attributes: {
+          id: 'string|required',
+          originalId: 'string|required',
+          queueId: 'string|required',
+          data: 'json|required',
+          error: 'string|required',
+          attempts: 'number|required',
+          createdAt: 'datetime|required'
+        },
+        behavior: 'body-only',
+        timestamps: true
+      })
+    );
+
+    if (ok) {
+      this.deadLetterResourceObj = (this.database.resources[resourceName] as Resource | undefined) ?? null;
+    } else {
+      this.deadLetterResourceObj = (this.database.resources[resourceName] as Resource | undefined) ?? null;
+      if (!this.deadLetterResourceObj) {
+        throw err;
+      }
+    }
+
+    this.deadLetterResourceName = this.deadLetterResourceObj!.name;
+    if (this.config.failureStrategy.deadLetterQueue) {
+      this.config.failureStrategy.deadLetterQueue = this.deadLetterResourceName;
+    }
+
+    if (this.deadLetterResourceAlias) {
+      const existing = this.database.resources[this.deadLetterResourceAlias];
+      if (!existing || existing === (this.deadLetterResourceObj as unknown)) {
+        (this.database.resources as Record<string, unknown>)[this.deadLetterResourceAlias] = this.deadLetterResourceObj;
+      }
+    }
+
+    this.logger.debug(
+      { resourceName: this.deadLetterResourceName },
+      `Dead letter queue ready: ${this.deadLetterResourceName}`
+    );
+  }
+
+  async extendVisibility(queueId: string, extraMilliseconds: number, { lockToken }: { lockToken?: string } = {}): Promise<boolean> {
+    if (!queueId || !extraMilliseconds || extraMilliseconds <= 0) {
+      return false;
+    }
+
+    if (!lockToken) {
+      this.logger.warn(
+        { queueId },
+        'extendVisibility requires a lockToken to renew visibility'
+      );
+      return false;
+    }
+
+    const [okGet, errGet, entry] = await tryFn(() => this.queueResource!.get(queueId));
+    if (!okGet || !entry) {
+      this.logger.warn(
+        { queueId, error: (errGet as Error)?.message },
+        `extendVisibility failed to load entry: ${(errGet as Error)?.message}`
+      );
+      return false;
+    }
+
+    const terminalStates = ['completed', 'failed', 'dead'];
+    if (terminalStates.includes(entry.status)) {
+      this.logger.warn(
+        { queueId, status: entry.status, lockToken },
+        `Cannot renew lock: message ${queueId} is in terminal state '${entry.status}'`
+      );
+      this.emit('plg:s3-queue:lock-renewal-rejected', {
+        queueId,
+        reason: 'terminal_state',
+        status: entry.status,
+        lockToken
+      });
+      return false;
+    }
+
+    if (!entry.lockToken) {
+      this.logger.warn(
+        { queueId, status: entry.status },
+        `Cannot renew lock: message ${queueId} has no active lock (lockToken is null)`
+      );
+      this.emit('plg:s3-queue:lock-renewal-rejected', {
+        queueId,
+        reason: 'lock_released',
+        status: entry.status,
+        lockToken
+      });
+      return false;
+    }
+
+    if (entry.lockToken !== lockToken) {
+      this.logger.warn(
+        { queueId, providedToken: lockToken, currentToken: entry.lockToken },
+        `extendVisibility lock token mismatch for queueId: ${queueId}`
+      );
+      this.emit('plg:s3-queue:lock-renewal-rejected', {
+        queueId,
+        reason: 'token_mismatch',
+        providedToken: lockToken,
+        currentToken: entry.lockToken
+      });
+      return false;
+    }
+
+    if (entry.status !== 'processing') {
+      this.logger.warn(
+        { queueId, currentStatus: entry.status },
+        `Cannot renew lock: message ${queueId} is not in 'processing' state (current: ${entry.status})`
+      );
+      this.emit('plg:s3-queue:lock-renewal-rejected', {
+        queueId,
+        reason: 'invalid_state',
+        status: entry.status,
+        lockToken
+      });
+      return false;
+    }
+
+    const baseTime = Math.max(entry.visibleAt || 0, Date.now());
+    const newVisibleAt = baseTime + extraMilliseconds;
+
+    const [okUpdate, errUpdate, result] = await tryFn(() =>
+      this.queueResource!.updateConditional(queueId, {
+        visibleAt: newVisibleAt,
+        claimedAt: entry.claimedAt || Date.now()
+      }, {
+        ifMatch: entry._etag!
+      })
+    );
+
+    if (!okUpdate || !result?.success) {
+      this.logger.warn(
+        { queueId, error: (errUpdate as Error)?.message || result?.error },
+        `extendVisibility conditional update failed: ${(errUpdate as Error)?.message || result?.error}`
+      );
+      return false;
+    }
+
+    this.logger.debug(
+      { queueId, newVisibleAt, extraMilliseconds },
+      `Lock renewed for message ${queueId}: new visibleAt=${newVisibleAt}`
+    );
+
+    this.emit('plg:s3-queue:lock-renewed', {
+      queueId,
+      lockToken,
+      newVisibleAt,
+      extraMilliseconds
+    });
+
+    return true;
+  }
+
+  async renewLock(queueId: string, lockToken: string, extraMilliseconds?: number): Promise<boolean> {
+    if (extraMilliseconds === undefined || extraMilliseconds === null) {
+      extraMilliseconds = this.config.visibilityTimeout;
+    }
+    return await this.extendVisibility(queueId, extraMilliseconds, { lockToken });
+  }
+
+  async recoverStalledMessages(now: number): Promise<void> {
+    if (this.config.recoveryInterval <= 0) return;
+    if (this._recoveryInFlight) return;
+    if (this._lastRecovery && now - this._lastRecovery < this.config.recoveryInterval) {
+      return;
+    }
+
+    this._recoveryInFlight = true;
+    this._lastRecovery = now;
+
+    try {
+      const [ok, err, allCandidates] = await tryFn(() =>
+        this.queueResource!.query({
+          status: 'processing'
+        }, {
+          limit: this.config.recoveryBatchSize * 2
+        })
+      );
+
+      if (!ok) {
+        this.logger.warn(
+          { error: (err as Error)?.message },
+          `Failed to query stalled messages: ${(err as Error)?.message}`
+        );
+        return;
+      }
+
+      if (!allCandidates || allCandidates.length === 0) {
+        return;
+      }
+
+      const candidates = allCandidates.filter(msg => msg.visibleAt <= now).slice(0, this.config.recoveryBatchSize);
+
+      if (candidates.length === 0) {
+        return;
+      }
+
+      for (const candidate of candidates) {
+        await this._recoverSingleMessage(candidate, now);
+      }
+    } finally {
+      this._recoveryInFlight = false;
+    }
+  }
+
+  private async _recoverSingleMessage(candidate: QueueEntry, now: number): Promise<void> {
+    const [okGet, errGet, queueEntry] = await tryFn(() => this.queueResource!.get(candidate.id));
+    if (!okGet || !queueEntry) {
+      this.logger.warn(
+        { messageId: candidate.id, error: (errGet as Error)?.message },
+        `Failed to load stalled message: ${(errGet as Error)?.message}`
+      );
+      return;
+    }
+
+    if (queueEntry.status !== 'processing' || queueEntry.visibleAt > now) {
+      return;
+    }
+
+    if (queueEntry.maxAttempts !== undefined && queueEntry.attempts >= queueEntry.maxAttempts) {
+      const needsOriginalRecord =
+        this.config.failureStrategy.mode === 'dead-letter' ||
+        (this.config.failureStrategy.mode === 'hybrid' && !!this.config.failureStrategy.deadLetterQueue);
+
+      let record: Record<string, unknown> = { id: queueEntry.originalId, _missing: true };
+
+      if (needsOriginalRecord) {
+        const [okRecord, , original] = await tryFn(() =>
+          (this.targetResource as unknown as { get(id: string): Promise<Record<string, unknown>> }).get(queueEntry.originalId)
+        );
+        if (okRecord && original) {
+          record = original;
+        }
+      }
+
+      const recoveredMessage: ClaimedMessage = {
+        queueId: queueEntry.id,
+        originalId: queueEntry.originalId,
+        record: record!,
+        attempts: queueEntry.attempts,
+        maxAttempts: queueEntry.maxAttempts,
+        lockToken: queueEntry.lockToken || '',
+        visibleUntil: queueEntry.visibleAt,
+        queuedAt: queueEntry.queuedAt
+      };
+
+      const timeoutError = 'visibility-timeout exceeded max attempts';
+
+      if (this.config.failureStrategy.mode === 'dead-letter' || this.config.failureStrategy.mode === 'hybrid') {
+        await this.moveToDeadLetter(recoveredMessage, timeoutError);
+        this.emit('plg:s3-queue:message-dead', {
+          queueId: queueEntry.id,
+          originalId: queueEntry.originalId,
+          error: timeoutError,
+          finalStatus: 'dead-lettered'
+        });
+        this._emitOutcome('dead-lettered', recoveredMessage, { error: timeoutError });
+      } else {
+        await this.failMessage(recoveredMessage, timeoutError);
+        this.emit('plg:s3-queue:message-failed', {
+          queueId: queueEntry.id,
+          originalId: queueEntry.originalId,
+          attempts: queueEntry.attempts,
+          error: timeoutError,
+          finalStatus: 'failed'
+        });
+        this._emitOutcome('failed', recoveredMessage, { error: timeoutError });
+      }
+      return;
+    }
+
+    const [okUpdate, errUpdate, result] = await tryFn(() =>
+      this.queueResource!.updateConditional(queueEntry.id, {
+        status: 'pending',
+        visibleAt: now,
+        claimedBy: null,
+        claimedAt: null,
+        lockToken: null,
+        error: 'Recovered after visibility timeout'
+      }, {
+        ifMatch: queueEntry._etag!
+      })
+    );
+
+    if (!okUpdate || !result?.success) {
+      this.logger.warn(
+        { queueId: queueEntry.id, error: (errUpdate as Error)?.message || result?.error },
+        `Failed to recover message: ${(errUpdate as Error)?.message || result?.error}`
+      );
+      return;
+    }
+
+    await this._clearProcessedMarker(queueEntry.id);
+    this.emit('plg:s3-queue:message-recovered', {
+      queueId: queueEntry.id,
+      originalId: queueEntry.originalId
+    });
+  }
+
+  private _emitOutcome(finalStatus: string, message: ClaimedMessage, extra: Record<string, unknown> = {}): void {
+    this.emit('plg:s3-queue:message-outcome', {
+      queueId: message.queueId,
+      originalId: message.record?.id,
+      finalStatus,
+      attempts: message.attempts,
+      maxAttempts: message.maxAttempts,
+      orderingMode: this.config.orderingMode,
+      orderingGuarantee: this.config.orderingGuarantee,
+      ...extra
+    });
+  }
+
+  private async _handleProcessingFailure(message: ClaimedMessage, error: Error): Promise<string> {
+    const strategy = this.config.failureStrategy;
+    const errorMessage = error?.message || 'Processing failed';
+    const attempts = message.attempts;
+    const maxAttempts = message.maxAttempts ?? strategy.maxRetries ?? 0;
+
+    if (strategy.mode === 'dead-letter') {
+      await this.moveToDeadLetter(message, errorMessage);
+      this.emit('plg:s3-queue:message-dead', {
+        queueId: message.queueId,
+        originalId: message.record?.id,
+        error: errorMessage,
+        finalStatus: 'dead-lettered'
+      });
+      return 'dead-lettered';
+    }
+
+    if (attempts < maxAttempts) {
+      await this.retryMessage(message, attempts, errorMessage);
+      this.emit('plg:s3-queue:message-retry', {
+        queueId: message.queueId,
+        originalId: message.record?.id,
+        attempts,
+        error: errorMessage,
+        finalStatus: 'retrying'
+      });
+      return 'retrying';
+    }
+
+    if (strategy.mode === 'hybrid' && strategy.deadLetterQueue) {
+      await this.moveToDeadLetter(message, errorMessage);
+      this.emit('plg:s3-queue:message-dead', {
+        queueId: message.queueId,
+        originalId: message.record?.id,
+        error: errorMessage,
+        finalStatus: 'dead-lettered'
+      });
+      return 'dead-lettered';
+    }
+
+    await this.failMessage(message, errorMessage);
+    this.emit('plg:s3-queue:message-failed', {
+      queueId: message.queueId,
+      originalId: message.record?.id,
+      attempts,
+      error: errorMessage,
+      finalStatus: 'failed'
+    });
+    return 'failed';
+  }
+
+  private async _updateQueueEntryWithLock(
+    message: ClaimedMessage,
+    attributes: Record<string, unknown>,
+    { clearProcessedMarker = false, requireLock = true } = {}
+  ): Promise<{ success: boolean; data?: QueueEntry; etag?: string; error?: string }> {
+    const { queueId, lockToken } = message;
+
+    const [okGet, errGet, entry] = await tryFn(() => this.queueResource!.get(queueId));
+    if (!okGet || !entry) {
+      throw new QueueError(`Queue entry '${queueId}' not found during lock-protected update`, {
+        pluginName: 'S3QueuePlugin',
+        operation: 'updateWithLock',
+        queueId,
+        statusCode: 404,
+        retriable: false,
+        original: errGet
+      });
+    }
+
+    if (requireLock && entry.lockToken !== lockToken) {
+      throw new QueueError('Lock token mismatch', {
+        pluginName: 'S3QueuePlugin',
+        operation: 'updateWithLock',
+        queueId,
+        statusCode: 409,
+        retriable: false,
+        suggestion: 'Ensure renewLock/finish is called with the token returned by attemptClaim().'
+      });
+    }
+
+    const mergedAttributes = {
+      ...attributes,
+      lockToken: attributes.lockToken ?? null
+    };
+
+    const [okUpdate, errUpdate, result] = await tryFn(() =>
+      this.queueResource!.updateConditional(queueId, mergedAttributes, {
+        ifMatch: entry._etag!
+      })
+    );
+
+    if (!okUpdate || !result?.success) {
+      throw new QueueError('Failed to update queue entry with lock', {
+        pluginName: 'S3QueuePlugin',
+        operation: 'updateWithLock',
+        queueId,
+        statusCode: 409,
+        retriable: true,
+        suggestion: 'Re-fetch the entry and retry. The message may have been recovered or reassigned.',
+        original: errUpdate || result?.error
+      });
+    }
+
+    if (clearProcessedMarker) {
+      await this._clearProcessedMarker(queueId);
+    }
+
+    return result;
+  }
+
+  private _normalizeOrderingMode(orderingMode: string): 'fifo' | 'lifo' {
+    const candidate = (orderingMode || 'fifo').toString().toLowerCase();
+    if (candidate !== 'fifo' && candidate !== 'lifo') {
+      throw new QueueError(`Invalid orderingMode '${orderingMode}'`, {
+        pluginName: 'S3QueuePlugin',
+        operation: 'normalizeOrderingMode',
+        statusCode: 400,
+        retriable: false,
+        suggestion: "Use 'fifo' (default) or 'lifo'."
+      });
+    }
+    return candidate as 'fifo' | 'lifo';
+  }
+
+  private _normalizeFailureStrategy({
+    failureStrategy,
+    deadLetterResource,
+    maxAttempts
+  }: {
+    failureStrategy?: string | { mode?: string; maxRetries?: number; deadLetterQueue?: string };
+    deadLetterResource: string | null;
+    maxAttempts: number;
+  }): FailureStrategy {
+    const defaultStrategy: FailureStrategy = {
+      mode: deadLetterResource ? 'hybrid' : 'retry',
+      maxRetries: Math.max(0, maxAttempts ?? 3),
+      deadLetterQueue: deadLetterResource || null
+    };
+
+    if (!failureStrategy) {
+      return defaultStrategy;
+    }
+
+    let strategyObj: { mode?: string; maxRetries?: number; deadLetterQueue?: string };
+    if (typeof failureStrategy === 'string') {
+      strategyObj = { mode: failureStrategy };
+    } else {
+      strategyObj = failureStrategy;
+    }
+
+    const mode = (strategyObj.mode || defaultStrategy.mode || 'retry').toLowerCase();
+    const maxRetries = strategyObj.maxRetries ?? defaultStrategy.maxRetries;
+    const deadLetterQueue = strategyObj.deadLetterQueue ?? deadLetterResource ?? defaultStrategy.deadLetterQueue;
+
+    if (mode === 'retry') {
+      return {
+        mode: 'retry',
+        maxRetries: Math.max(0, maxRetries ?? 3),
+        deadLetterQueue: null
+      };
+    }
+
+    if (mode === 'dead-letter') {
+      if (!deadLetterQueue) {
+        throw new QueueError('dead-letter mode requires a deadLetterQueue/deadLetterResource', {
+          pluginName: 'S3QueuePlugin',
+          operation: 'normalizeFailureStrategy',
+          statusCode: 400,
+          retriable: false,
+          suggestion: 'Provide deadLetterResource or failureStrategy.deadLetterQueue.'
+        });
+      }
+      return {
+        mode: 'dead-letter',
+        maxRetries: 0,
+        deadLetterQueue
+      };
+    }
+
+    if (mode === 'hybrid') {
+      if (!deadLetterQueue) {
+        throw new QueueError('hybrid failure strategy requires a dead-letter queue', {
+          pluginName: 'S3QueuePlugin',
+          operation: 'normalizeFailureStrategy',
+          statusCode: 400,
+          retriable: false,
+          suggestion: 'Set deadLetterResource or failureStrategy.deadLetterQueue.'
+        });
+      }
+      return {
+        mode: 'hybrid',
+        maxRetries: Math.max(0, maxRetries ?? 3),
+        deadLetterQueue
+      };
+    }
+
+    throw new QueueError(`Unknown failure strategy mode '${mode}'`, {
+      pluginName: 'S3QueuePlugin',
+      operation: 'normalizeFailureStrategy',
+      statusCode: 400,
+      retriable: false,
+      suggestion: "Supported modes: 'retry', 'dead-letter', 'hybrid'."
+    });
+  }
+
+  private _resolveMaxAttempts(): number {
+    const strategy = this.config?.failureStrategy;
+    if (!strategy) {
+      return this.config.maxAttempts ?? 3;
+    }
+    if (strategy.mode === 'dead-letter') {
+      return 0;
+    }
+    return strategy.maxRetries ?? this.config.maxAttempts ?? 3;
+  }
+
+  private _computeIdleDelay(idleStreak: number): number {
+    const base = this.config.pollInterval;
+    const maxInterval = Math.max(base, this.config.maxPollInterval || base);
+    if (maxInterval <= base) {
+      return base;
+    }
+    const factor = Math.pow(2, Math.max(0, idleStreak - 1));
+    const delay = base * factor;
+    return Math.min(delay, maxInterval);
+  }
+
+  protected override async _sleep(ms: number): Promise<void> {
+    if (!ms || ms <= 0) return;
+    await new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  clearProcessedCache(): void {
+    this.processedCache.clear();
+  }
+
+  private _getProcessedCacheTTL(): number {
+    return Math.max(1000, this.config.processedCacheTTL);
+  }
+
+  private async _markMessageProcessed(messageId: string): Promise<void> {
+    const ttl = this._getProcessedCacheTTL();
+    const expiresAt = Date.now() + ttl;
+    this.processedCache.set(messageId, expiresAt);
+
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const key = storage.getPluginKey(null, 'cache', 'processed', messageId);
+    const ttlSeconds = Math.max(1, Math.ceil(ttl / 1000));
+
+    const payload = {
+      workerId: this.workerId,
+      markedAt: Date.now()
+    };
+
+    const [ok, err] = await tryFn(() =>
+      storage.set(key, payload, {
+        ttl: ttlSeconds,
+        behavior: 'body-only'
+      })
+    );
+
+    if (!ok) {
+      this.logger.warn(
+        { messageId, error: (err as Error)?.message },
+        `Failed to persist processed marker: ${(err as Error)?.message}`
+      );
+    }
+  }
+
+  private async _isRecentlyProcessed(messageId: string): Promise<boolean> {
+    const now = Date.now();
+    const localExpiresAt = this.processedCache.get(messageId);
+    if (localExpiresAt && localExpiresAt > now) {
+      return true;
+    }
+    if (localExpiresAt && localExpiresAt <= now) {
+      this.processedCache.delete(messageId);
+    }
+
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const key = storage.getPluginKey(null, 'cache', 'processed', messageId);
+    const [ok, err, data] = await tryFn(() => storage.get(key));
+
+    if (!ok) {
+      if (err && (err as { code?: string }).code !== 'NoSuchKey' && (err as { code?: string }).code !== 'NotFound') {
+        this.logger.warn(
+          { messageId, error: (err as Error).message || err },
+          `Failed to read processed marker: ${(err as Error).message || err}`
+        );
+      }
+      return false;
+    }
+
+    if (!data) {
+      return false;
+    }
+
+    const ttl = this._getProcessedCacheTTL();
+    this.processedCache.set(messageId, now + ttl);
+    return true;
+  }
+
+  private async _clearProcessedMarker(messageId: string): Promise<void> {
+    this.processedCache.delete(messageId);
+
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const key = storage.getPluginKey(null, 'cache', 'processed', messageId);
+
+    const [ok, err] = await tryFn(() => storage.delete(key));
+    if (!ok && err && (err as { code?: string }).code !== 'NoSuchKey' && (err as { code?: string }).code !== 'NotFound') {
+      this.logger.warn(
+        { messageId, error: (err as Error).message || err },
+        `Failed to delete processed marker: ${(err as Error).message || err}`
+      );
+    }
+  }
+
+  async coordinatorDispatchLoop(): Promise<void> {
+    if (!this.config.enableCoordinator) return;
+    if (!this.isCoordinator) return;
+
+    const now = Date.now();
+
+    if (this._nextDispatchAllowedAt > now) return;
+
+    const existingTickets = await this.getAvailableTickets();
+    if (
+      existingTickets.length === 0 &&
+      this.config.recoveryInterval > 0 &&
+      !this._stalledTicketRecoveryInFlight &&
+      now - this._lastStalledTicketRecovery >= this.config.recoveryInterval
+    ) {
+      this._stalledTicketRecoveryInFlight = true;
+      this._lastStalledTicketRecovery = now;
+      void this.recoverStalledTickets()
+        .catch((error) => {
+          this.logger.debug(
+            { error: (error as Error)?.message },
+            `Failed to recover stale tickets: ${(error as Error)?.message}`
+          );
+        })
+        .finally(() => {
+          this._stalledTicketRecoveryInFlight = false;
+        });
+    }
+
+    const availableCapacity = Math.max(this.config.ticketBatchSize - existingTickets.length, 0);
+
+    if (availableCapacity === 0) {
+      return;
+    }
+
+    const [ok, , allMessages] = await tryFn(() =>
+      this.queueResource!.query({ status: 'pending' }, { limit: availableCapacity * 2 })
+    );
+
+    if (!ok || !allMessages) {
+      return;
+    }
+
+    const messages = allMessages.filter(msg => msg.visibleAt <= now).slice(0, availableCapacity);
+
+    if (messages.length === 0) {
+      this._dispatchIdleStreak = Math.min(this._dispatchIdleStreak + 1, 10);
+      const base = this.config.pollInterval;
+      const maxIdle = this.config.maxPollInterval || Math.max(base * 32, 30000);
+      const idleDelay = Math.min(base * Math.pow(2, Math.max(0, this._dispatchIdleStreak - 1)), maxIdle);
+      this._nextDispatchAllowedAt = now + idleDelay;
+      return;
+    }
+
+    this._dispatchIdleStreak = 0;
+    this._nextDispatchAllowedAt = 0;
+
+    const orderedMessages = this._prepareAvailableMessages(messages, now);
+
+    if (orderedMessages.length === 0) {
+      return;
+    }
+
+    const releaseOrderingLock = await this._acquireOrderingLock();
+    if (!releaseOrderingLock) {
+      return;
+    }
+
+    try {
+      const ticketCount = await this.publishDispatchTickets(orderedMessages);
+
+      if (ticketCount > 0) {
+        this.logger.debug(
+          { ticketCount, workerId: this.workerId },
+          `Coordinator published ${ticketCount} dispatch tickets`
+        );
+
+        this.emit('plg:s3-queue:tickets-published', {
+          coordinatorId: this.workerId,
+          count: ticketCount,
+          timestamp: now
+        });
+      }
+    } finally {
+      await releaseOrderingLock();
+    }
+  }
+
+  async publishDispatchTickets(orderedMessages: QueueEntry[]): Promise<number> {
+    if (!orderedMessages || orderedMessages.length === 0) return 0;
+
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const now = Date.now();
+    const ticketTTL = Math.max(30, Math.ceil(this.config.visibilityTimeout / 1000) * 2);
+    let published = 0;
+
+    for (let i = 0; i < orderedMessages.length; i++) {
+      const msg = orderedMessages[i]!;
+      const ticketId = `ticket-${msg.id}-${now}-${i}`;
+      const key = storage.getPluginKey(null, 'tickets', ticketId);
+
+      const ticketData: TicketData = {
+        ticketId,
+        messageId: msg.id,
+        originalId: msg.originalId,
+        queuedAt: msg._queuedAt || msg.queuedAt,
+        orderIndex: i,
+        publishedAt: new Date(now).toISOString(),
+        publishedBy: this.workerId,
+        status: 'available',
+        claimedBy: null,
+        claimedAt: null,
+        ticketTTL
+      };
+
+      const [ok, err] = await tryFn(() =>
+        storage.set(key, ticketData, {
+          ttl: ticketTTL,
+          behavior: 'body-only'
+        })
+      );
+
+      if (ok) {
+        published++;
+        await this._markTicketAvailable(ticketData);
+      } else {
+        this.logger.warn(
+          { ticketId, error: (err as Error)?.message },
+          `Failed to publish ticket ${ticketId}: ${(err as Error)?.message}`
+        );
+      }
+    }
+
+    return published;
+  }
+
+  async getAvailableTickets(): Promise<TicketData[]> {
+    if (!this.config.enableCoordinator) return [];
+
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const available: TicketData[] = [];
+
+    const indexLimit = Math.max(this.config.ticketBatchSize * 2, 16);
+    const [okIndex, errIndex, availableKeys] = await tryFn(() => this._listAvailableTicketKeys({ limit: indexLimit }));
+    if (okIndex && availableKeys && availableKeys.length > 0) {
+      for (const key of availableKeys) {
+        const [okSnapshot, , snapshot] = await tryFn(() => storage.getWithVersion(key));
+        if (!okSnapshot || !snapshot?.data) {
+          continue;
+        }
+
+        const ticket = asTicketData(snapshot.data);
+        if (!ticket || ticket.status !== 'available' || ticket.claimedBy) {
+          continue;
+        }
+
+        available.push(ticket);
+        if (available.length >= this.config.ticketBatchSize) {
+          break;
+        }
+      }
+
+      available.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+      if (available.length > 0) {
+        return available;
+      }
+    } else if (!okIndex) {
+      this.logger.warn(
+        { error: (errIndex as Error)?.message },
+        `Failed to list available ticket index: ${(errIndex as Error)?.message}`
+      );
+    }
+
+    const fallbackLimit = Math.max(this.config.ticketBatchSize * 4, 32);
+    const [okFallback, errFallback, ticketKeys] = await tryFn(() => this._listTicketKeys('tickets/', { limit: fallbackLimit }));
+
+    if (!okFallback) {
+      this.logger.warn(
+        { error: (errFallback as Error)?.message },
+        `Failed to list tickets: ${(errFallback as Error)?.message}`
+      );
+      return [];
+    }
+
+    if (!ticketKeys || ticketKeys.length === 0) {
+      return [];
+    }
+
+    for (const key of ticketKeys) {
+      const [okSnapshot, , snapshot] = await tryFn(() => storage.getWithVersion(key));
+      if (!okSnapshot || !snapshot?.data) {
+        continue;
+      }
+
+      const ticket = asTicketData(snapshot.data);
+      if (!ticket || ticket.status !== 'available' || ticket.claimedBy) {
+        continue;
+      }
+
+      available.push(ticket);
+      if (available.length >= this.config.ticketBatchSize) {
+        break;
+      }
+    }
+
+    available.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+
+    return available;
+  }
+
+  async claimFromTicket(ticket: TicketData): Promise<ClaimedMessage | null> {
+    if (!ticket || !ticket.messageId) return null;
+
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const now = Date.now();
+
+    const ticketKey = storage.getPluginKey(null, 'tickets', ticket.ticketId);
+
+    const [okGet, errGet, currentTicketSnapshot] = await tryFn(() => storage.getWithVersion(ticketKey));
+
+    if (!okGet || !currentTicketSnapshot?.data || !currentTicketSnapshot.version) {
+      this.logger.debug(
+        { ticketId: ticket.ticketId, error: (errGet as Error)?.message },
+        `Skipping ticket claim due to stale or missing snapshot: ${ticket.ticketId}`
+      );
+      return null;
+    }
+
+    const ticketData = asTicketData(currentTicketSnapshot.data);
+    if (!ticketData) {
+      this.logger.warn(
+        { ticketId: ticket.ticketId },
+        `Skipping ticket claim due to malformed ticket snapshot: ${ticket.ticketId}`
+      );
+      return null;
+    }
+
+    if (ticketData.status !== 'available' || ticketData.claimedBy) {
+      return null;
+    }
+
+    const [okClaim, errClaim] = await tryFn(() =>
+      storage.setIfVersion(
+        ticketKey,
+        {
+          ...ticketData,
+          status: 'claimed',
+          claimedBy: this.workerId,
+          claimedAt: now
+        },
+        currentTicketSnapshot.version!,
+        {
+          ttl: ticketData.ticketTTL || ticketData._ttl || 60,
+          behavior: 'body-only'
+        }
+      )
+    );
+
+    if (!okClaim) {
+      this.logger.debug(
+        { ticketId: ticket.ticketId, error: (errClaim as Error)?.message },
+        `Failed to claim ticket ${ticket.ticketId}: ${(errClaim as Error)?.message}`
+      );
+      return null;
+    }
+
+    await this._unmarkTicketAvailable(ticketData);
+
+    const [okMsg, errMsg, msg] = await tryFn(() =>
+      this.queueResource!.get(ticket.messageId)
+    );
+
+    if (!okMsg || !msg) {
+      await this.markTicketProcessed(ticket.ticketId);
+      return null;
+    }
+
+    const claimedMessage = await this.attemptClaim(msg, { enforceOrder: true });
+
+    if (claimedMessage) {
+      await this.markTicketProcessed(ticket.ticketId);
+      return claimedMessage;
+    } else {
+      await this.releaseTicket(ticket.ticketId);
+      return null;
+    }
+  }
+
+  async markTicketProcessed(ticketId: string): Promise<void> {
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const key = storage.getPluginKey(null, 'tickets', ticketId);
+
+    const [okGet, errGet, snapshot] = await tryFn(() => storage.getWithVersion(key));
+
+    if (!okGet || !snapshot?.data || !snapshot.version) {
+      if (errGet && (errGet as { code?: string }).code !== 'NoSuchKey' && (errGet as { code?: string }).code !== 'NotFound') {
+        this.logger.warn(
+          { ticketId, error: (errGet as Error)?.message },
+          `Failed to read ticket for deletion: ${(errGet as Error)?.message}`
+        );
+      }
+      return;
+    }
+
+    const ticketData = asTicketData(snapshot.data);
+    if (ticketData) {
+      await this._unmarkTicketAvailable(ticketData);
+    }
+
+    if (typeof storage.deleteIfVersion === 'function') {
+      const [okDelete, errDelete, deleted] = await tryFn(() =>
+        storage.deleteIfVersion!(key, snapshot.version as string)
+      );
+
+      if (!okDelete || deleted === false) {
+        if (errDelete && (errDelete as { code?: string }).code !== 'NoSuchKey' && (errDelete as { code?: string }).code !== 'NotFound') {
+          this.logger.warn(
+            { ticketId, error: (errDelete as Error)?.message },
+            `Failed to delete ticket atomically: ${(errDelete as Error)?.message}`
+          );
+        }
+      }
+      return;
+    }
+
+    const [okDelete, errDelete] = await tryFn(() =>
+      storage.delete(key)
+    );
+
+    if (!okDelete && errDelete && (errDelete as { code?: string }).code !== 'NoSuchKey' && (errDelete as { code?: string }).code !== 'NotFound') {
+      this.logger.warn(
+        { ticketId, error: (errDelete as Error)?.message },
+        `Failed to delete ticket: ${(errDelete as Error)?.message}`
+      );
+    }
+  }
+
+  async releaseTicket(ticketId: string, options: { forceOwner?: boolean } = {}): Promise<void> {
+    const { forceOwner = false } = options;
+    const storage = this.getStorage() as unknown as PluginStorage;
+    const key = storage.getPluginKey(null, 'tickets', ticketId);
+
+    const [okGet, errGet, currentTicketSnapshot] = await tryFn(() => storage.getWithVersion(key));
+
+    if (!okGet || !currentTicketSnapshot?.data || !currentTicketSnapshot.version) {
+      if (errGet && (errGet as { code?: string }).code !== 'NoSuchKey' && (errGet as { code?: string }).code !== 'NotFound') {
+        this.logger.warn(
+          { ticketId, error: (errGet as Error)?.message },
+          `Failed to read ticket before release: ${(errGet as Error)?.message}`
+        );
+      }
+      return;
+    }
+
+    const ticketData = asTicketData(currentTicketSnapshot.data);
+    if (!ticketData) {
+      this.logger.warn(
+        { ticketId },
+        `Cannot mark ticket as processed: malformed ticket snapshot`
+      );
+      return;
+    }
+
+    if (!forceOwner && ticketData.claimedBy && ticketData.claimedBy !== this.workerId) {
+      return;
+    }
+
+    const [okRelease, errRelease] = await tryFn(() =>
+      storage.setIfVersion(
+        key,
+        {
+          ...ticketData,
+          status: 'available',
+          claimedBy: null,
+          claimedAt: null
+        },
+        currentTicketSnapshot.version as string,
+        {
+          ttl: ticketData.ticketTTL || ticketData._ttl || 60,
+          behavior: 'body-only'
+        }
+      )
+    );
+
+    if (!okRelease) {
+      this.logger.warn(
+        { ticketId, error: (errRelease as Error)?.message },
+        `Failed to release ticket: ${(errRelease as Error)?.message}`
+      );
+      return;
+    }
+
+    await this._markTicketAvailable({
+      ...ticketData,
+      status: 'available',
+      claimedBy: null,
+      claimedAt: null
+    });
+  }
+
+  async recoverStalledTickets(): Promise<void> {
+    if (!this.config.enableCoordinator) return;
+    if (!this.isCoordinator) return;
+    if (this._stalledTicketRecoveryInFlight) return;
+
+    const now = Date.now();
+    if (this._lastStalledTicketRecovery && now - this._lastStalledTicketRecovery < this.config.recoveryInterval) return;
+
+    this._stalledTicketRecoveryInFlight = true;
+    this._lastStalledTicketRecovery = now;
+
+    try {
+      const storage = this.getStorage() as unknown as PluginStorage;
+      const prefix = 'tickets/';
+      const limit = Math.max(this.config.recoveryBatchSize * 6, 50);
+
+      const [okTickets, , tickets] = await tryFn(() => storage.listWithPrefix(prefix, { limit }));
+
+      if (!okTickets || !tickets || tickets.length === 0) {
+        return;
+      }
+
+      const activeWorkers = (await this.getActiveWorkers()) as Worker[];
+      const activeWorkerIds = new Set(activeWorkers.map((w) => w.workerId));
+
+      const stalledTimeout = this.config.heartbeatTTL * 1000;
+      let recovered = 0;
+
+      for (const ticket of tickets) {
+        if (!ticket || !ticket.ticketId || ticket.status !== 'claimed' || !ticket.claimedBy) {
+          continue;
+        }
+
+        if (activeWorkerIds.has(ticket.claimedBy)) {
+          const claimAge = now - (ticket.claimedAt || 0);
+          if (claimAge < stalledTimeout) {
+            continue;
+          }
+        }
+
+        await this.releaseTicket(ticket.ticketId, { forceOwner: true });
+        recovered++;
+
+        this.logger.debug(
+          { ticketId: ticket.ticketId, claimedBy: ticket.claimedBy },
+          `Recovered stalled ticket ${ticket.ticketId} from worker ${ticket.claimedBy}`
+        );
+      }
+
+      if (recovered > 0) {
+        this.emit('plg:s3-queue:tickets-recovered', {
+          coordinatorId: this.workerId,
+          count: recovered,
+          timestamp: now
+        });
+      }
+    } finally {
+      this._stalledTicketRecoveryInFlight = false;
+    }
+  }
+}
