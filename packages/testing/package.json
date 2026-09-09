@@ -1,6 +1,6 @@
 {
   "name": "@baldin/testing",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Factories and seeders for Baldin applications and plugin test suites.",
   "license": "Unlicense",
@@ -37,7 +37,7 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/core": "workspace:*",

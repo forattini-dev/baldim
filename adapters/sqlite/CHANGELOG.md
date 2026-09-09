@@ -1,5 +1,20 @@
 # @baldin/adapter-sqlite
 
+## 0.2.0
+
+### Minor Changes
+
+- 206ba95: Verify persisted s3db.js v21 data through provider-native SQLite and S3-compatible fixtures, and exercise libSQL and D1 through the shared storage contract.
+
+### Patch Changes
+
+- Updated dependencies [e8d2143]
+- Updated dependencies [e9c3a78]
+- Updated dependencies [6ed3bd3]
+- Updated dependencies [f686e95]
+- Updated dependencies [e150c2f]
+  - @baldin/core@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

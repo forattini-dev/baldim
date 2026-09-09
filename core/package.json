@@ -1,6 +1,6 @@
 {
   "name": "@baldin/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Document database engine, resource model, extension contracts, and multidatabase manager for Baldin.",
   "license": "Unlicense",

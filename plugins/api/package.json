@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-api",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Raffel-based HTTP, WebSocket, authentication, OpenAPI, and runtime inspection plugin for Baldin.",
   "license": "Unlicense",
@@ -61,7 +61,7 @@
     "redis": "^5.11.0"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",

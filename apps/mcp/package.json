@@ -1,6 +1,6 @@
 {
   "name": "@baldin/mcp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Model Context Protocol server for Baldin documentation and databases.",
   "license": "Unlicense",

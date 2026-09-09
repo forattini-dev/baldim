@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-fulltext",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Persistent full-text indexes and ranked search for Baldin resources.",
   "license": "Unlicense",
@@ -37,7 +37,7 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/core": "workspace:*",

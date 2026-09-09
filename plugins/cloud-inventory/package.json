@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-cloud-inventory",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Multi-cloud resource discovery, snapshots, diffs, schedules, and Terraform export for Baldin.",
   "license": "Unlicense",
@@ -113,7 +113,7 @@
     "oci-objectstorage": "^2.140.0",
     "tslib": "2.3.1"
   },
-  "peerDependencies": { "@baldin/core": "^0.1.0" },
+  "peerDependencies": { "@baldin/core": "^0.2.0" },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",
     "@baldin/core": "workspace:*",

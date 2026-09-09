@@ -1,6 +1,6 @@
 {
   "name": "@baldin/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Command-line interface for Baldin databases.",
   "license": "Unlicense",

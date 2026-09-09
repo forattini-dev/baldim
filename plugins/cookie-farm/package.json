@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-cookie-farm",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Persistent browser personas, warmup, rotation, reputation, and export for Baldin.",
   "license": "Unlicense",
@@ -40,7 +40,7 @@
     "@baldin/plugin-puppeteer": "workspace:*"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",

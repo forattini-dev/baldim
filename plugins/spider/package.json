@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-spider",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Web crawling, discovery, browser analysis, and pluggable crawl backends for Baldin.",
   "license": "Unlicense",
@@ -60,7 +60,7 @@
     "puppeteer-core": "^24.29.1"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",

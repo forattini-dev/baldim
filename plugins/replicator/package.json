@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-replicator",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Baldin replication pipelines for databases, queues, and webhooks.",
   "license": "Unlicense",
@@ -36,7 +36,7 @@
     "mysql2": "^3.0.0",
     "pg": "^8.0.0"
   },
-  "peerDependencies": { "@baldin/core": "^0.1.0" },
+  "peerDependencies": { "@baldin/core": "^0.2.0" },
   "devDependencies": {
     "@baldin/adapter-memory": "workspace:*",
     "@baldin/core": "workspace:*",

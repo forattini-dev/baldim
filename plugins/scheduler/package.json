@@ -1,6 +1,6 @@
 {
   "name": "@baldin/plugin-scheduler",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Distributed cron-style job scheduling for Baldin.",
   "license": "Unlicense",
@@ -37,7 +37,7 @@
     "prepack": "pnpm run build"
   },
   "peerDependencies": {
-    "@baldin/core": "^0.1.0"
+    "@baldin/core": "^0.2.0"
   },
   "devDependencies": {
     "@baldin/core": "workspace:*",
