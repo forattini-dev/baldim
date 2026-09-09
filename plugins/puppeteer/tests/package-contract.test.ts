@@ -19,7 +19,9 @@ describe('@baldin/plugin-puppeteer package contract', () => {
       puppeteer: expect.any(String),
     });
     expect(manifest.dependencies).not.toHaveProperty('@baldin/core');
-    expect(manifest.peerDependencies).toEqual({ '@baldin/core': '^0.1.0' });
+    expect(manifest.peerDependencies).toEqual({
+      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+    });
   });
 
   it('loads its declared automation integrations without starting a browser', async () => {

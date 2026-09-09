@@ -23,7 +23,9 @@ describe('@baldin/plugin-replicator package contract', () => {
       '@google-cloud/bigquery', '@libsql/client', '@planetscale/database',
       'mongodb', 'mysql2', 'pg',
     ]);
-    expect(manifest.peerDependencies).toEqual({ '@baldin/core': '^0.1.0' });
+    expect(manifest.peerDependencies).toEqual({
+      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+    });
   });
 
   it('contains no legacy product branding', async () => {

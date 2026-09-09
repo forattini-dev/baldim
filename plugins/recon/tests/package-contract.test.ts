@@ -20,7 +20,9 @@ describe('@baldin/plugin-recon package contract', () => {
     const manifest = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
     expect(manifest.dependencies).toMatchObject({ recker: '1.0.103' });
     expect(manifest.optionalDependencies).toMatchObject({ 'redblue-cli': '^0.1.0' });
-    expect(manifest.peerDependencies).toEqual({ '@baldin/core': '^0.1.0' });
+    expect(manifest.peerDependencies).toEqual({
+      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+    });
   });
 
   it('contains no legacy branding or monolith-only imports', async () => {

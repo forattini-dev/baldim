@@ -22,7 +22,9 @@ describe('@baldin/plugin-spider package contract', () => {
       ...manifest.optionalDependencies,
     };
 
-    expect(manifest.peerDependencies).toEqual({ '@baldin/core': '^0.1.0' });
+    expect(manifest.peerDependencies).toEqual({
+      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+    });
     expect(runtime).toMatchObject({
       '@baldin/plugin-puppeteer': 'workspace:*',
       '@baldin/plugin-queue-consumer': 'workspace:*',

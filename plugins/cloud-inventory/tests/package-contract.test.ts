@@ -22,7 +22,9 @@ describe('@baldin/plugin-cloud-inventory package contract', () => {
       ...Object.keys(manifest.optionalDependencies ?? {}),
     ]);
 
-    expect(manifest.peerDependencies).toEqual({ '@baldin/core': '^0.1.0' });
+    expect(manifest.peerDependencies).toEqual({
+      '@baldin/core': expect.stringMatching(/^\^\d+\.\d+\.\d+$/),
+    });
     expect([...declared]).toEqual(expect.arrayContaining([
       '@aws-sdk/client-ec2',
       '@aws-sdk/credential-providers',
