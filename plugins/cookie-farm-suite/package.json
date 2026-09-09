@@ -1,0 +1,55 @@
+{
+  "name": "@baldin/plugin-cookie-farm-suite",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Composable Puppeteer, CookieFarm, queue, and TTL workflows for Baldin.",
+  "license": "Unlicense",
+  "engines": {
+    "node": ">=24"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/forattini-dev/baldin.git",
+    "directory": "plugins/cookie-farm-suite"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "UNLICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.contract.json --noEmit",
+    "test": "vitest run",
+    "prepack": "pnpm run build"
+  },
+  "dependencies": {
+    "@baldin/plugin-cookie-farm": "workspace:*",
+    "@baldin/plugin-puppeteer": "workspace:*",
+    "@baldin/plugin-s3-queue": "workspace:*",
+    "@baldin/plugin-ttl": "workspace:*"
+  },
+  "peerDependencies": {
+    "@baldin/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "@baldin/adapter-memory": "workspace:*",
+    "@baldin/core": "workspace:*",
+    "@types/node": "25.5.2",
+    "typescript": "6.0.2",
+    "vitest": "4.1.3"
+  }
+}

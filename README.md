@@ -79,6 +79,8 @@ and dependency rules.
 | plugins/identity | @baldin/plugin-identity | OAuth2/OIDC identity provider, sessions, onboarding, MFA, email, and administrative UI |
 | plugins/websocket | @baldin/plugin-websocket | Dedicated real-time CRUD, subscriptions, channels, tickets, and connection recovery |
 | plugins/puppeteer | @baldin/plugin-puppeteer | Browser automation, proxy pools, persistent cookies, monitoring, and anti-bot inspection |
+| plugins/cookie-farm | @baldin/plugin-cookie-farm | Persistent browser personas, warmup, rotation, reputation, and export |
+| plugins/cookie-farm-suite | @baldin/plugin-cookie-farm-suite | Namespaced Puppeteer, CookieFarm, queue, and TTL workflows |
 | packages/testing | @baldin/testing | Factories and seeders for applications and plugin tests |
 | packages/typegen | @baldin/typegen | Generates typed resource maps for applications |
 | apps | Docs, CLI, demos | Reserved |

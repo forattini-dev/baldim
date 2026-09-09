@@ -350,6 +350,59 @@ importers:
         specifier: 4.1.3
         version: 4.1.3(@types/node@25.5.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
 
+  plugins/cookie-farm:
+    dependencies:
+      '@baldin/plugin-puppeteer':
+        specifier: workspace:*
+        version: link:../puppeteer
+    devDependencies:
+      '@baldin/adapter-memory':
+        specifier: workspace:*
+        version: link:../../adapters/memory
+      '@baldin/core':
+        specifier: workspace:*
+        version: link:../../core
+      '@types/node':
+        specifier: 25.5.2
+        version: 25.5.2
+      typescript:
+        specifier: 6.0.2
+        version: 6.0.2
+      vitest:
+        specifier: 4.1.3
+        version: 4.1.3(@types/node@25.5.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
+
+  plugins/cookie-farm-suite:
+    dependencies:
+      '@baldin/plugin-cookie-farm':
+        specifier: workspace:*
+        version: link:../cookie-farm
+      '@baldin/plugin-puppeteer':
+        specifier: workspace:*
+        version: link:../puppeteer
+      '@baldin/plugin-s3-queue':
+        specifier: workspace:*
+        version: link:../s3-queue
+      '@baldin/plugin-ttl':
+        specifier: workspace:*
+        version: link:../ttl
+    devDependencies:
+      '@baldin/adapter-memory':
+        specifier: workspace:*
+        version: link:../../adapters/memory
+      '@baldin/core':
+        specifier: workspace:*
+        version: link:../../core
+      '@types/node':
+        specifier: 25.5.2
+        version: 25.5.2
+      typescript:
+        specifier: 6.0.2
+        version: 6.0.2
+      vitest:
+        specifier: 4.1.3
+        version: 4.1.3(@types/node@25.5.2)(esbuild@0.28.2)(tsx@4.23.13)(yaml@2.9.0)
+
   plugins/costs:
     devDependencies:
       '@baldin/adapter-memory':
