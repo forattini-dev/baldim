@@ -28,7 +28,7 @@
     "tuiuiu.js": "1.0.63"
   },
   "devDependencies": {
-    "@types/node": "25.5.2",
+    "@types/node": "26.4.1",
     "typescript": "6.0.2"
   }
 }
