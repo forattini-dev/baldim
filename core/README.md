@@ -22,6 +22,17 @@ const notes = await database.createResource({
 await notes.insert({ id: 'first', title: 'Try Baldim', done: false });
 ```
 
+Storage clients with multipart support (for example `@baldim/adapter-s3`) can
+be used per insert:
+
+```ts
+await notes.insert({ id: 'big-one', title: 'Large record' }, { multipart: true });
+await notes.insert(
+  { id: 'big-two', title: 'Large record' },
+  { multipart: { partSize: 16 * 1024 * 1024, queueConcurrency: 2 } },
+);
+```
+
 For multiple databases, use the manager with named connections:
 
 ```ts

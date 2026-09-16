@@ -24,9 +24,15 @@ export interface ResourceData extends StringRecord {
   $after?: ResourceData | null;
 }
 
+export interface InsertMultipartOptions {
+  partSize?: number;
+  queueConcurrency?: number;
+}
+
 export interface InsertOptions {
   content?: Buffer | string;
   contentType?: string;
+  multipart?: boolean | InsertMultipartOptions;
 }
 
 export interface InsertParams extends StringRecord {
@@ -93,9 +99,20 @@ export interface CopyObjectParams {
   metadata: StringRecord<string>;
 }
 
+export interface MultipartPutObjectParams {
+  key: string;
+  body?: string | Buffer;
+  contentType?: string;
+  metadata: StringRecord<string>;
+  partSize?: number;
+  queueConcurrency?: number;
+}
+
 export interface StorageClient {
   config: StorageClientConfig;
   putObject(params: PutObjectParams): Promise<{ ETag?: string }>;
+  putObjectMultipart?(params: MultipartPutObjectParams): Promise<{ ETag?: string }>;
+  exists?(key: string): Promise<boolean>;
   getObject(key: string): Promise<StorageResponse>;
   headObject(key: string): Promise<StorageResponse>;
   deleteObject(key: string): Promise<unknown>;
@@ -495,6 +512,30 @@ export class ResourcePersistence {
       });
     }
 
+    const multipartOption = options?.multipart;
+    const useMultipart = multipartOption === true || (typeof multipartOption === 'object' && multipartOption !== null);
+
+    if (useMultipart && (typeof this.client.putObjectMultipart !== 'function' || typeof this.client.exists !== 'function')) {
+      throw new ResourceError('Storage client does not support multipart uploads', {
+        resourceName: this.name,
+        operation: 'insert',
+        id: finalId,
+        statusCode: 400,
+        retriable: false,
+        suggestion: 'Use an S3-compatible adapter with multipart support or omit the multipart option.'
+      });
+    }
+
+    if (useMultipart && await this.client.exists!(key)) {
+      throw new InvalidResourceItem({
+        bucket: this.client.config.bucket,
+        resourceName: this.name,
+        attributes: preProcessedData,
+        validation: [{ message: `Resource with id '${finalId}' already exists`, field: 'id' }],
+        message: `Resource with id '${finalId}' already exists`
+      });
+    }
+
     const useAtomicPartitionWrite = this._shouldUseAtomicPartitionWriteTransaction();
     let insertedObject = useAtomicPartitionWrite
       ? await this.resource.composeFullObjectFromWrite({
@@ -506,13 +547,21 @@ export class ResourcePersistence {
       : null;
 
     const [okPut, errPut, putResponse] = await tryFn<{ ETag?: string }>(() => this._runAtomicPartitionWriteIfSupported(async () => {
-      const putResponse = await this.client.putObject({
-        key,
-        body: finalBody,
-        contentType,
-        metadata: finalMetadata,
-        ifNoneMatch: '*'
-      });
+      const putResponse = useMultipart
+        ? await this.client.putObjectMultipart!({
+          key,
+          body: finalBody,
+          contentType,
+          metadata: finalMetadata,
+          ...(typeof multipartOption === 'object' ? multipartOption : {})
+        })
+        : await this.client.putObject({
+          key,
+          body: finalBody,
+          contentType,
+          metadata: finalMetadata,
+          ifNoneMatch: '*'
+        });
 
       if (useAtomicPartitionWrite && insertedObject) {
         await this.resource.createPartitionReferences(insertedObject);

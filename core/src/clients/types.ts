@@ -187,6 +187,102 @@ export interface StorageDeleteObjectsResponse {
   Errors: Array<{ Key: string; Code: string; Message: string }>;
 }
 
+export interface StorageCreateMultipartUploadParams {
+  key: string;
+  metadata?: Record<string, unknown>;
+  contentType?: string;
+  contentEncoding?: string;
+}
+
+export interface StorageCreateMultipartUploadResponse {
+  key: string;
+  uploadId: string;
+}
+
+export interface StorageUploadPartParams {
+  key: string;
+  uploadId: string;
+  partNumber: number;
+  body: Buffer | string | Readable;
+  contentLength?: number;
+}
+
+export interface StorageUploadPartResponse {
+  partNumber: number;
+  etag: string;
+}
+
+export interface StorageCompletedPart {
+  partNumber: number;
+  etag: string;
+}
+
+export interface StorageCompleteMultipartUploadParams {
+  key: string;
+  uploadId: string;
+  parts: StorageCompletedPart[];
+}
+
+export interface StorageCompleteMultipartUploadResponse {
+  ETag: string | null;
+  VersionId: string | null;
+  Location: string | null;
+}
+
+export interface StorageAbortMultipartUploadParams {
+  key: string;
+  uploadId: string;
+}
+
+export interface StorageAbortMultipartUploadResponse {
+  key: string;
+  uploadId: string;
+}
+
+export interface StorageListPartsParams {
+  key: string;
+  uploadId: string;
+  maxParts?: number;
+  partNumberMarker?: number;
+}
+
+export interface StorageListPartsResponse {
+  key: string;
+  uploadId: string;
+  parts: StorageCompletedPart[];
+  isTruncated: boolean;
+  nextPartNumberMarker?: number | null;
+}
+
+export interface StorageListMultipartUploadsParams {
+  prefix?: string;
+  maxUploads?: number;
+  continuationToken?: string | null;
+}
+
+export interface StorageMultipartUploadInfo {
+  key: string;
+  uploadId: string;
+  initiated?: Date | null;
+}
+
+export interface StorageListMultipartUploadsResponse {
+  uploads: StorageMultipartUploadInfo[];
+  isTruncated: boolean;
+  nextContinuationToken?: string | null;
+}
+
+export interface StoragePutObjectMultipartParams {
+  key: string;
+  body: Buffer | string | Readable;
+  metadata?: Record<string, unknown>;
+  contentType?: string;
+  contentEncoding?: string;
+  partSize?: number;
+  queueConcurrency?: number;
+  onProgress?: (progress: { partNumber: number; totalParts: number | null; uploadedBytes: number }) => void;
+}
+
 /** @deprecated Use StoragePutObjectParams. */
 export type PutObjectParams = StoragePutObjectParams;
 /** @deprecated Use StorageCopyObjectParams. */
@@ -250,6 +346,7 @@ export interface StorageListParams {
 
 export interface ClientCapabilities {
   distributedMetadataLock?: boolean;
+  multipartUpload?: boolean;
 }
 
 export interface Client extends EventEmitter {
@@ -281,4 +378,12 @@ export interface Client extends EventEmitter {
   getQueueStats(): QueueStats | null;
   getAggregateMetrics(since?: number): unknown | null;
   destroy(): void | Promise<void>;
+
+  createMultipartUpload?(params: StorageCreateMultipartUploadParams): Promise<StorageCreateMultipartUploadResponse>;
+  uploadPart?(params: StorageUploadPartParams): Promise<StorageUploadPartResponse>;
+  completeMultipartUpload?(params: StorageCompleteMultipartUploadParams): Promise<StorageCompleteMultipartUploadResponse>;
+  abortMultipartUpload?(params: StorageAbortMultipartUploadParams): Promise<StorageAbortMultipartUploadResponse>;
+  listParts?(params: StorageListPartsParams): Promise<StorageListPartsResponse>;
+  listMultipartUploads?(params?: StorageListMultipartUploadsParams): Promise<StorageListMultipartUploadsResponse>;
+  putObjectMultipart?(params: StoragePutObjectMultipartParams): Promise<StoragePutObjectResponse>;
 }

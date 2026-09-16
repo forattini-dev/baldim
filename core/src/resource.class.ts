@@ -56,7 +56,8 @@ import type {
   OrphanedPartitions
 } from './core/resource-partitions.class.js';
 import type {
-  UpdateConditionalOptions
+  UpdateConditionalOptions,
+  InsertOptions
 } from './core/resource-persistence.class.js';
 import type {
   ResourceConfigInput
@@ -972,7 +973,7 @@ export class Resource extends AsyncEventEmitter implements Disposable {
     return this._eventsModule.emit(eventName, ...args);
   }
 
-  async insert({ id, ...attributes }: { id?: string } & Record<string, unknown>, options?: { content?: Buffer | string; contentType?: string }): Promise<ResourceData> {
+  async insert({ id, ...attributes }: { id?: string } & Record<string, unknown>, options?: InsertOptions): Promise<ResourceData> {
     this._ensureSchemaCompiled();
     return this._persistence.insert({ id, ...attributes }, options) as Promise<ResourceData>;
   }

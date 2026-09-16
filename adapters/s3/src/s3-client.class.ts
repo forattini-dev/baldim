@@ -1,5 +1,6 @@
 import path from 'path';
 import EventEmitter from 'events';
+import type { Readable } from 'node:stream';
 import { chunk } from 'lodash-es';
 
 import { ReckerHttpHandler } from './recker-http-handler.js';
@@ -13,12 +14,19 @@ import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
   ListObjectsV2Command,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand,
+  AbortMultipartUploadCommand,
+  ListPartsCommand,
+  ListMultipartUploadsCommand,
 } from '@aws-sdk/client-s3';
 
 import {
   AdaptiveTuning,
   TasksPool,
   UnknownError,
+  ValidationError,
   idGenerator,
   mapAwsError,
   md5,
@@ -38,6 +46,20 @@ import type {
   StorageListObjectsParams,
   GetKeysPageParams,
   QueueStats,
+  StorageCreateMultipartUploadParams,
+  StorageCreateMultipartUploadResponse,
+  StorageUploadPartParams,
+  StorageUploadPartResponse,
+  StorageCompleteMultipartUploadParams,
+  StorageCompleteMultipartUploadResponse,
+  StorageAbortMultipartUploadParams,
+  StorageAbortMultipartUploadResponse,
+  StorageListPartsParams,
+  StorageListPartsResponse,
+  StorageListMultipartUploadsParams,
+  StorageListMultipartUploadsResponse,
+  StoragePutObjectMultipartParams,
+  StoragePutObjectResponse,
 } from '@baldim/core/adapter';
 import { HTTP_CLIENT_PROFILES } from './types.js';
 import type { HttpClientOptions, HttpClientProfile, ReckerHttpHandlerOptions, S3ClientConfig } from './types.js';
@@ -85,7 +107,7 @@ interface AwsCommand {
 
 export class S3Client extends EventEmitter {
   id: string;
-  readonly capabilities = { distributedMetadataLock: true } as const;
+  readonly capabilities = { distributedMetadataLock: true, multipartUpload: true } as const;
   logLevel: string;
   private logger: Logger;
   config: S3ConnectionConfig;
@@ -802,6 +824,335 @@ export class S3Client extends EventEmitter {
     if (ok) return true;
     if ((err as Error).name === 'NoSuchKey' || (err as Error).name === 'NotFound') return false;
     throw err;
+  }
+
+  private _fullKey(key: string): string {
+    const keyPrefix = typeof this.config.keyPrefix === 'string' ? this.config.keyPrefix : '';
+    return keyPrefix ? path.join(keyPrefix, key) : key;
+  }
+
+  private _encodeUserMetadata(metadata: Record<string, unknown> | undefined): Record<string, string> | undefined {
+    if (!metadata) return undefined;
+    const stringMetadata: Record<string, string> = {};
+    for (const [k, v] of Object.entries(metadata)) {
+      const validKey = String(k).replace(/[^a-zA-Z0-9\-_]/g, '_').toLowerCase();
+      const { encoded } = metadataEncode(v);
+      stringMetadata[validKey] = encoded;
+    }
+    return stringMetadata;
+  }
+
+  async createMultipartUpload(params: StorageCreateMultipartUploadParams): Promise<StorageCreateMultipartUploadResponse> {
+    const { key, metadata, contentType, contentEncoding } = params;
+
+    return await this._executeOperation(async () => {
+      const options: Record<string, unknown> = {
+        Bucket: this.config.bucket,
+        Key: this._fullKey(key),
+      };
+
+      const stringMetadata = this._encodeUserMetadata(metadata);
+      if (stringMetadata) options.Metadata = stringMetadata;
+      if (contentType !== undefined) options.ContentType = contentType;
+      if (contentEncoding !== undefined) options.ContentEncoding = contentEncoding;
+
+      const [ok, err, response] = await tryFn(() => this.sendCommand(new CreateMultipartUploadCommand(options as unknown as ConstructorParameters<typeof CreateMultipartUploadCommand>[0])));
+      this.emit('cl:CreateMultipartUpload', err || response, { key });
+
+      if (!ok) {
+        throw mapAwsError(err as Error, {
+          bucket: this.config.bucket,
+          key,
+          commandName: 'CreateMultipartUploadCommand',
+          commandInput: options,
+        });
+      }
+
+      return { key, uploadId: (response as { UploadId?: string }).UploadId! };
+    }, { metadata: { operation: 'createMultipartUpload', key } });
+  }
+
+  async uploadPart(params: StorageUploadPartParams): Promise<StorageUploadPartResponse> {
+    const { key, uploadId, partNumber, body, contentLength } = params;
+
+    return await this._executeOperation(async () => {
+      const options: Record<string, unknown> = {
+        Bucket: this.config.bucket,
+        Key: this._fullKey(key),
+        UploadId: uploadId,
+        PartNumber: partNumber,
+        Body: body || Buffer.alloc(0),
+      };
+
+      if (contentLength !== undefined) options.ContentLength = contentLength;
+
+      const [ok, err, response] = await tryFn(() => this.sendCommand(new UploadPartCommand(options as unknown as ConstructorParameters<typeof UploadPartCommand>[0])));
+      this.emit('cl:UploadPart', err || response, { key, uploadId, partNumber });
+
+      if (!ok) {
+        throw mapAwsError(err as Error, {
+          bucket: this.config.bucket,
+          key,
+          commandName: 'UploadPartCommand',
+          commandInput: { ...options, Body: undefined },
+        });
+      }
+
+      const etag = (response as { ETag?: string }).ETag;
+      if (!etag) {
+        throw new UnknownError('UploadPart returned no ETag', {
+          bucket: this.config.bucket,
+          key,
+          uploadId,
+          partNumber,
+        });
+      }
+
+      return { partNumber, etag };
+    }, { metadata: { operation: 'uploadPart', key, partNumber } });
+  }
+
+  async completeMultipartUpload(params: StorageCompleteMultipartUploadParams): Promise<StorageCompleteMultipartUploadResponse> {
+    const { key, uploadId, parts } = params;
+
+    if (!parts || parts.length === 0) {
+      throw new ValidationError('completeMultipartUpload requires at least one uploaded part.', {
+        key,
+        uploadId,
+      });
+    }
+
+    return await this._executeOperation(async () => {
+      const orderedParts = [...parts].sort((a, b) => a.partNumber - b.partNumber);
+      const options = {
+        Bucket: this.config.bucket,
+        Key: this._fullKey(key),
+        UploadId: uploadId,
+        MultipartUpload: {
+          Parts: orderedParts.map((part) => ({
+            ETag: part.etag,
+            PartNumber: part.partNumber,
+          })),
+        },
+      };
+
+      const [ok, err, response] = await tryFn(() => this.sendCommand(new CompleteMultipartUploadCommand(options)));
+      this.emit('cl:CompleteMultipartUpload', err || response, { key, uploadId, parts: orderedParts.length });
+
+      if (!ok) {
+        throw mapAwsError(err as Error, {
+          bucket: this.config.bucket,
+          key,
+          commandName: 'CompleteMultipartUploadCommand',
+          commandInput: options,
+        });
+      }
+
+      const completed = response as { ETag?: string; VersionId?: string; Location?: string };
+      return {
+        ETag: completed.ETag ?? null,
+        VersionId: completed.VersionId ?? null,
+        Location: completed.Location ?? null,
+      };
+    }, { metadata: { operation: 'completeMultipartUpload', key } });
+  }
+
+  async abortMultipartUpload(params: StorageAbortMultipartUploadParams): Promise<StorageAbortMultipartUploadResponse> {
+    const { key, uploadId } = params;
+
+    return await this._executeOperation(async () => {
+      const options = {
+        Bucket: this.config.bucket,
+        Key: this._fullKey(key),
+        UploadId: uploadId,
+      };
+
+      const [ok, err, response] = await tryFn(() => this.sendCommand(new AbortMultipartUploadCommand(options)));
+      this.emit('cl:AbortMultipartUpload', err || response, { key, uploadId });
+
+      if (!ok) {
+        throw mapAwsError(err as Error, {
+          bucket: this.config.bucket,
+          key,
+          commandName: 'AbortMultipartUploadCommand',
+          commandInput: options,
+        });
+      }
+
+      return { key, uploadId };
+    }, { metadata: { operation: 'abortMultipartUpload', key } });
+  }
+
+  async listParts(params: StorageListPartsParams): Promise<StorageListPartsResponse> {
+    const { key, uploadId, maxParts = 1000, partNumberMarker = 0 } = params;
+
+    return await this._executeOperation(async () => {
+      const options = {
+        Bucket: this.config.bucket,
+        Key: this._fullKey(key),
+        UploadId: uploadId,
+        MaxParts: maxParts,
+        PartNumberMarker: String(partNumberMarker),
+      };
+
+      const [ok, err, response] = await tryFn(() => this.sendCommand(new ListPartsCommand(options)));
+      this.emit('cl:ListParts', err || response, { key, uploadId });
+
+      if (!ok) {
+        throw mapAwsError(err as Error, {
+          bucket: this.config.bucket,
+          key,
+          commandName: 'ListPartsCommand',
+          commandInput: options,
+        });
+      }
+
+      const raw = response as {
+        Parts?: Array<{ PartNumber?: number; ETag?: string }>;
+        IsTruncated?: boolean;
+        NextPartNumberMarker?: number;
+      };
+
+      return {
+        key,
+        uploadId,
+        parts: (raw.Parts || []).map((part) => ({
+          partNumber: part.PartNumber!,
+          etag: part.ETag!,
+        })),
+        isTruncated: raw.IsTruncated ?? false,
+        nextPartNumberMarker: raw.NextPartNumberMarker ?? null,
+      };
+    }, { metadata: { operation: 'listParts', key } });
+  }
+
+  async listMultipartUploads(params: StorageListMultipartUploadsParams = {}): Promise<StorageListMultipartUploadsResponse> {
+    const { prefix, maxUploads = 1000, continuationToken } = params;
+
+    return await this._executeOperation(async () => {
+      const options: Record<string, unknown> = {
+        Bucket: this.config.bucket,
+        MaxUploads: maxUploads,
+      };
+
+      if (prefix !== undefined) options.Prefix = prefix;
+      if (continuationToken) {
+        const [keyMarker, uploadIdMarker] = String(continuationToken).split('|', 2);
+        options.KeyMarker = keyMarker;
+        options.UploadIdMarker = uploadIdMarker;
+      }
+
+      const [ok, err, response] = await tryFn(() => this.sendCommand(new ListMultipartUploadsCommand(options as unknown as ConstructorParameters<typeof ListMultipartUploadsCommand>[0])));
+      this.emit('cl:ListMultipartUploads', err || response, { prefix });
+
+      if (!ok) {
+        throw mapAwsError(err as Error, {
+          bucket: this.config.bucket,
+          commandName: 'ListMultipartUploadsCommand',
+          commandInput: options,
+        });
+      }
+
+      const raw = response as {
+        Uploads?: Array<{ Key?: string; UploadId?: string; Initiated?: Date }>;
+        IsTruncated?: boolean;
+        NextKeyMarker?: string;
+        NextUploadIdMarker?: string;
+      };
+
+      const configuredPrefix = this.config.keyPrefix
+        ? `${this.config.keyPrefix.replace(/\/+$/, '')}/`
+        : '';
+      const stripConfiguredPrefix = (key: string | undefined): string =>
+        key && configuredPrefix && key.startsWith(configuredPrefix)
+          ? key.slice(configuredPrefix.length)
+          : (key ?? '');
+
+      return {
+        uploads: (raw.Uploads || []).map((upload) => ({
+          key: stripConfiguredPrefix(upload.Key),
+          uploadId: upload.UploadId!,
+          initiated: upload.Initiated ?? null,
+        })),
+        isTruncated: raw.IsTruncated ?? false,
+        nextContinuationToken: raw.IsTruncated && raw.NextKeyMarker
+          ? `${raw.NextKeyMarker}|${raw.NextUploadIdMarker ?? ''}`
+          : null,
+      };
+    }, { metadata: { operation: 'listMultipartUploads' } });
+  }
+
+  async putObjectMultipart(params: StoragePutObjectMultipartParams): Promise<StoragePutObjectResponse> {
+    const { key, body, metadata, contentType, contentEncoding, partSize, queueConcurrency, onProgress } = params;
+
+    const MIN_PART_SIZE = 5 * 1024 * 1024;
+    const resolvedPartSize = partSize ?? 8 * 1024 * 1024;
+
+    if (!Number.isFinite(resolvedPartSize) || resolvedPartSize <= 0) {
+      throw new ValidationError('putObjectMultipart requires a positive partSize.', { key, partSize });
+    }
+
+    const buffer = Buffer.isBuffer(body)
+      ? body
+      : typeof body === 'string'
+        ? Buffer.from(body, 'utf8')
+        : await this._streamToBuffer(body);
+
+    const totalParts = Math.max(1, Math.ceil(buffer.length / resolvedPartSize));
+
+    if (totalParts > 1 && resolvedPartSize < MIN_PART_SIZE) {
+      throw new ValidationError(
+        `partSize must be at least ${MIN_PART_SIZE} bytes when the body is split into multiple parts (S3 minimum part size).`,
+        { key, partSize: resolvedPartSize, totalParts }
+      );
+    }
+
+    const { uploadId } = await this.createMultipartUpload({ key, metadata, contentType, contentEncoding });
+    const concurrency = Math.max(1, Math.min(queueConcurrency ?? 4, totalParts));
+
+    try {
+      const parts: StorageCompleteMultipartUploadParams['parts'] = [];
+      let uploadedBytes = 0;
+      let nextPartNumber = 1;
+
+      const worker = async (): Promise<void> => {
+        while (true) {
+          const partNumber = nextPartNumber++;
+          if (partNumber > totalParts) return;
+
+          const start = (partNumber - 1) * resolvedPartSize;
+          const chunkBuffer = buffer.subarray(start, Math.min(start + resolvedPartSize, buffer.length));
+          const uploaded = await this.uploadPart({ key, uploadId, partNumber, body: chunkBuffer, contentLength: chunkBuffer.length });
+          parts.push({ partNumber: uploaded.partNumber, etag: uploaded.etag });
+          uploadedBytes += chunkBuffer.length;
+          onProgress?.({ partNumber, totalParts, uploadedBytes });
+        }
+      };
+
+      await Promise.all(Array.from({ length: concurrency }, () => worker()));
+
+      const completed = await this.completeMultipartUpload({ key, uploadId, parts });
+      const summary = { key, uploadId, totalParts, uploadedBytes, etag: completed.ETag };
+      this.emit('cl:PutObjectMultipart', summary, { key });
+
+      return {
+        ETag: completed.ETag ?? '',
+        VersionId: completed.VersionId,
+        ServerSideEncryption: null,
+        Location: completed.Location ?? '',
+      };
+    } catch (error) {
+      await tryFn(() => this.abortMultipartUpload({ key, uploadId }));
+      throw error;
+    }
+  }
+
+  private async _streamToBuffer(stream: Readable): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array));
+    }
+    return Buffer.concat(chunks);
   }
 
   async deleteObject(key: string): Promise<unknown> {
