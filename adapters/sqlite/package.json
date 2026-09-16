@@ -1,6 +1,6 @@
 {
   "name": "@baldim/adapter-sqlite",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "SQLite, libSQL, and Cloudflare D1 storage adapters for Baldim.",
   "license": "MIT",

@@ -1,5 +1,13 @@
 # @baldim/adapter-reddb
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @baldim/core@0.2.1
+  - @baldim/utils@0.1.0
+
 ## 0.2.0
 
 ### Minor Changes

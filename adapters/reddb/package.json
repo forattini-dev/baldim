@@ -1,6 +1,6 @@
 {
   "name": "@baldim/adapter-reddb",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "RedDB storage adapter for Baldim.",
   "license": "MIT",

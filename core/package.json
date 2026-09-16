@@ -1,6 +1,6 @@
 {
   "name": "@baldim/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "Document database engine, resource model, extension contracts, and multidatabase manager for Baldim.",
   "license": "MIT",

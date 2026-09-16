@@ -1,5 +1,13 @@
 # @baldim/plugin-tfstate
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @baldim/core@0.2.1
+  - @baldim/adapter-s3@0.1.2
+
 ## 0.1.0
 
 ### Minor Changes

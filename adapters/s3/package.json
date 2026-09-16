@@ -1,6 +1,6 @@
 {
   "name": "@baldim/adapter-s3",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "S3-compatible storage adapter for Baldim, including AWS S3, Cloudflare R2, and MinIO.",
   "license": "MIT",

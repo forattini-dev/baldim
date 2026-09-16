@@ -1,5 +1,11 @@
 # @baldim/core
 
+## 0.2.1
+
+### Patch Changes
+
+- Add multipart upload support to the storage client: optional Client operations (createMultipartUpload, uploadPart, completeMultipartUpload, abortMultipartUpload, listParts, listMultipartUploads, putObjectMultipart), a `multipartUpload` capability flag, and a `Resource.insert({ multipart })` option that routes the object write through multipart when the storage client supports it.
+
 ## 0.2.0
 
 ### Minor Changes

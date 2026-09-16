@@ -1,6 +1,6 @@
 {
   "name": "@baldim/plugin-tfstate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Terraform and OpenTofu state ingestion, history, diffs, monitoring, and export for Baldim.",
   "license": "MIT",
@@ -45,7 +45,7 @@
     "glob": "^13.0.6"
   },
   "peerDependencies": {
-    "@baldim/core": "^0.2.0"
+    "@baldim/core": "^0.2.1"
   },
   "devDependencies": {
     "@baldim/core": "workspace:*",

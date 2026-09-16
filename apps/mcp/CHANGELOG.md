@@ -1,5 +1,18 @@
 # @baldim/mcp
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @baldim/core@0.2.1
+  - @baldim/adapter-s3@0.1.2
+  - @baldim/adapter-filesystem@0.1.2
+  - @baldim/adapter-reddb@0.2.1
+  - @baldim/adapter-sqlite@0.2.1
+  - @baldim/plugin-cache@0.1.1
+  - @baldim/plugin-costs@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

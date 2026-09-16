@@ -59,7 +59,7 @@
     "redblue-cli": "^0.1.0"
   },
   "peerDependencies": {
-    "@baldim/core": "^0.2.0"
+    "@baldim/core": "^0.2.1"
   },
   "devDependencies": {
     "@baldim/adapter-memory": "workspace:*",

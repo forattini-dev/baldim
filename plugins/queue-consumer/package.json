@@ -42,7 +42,7 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-sqs": ">=3",
-    "@baldim/core": "^0.2.0",
+    "@baldim/core": "^0.2.1",
     "amqplib": ">=0.10",
     "bullmq": ">=5",
     "ioredis": ">=5"

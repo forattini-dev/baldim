@@ -1,6 +1,6 @@
 {
   "name": "@baldim/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Model Context Protocol server for Baldim documentation and databases.",
   "license": "MIT",
