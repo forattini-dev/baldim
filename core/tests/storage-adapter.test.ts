@@ -4,7 +4,6 @@ import {
   createStorageClient,
   hasStorageAdapter,
   registerStorageAdapter,
-  resolveLegacyConnectionString,
   type StorageAdapterContext,
 } from '../src/storage-adapter.js';
 
@@ -38,17 +37,5 @@ describe('storage adapter registry', () => {
     await expect(createStorageClient('missing', context)).rejects.toThrow(
       'No storage adapter is registered for missing:'
     );
-  });
-
-  it('lets an adapter own legacy option resolution', () => {
-    const unregister = registerStorageAdapter('legacy', () => ({ id: 'legacy' }) as never, {
-      legacyConnectionString: (options) => options.legacyBucket === 'docs'
-        ? 'legacy://docs'
-        : undefined,
-    });
-
-    expect(resolveLegacyConnectionString({ legacyBucket: 'docs' })).toBe('legacy://docs');
-    unregister();
-    expect(resolveLegacyConnectionString({ legacyBucket: 'docs' })).toBeUndefined();
   });
 });

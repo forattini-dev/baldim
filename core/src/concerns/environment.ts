@@ -3,5 +3,5 @@
  * spelling so existing deployments keep their operational configuration.
  */
 export function getBaldimEnvironment(suffix: string): string | undefined {
-  return process.env[`BALDIM_${suffix}`] ?? process.env[`S3DB_${suffix}`];
+  return process.env[`BALDIM_${suffix}`];
 }

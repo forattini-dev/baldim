@@ -695,11 +695,6 @@ export class GeoPlugin extends Plugin<GeoPluginOptions> {
     return [...hashes];
   }
 
-  /** @deprecated Use getGeohashesInBounds(). */
-  _getGeohashesInBounds(options: GetGeohashesInBoundsOptions): string[] {
-    return this.getGeohashesInBounds(options);
-  }
-
   toRadians(degrees: number): number {
     return degrees * (Math.PI / 180);
   }
@@ -713,11 +708,6 @@ export class GeoPlugin extends Plugin<GeoPluginOptions> {
     return distances[precision] || 5;
   }
 
-  /** @deprecated Use getPrecisionDistance(). */
-  _getPrecisionDistance(precision: number): number {
-    return this.getPrecisionDistance(precision);
-  }
-
   selectOptimalZoom(zoomLevels: number[], radiusKm: number): number {
     if (!zoomLevels.length) {
       throw new GeoError('At least one zoom level is required', { operation: 'selectOptimalZoom' });
@@ -728,11 +718,6 @@ export class GeoPlugin extends Plugin<GeoPluginOptions> {
         ? current
         : best,
     );
-  }
-
-  /** @deprecated Use selectOptimalZoom(). */
-  _selectOptimalZoom(zoomLevels: number[], radiusKm: number): number | null {
-    return zoomLevels.length ? this.selectOptimalZoom(zoomLevels, radiusKm) : null;
   }
 
   getStats(): GeoStats {

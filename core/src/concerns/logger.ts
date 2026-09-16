@@ -15,8 +15,6 @@ export interface LoggerOptions {
 }
 
 export interface BaldimLogger extends PinoLogger {}
-/** @deprecated Use BaldimLogger. */
-export type S3DBLogger = BaldimLogger;
 
 export type Logger = BaldimLogger;
 

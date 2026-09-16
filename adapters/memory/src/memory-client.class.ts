@@ -2,7 +2,7 @@ import path from 'path';
 import EventEmitter from 'events';
 import { chunk } from 'lodash-es';
 
-import { BaseError, DatabaseError, TasksRunner, idGenerator, mapAwsError, tryFn } from './runtime.js';
+import { BaseError, DatabaseError, TasksRunner, idGenerator, mapStorageError, tryFn } from './runtime.js';
 import { metadataDecode, metadataEncode } from './metadata-encoding.js';
 import { MemoryStorage } from './memory-storage.class.js';
 import { createLogger } from './runtime.js';
@@ -195,7 +195,7 @@ export class MemoryClient extends EventEmitter {
       if (error instanceof BaseError) {
         throw error;
       }
-      const mappedError = mapAwsError(error as Error, {
+      const mappedError = mapStorageError(error as Error, {
         bucket: this.bucket,
         key: input.Key,
         commandName,

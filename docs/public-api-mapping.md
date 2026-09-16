@@ -8,7 +8,7 @@ the former `s3db.js/concerns/*` wildcard at baseline commit
 
 | Former import | Baldim import | Disposition |
 | --- | --- | --- |
-| `s3db.js` | `@baldim/core` | `Baldim` is canonical; `S3db` and `BuckieDB` remain deprecated aliases. |
+| `s3db.js` | `@baldim/core` | `Baldim` is canonical. |
 | `s3db.js/lite` | `@baldim/core/lite` | Migrated. |
 | `s3db.js/typescript-generator` | `@baldim/typegen` | Migrated to an independently publishable package. |
 | `s3db.js/concerns/guards-helpers` | `@baldim/plugin-api/guards` | Owned by the API plugin. |

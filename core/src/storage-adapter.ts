@@ -12,17 +12,8 @@ export type StorageAdapterFactory = (
   context: StorageAdapterContext
 ) => Client | Promise<Client>;
 
-export type LegacyConnectionStringResolver = (
-  options: Readonly<Record<string, unknown>>
-) => string | undefined;
-
-export interface StorageAdapterRegistrationOptions {
-  legacyConnectionString?: LegacyConnectionStringResolver;
-}
-
 interface RegisteredStorageAdapter {
   factory: StorageAdapterFactory;
-  legacyConnectionString?: LegacyConnectionStringResolver;
 }
 
 const adapters = new Map<string, RegisteredStorageAdapter>();
@@ -33,11 +24,10 @@ function normalizeProtocol(protocol: string): string {
 
 export function registerStorageAdapter(
   protocols: string | readonly string[],
-  factory: StorageAdapterFactory,
-  options: StorageAdapterRegistrationOptions = {}
+  factory: StorageAdapterFactory
 ): () => void {
   const normalized = (Array.isArray(protocols) ? protocols : [protocols]).map(normalizeProtocol);
-  const registration: RegisteredStorageAdapter = { factory, ...options };
+  const registration: RegisteredStorageAdapter = { factory };
 
   for (const protocol of normalized) {
     if (!protocol) {
@@ -57,17 +47,6 @@ export function registerStorageAdapter(
 
 export function hasStorageAdapter(protocol: string): boolean {
   return adapters.has(normalizeProtocol(protocol));
-}
-
-export function resolveLegacyConnectionString(
-  options: Readonly<Record<string, unknown>>
-): string | undefined {
-  const registrations = new Set(adapters.values());
-  for (const registration of registrations) {
-    const connectionString = registration.legacyConnectionString?.(options);
-    if (connectionString) return connectionString;
-  }
-  return undefined;
 }
 
 export async function createStorageClient(

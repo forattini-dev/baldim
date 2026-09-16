@@ -35,7 +35,7 @@ export class ResourceError extends BaseError {}
 export class ValidationError extends BaseError {}
 export class MetadataLimitError extends BaseError {}
 
-export function mapAwsError(error: Error, context: ErrorContext = {}): BaseError {
+export function mapStorageError(error: Error, context: ErrorContext = {}): BaseError {
   if (error instanceof BaseError) return error;
   return new DatabaseError(error.message || 'Storage operation failed', { ...context, original: error });
 }

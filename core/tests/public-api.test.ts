@@ -1,13 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import BaldimDefault, {
   Baldim,
-  BuckieDB,
   CronManager,
   createCronManager,
   Database,
-  S3db,
   StorageError,
-  S3dbError,
   decode,
   encode,
 } from '@baldim/core';
@@ -35,26 +32,18 @@ describe('@baldim/core public API', () => {
     manager.removeSignalHandlers();
   });
 
-  it('keeps the old public names as migration aliases', () => {
-    expect(new BuckieDB({ connectionString: 'memory://name-compat', logLevel: 'silent' })).toBeInstanceOf(Baldim);
-    expect(new S3db({ connectionString: 'memory://compat-test', logLevel: 'silent' })).toBeInstanceOf(Baldim);
-  });
-
-  it('keeps the canonical storage error compatible with the old class name', () => {
+  it('maps provider failures to providerMessage', () => {
     const error = new StorageError('provider failed', {
       original: { name: 'ProviderFailure', message: 'low-level failure' },
     });
 
-    expect(error).toBeInstanceOf(S3dbError);
+    expect(error).toBeInstanceOf(StorageError);
     expect(error.providerMessage).toBe('low-level failure');
-    expect(error.awsMessage).toBe('low-level failure');
   });
 
-  it('prefers BALDIM environment settings and accepts S3DB fallbacks', () => {
+  it('reads BALDIM environment settings', () => {
     vi.stubEnv('BALDIM_LOG_LEVEL', 'error');
-    vi.stubEnv('S3DB_LOG_LEVEL', 'debug');
     vi.stubEnv('BALDIM_DISABLE_CRON', 'true');
-    vi.stubEnv('S3DB_DISABLE_CRON', 'false');
 
     const database = new Baldim({
       connectionString: 'memory://environment-test',

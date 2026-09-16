@@ -2,8 +2,6 @@ export type HookFunction<T = unknown> = (data: T) => T | Promise<T>;
 
 export type BoundHookFunction<T = unknown> = HookFunction<T> & {
   __baldim_original?: HookFunction<T>;
-  /** @deprecated Compatibility marker for hooks bound by s3db.js. */
-  __s3db_original?: HookFunction<T>;
 };
 
 export interface HooksCollection {
@@ -127,8 +125,7 @@ export class ResourceHooks {
 
     const index = hooks.findIndex((hook) =>
       hook === fn ||
-      hook.__baldim_original === fn ||
-      hook.__s3db_original === fn
+      hook.__baldim_original === fn
     );
     if (index === -1) return false;
     hooks.splice(index, 1);
@@ -155,7 +152,7 @@ export class ResourceHooks {
     }
 
     const hookFn = fn as BoundHookFunction;
-    const original = hookFn.__baldim_original || hookFn.__s3db_original || hookFn;
+    const original = hookFn.__baldim_original || hookFn;
     const bound = original.bind(this.resource) as BoundHookFunction;
 
     try {

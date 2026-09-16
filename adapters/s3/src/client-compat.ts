@@ -8,7 +8,7 @@ export interface AwsRetryConfig {
   retryMode?: 'standard' | 'adaptive';
 }
 function normalizeRetryProfileValue(value: unknown): NormalizedRetryProfile {
-  const normalized = String(value || 'dual').trim().replace('aws-only', 'sdk-only');
+  const normalized = String(value || 'dual').trim();
 
   if (normalized === 'dual' || normalized === 'recker-only' || normalized === 'sdk-only') {
     return normalized;
@@ -18,14 +18,14 @@ function normalizeRetryProfileValue(value: unknown): NormalizedRetryProfile {
 }
 
 export function normalizeHttpClientRetryConfig(options: HttpClientOptions = {}): AwsRetryConfig {
-  const retryProfile = normalizeRetryProfileValue((options.retryProfile || options.retryCoordination) as unknown);
-  const rawAttempts = options.retryAttempts ?? options.awsMaxAttempts;
+  const retryProfile = normalizeRetryProfileValue(options.retryProfile);
+  const rawAttempts = options.retryAttempts;
   const maxAttempts =
     typeof rawAttempts === 'number' && Number.isFinite(rawAttempts) && rawAttempts > 0
       ? Math.max(1, Math.trunc(rawAttempts))
       : undefined;
 
-  const retryMode = options.retryMode ?? options.awsRetryMode;
+  const retryMode = options.retryMode;
 
   return {
     retryProfile,

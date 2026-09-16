@@ -1069,12 +1069,12 @@ export class Schema {
     if (invalid.length > 0) {
       throw new SchemaError('Schema map contains non-base36 keys.', {
         description: `Invalid map entries: ${invalid.slice(0, 5).join(', ')}${invalid.length > 5 ? '...' : ''}`,
-        suggestion: 'Recreate the resource with base36 mapping; legacy maps are not supported.'
+        suggestion: 'Recreate the resource with a clean base36 mapping.'
       });
     }
   }
 
-  private _buildRegistryFromMap(legacyMap: AttributeMapping, existingRegistry?: SchemaRegistry): SchemaRegistry {
+  private _buildRegistryFromMap(map: AttributeMapping, existingRegistry?: SchemaRegistry): SchemaRegistry {
     const registry: SchemaRegistry = {
       nextIndex: existingRegistry?.nextIndex ?? 0,
       mapping: { ...existingRegistry?.mapping },
@@ -1082,7 +1082,7 @@ export class Schema {
     };
 
     let maxIndex = registry.nextIndex - 1;
-    for (const [attr, encodedKey] of Object.entries(legacyMap)) {
+    for (const [attr, encodedKey] of Object.entries(map)) {
       const index = decodeKey(encodedKey);
       if (!(attr in registry.mapping)) {
         registry.mapping[attr] = index;

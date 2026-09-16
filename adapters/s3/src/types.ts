@@ -79,12 +79,6 @@ export interface HttpClientOptions {
   retryAttempts?: number;
   /** Retry mode for AWS client when its retry layer is active ('standard' | 'adaptive'). */
   retryMode?: 'standard' | 'adaptive';
-  /** Backward-compatible alias for retryProfile. */
-  retryCoordination?: 'dual' | 'recker-only' | 'aws-only';
-  /** Backward-compatible alias for retryMode. */
-  awsRetryMode?: 'standard' | 'adaptive';
-  /** Backward-compatible alias for retryAttempts. */
-  awsMaxAttempts?: number;
   connectTimeout?: number;
   headersTimeout?: number;
   bodyTimeout?: number;
@@ -203,17 +197,4 @@ export interface AwsHttpResponse {
 export interface HandleOptions {
   abortSignal?: AbortSignal;
   requestTimeout?: number;
-}
-
-
-
-/** Compatibility options accepted by Baldim when this adapter is imported. */
-export interface LegacyS3DatabaseOptions {
-  bucket?: string;
-  region?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
-  sessionToken?: string;
-  endpoint?: string;
-  forcePathStyle?: boolean;
 }

@@ -118,8 +118,7 @@ directly. Core and all storage adapters remain free of Raffel.
 Every former public subpath has a destination or explicit disposition in the
 [public API mapping](docs/public-api-mapping.md).
 
-`BuckieDB` and `S3db` remain as deprecated class aliases. The persisted `s3db.json` manifest and
-the existing `S3DB_*` environment variables remain supported during migration.
+The persisted `s3db.json` manifest remains supported so existing buckets keep working.
 
 ## License
 

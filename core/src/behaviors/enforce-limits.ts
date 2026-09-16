@@ -11,8 +11,6 @@ import type {
 } from './types.js';
 
 export const DEFAULT_METADATA_LIMIT_BYTES = 2047;
-/** @deprecated Use DEFAULT_METADATA_LIMIT_BYTES. */
-export const S3_METADATA_LIMIT_BYTES = DEFAULT_METADATA_LIMIT_BYTES;
 
 export async function handleInsert({ resource, data, mappedData }: BehaviorHandleInsertParams): Promise<BehaviorResult> {
   const totalSize = calculateTotalSize(mappedData);

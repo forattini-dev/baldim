@@ -16,8 +16,6 @@ export interface BaseErrorContext {
   statusCode?: number;
   requestId?: string;
   providerMessage?: string;
-  /** @deprecated Use providerMessage. */
-  awsMessage?: string;
   original?: Error | unknown;
   commandName?: string;
   commandInput?: unknown;
@@ -39,8 +37,6 @@ export interface SerializedError {
   statusCode?: number;
   requestId?: string;
   providerMessage?: string;
-  /** @deprecated Use providerMessage. */
-  awsMessage?: string;
   bucket?: string;
   key?: string;
   thrownAt?: Date;
@@ -66,8 +62,6 @@ export class BaseError extends Error {
   statusCode: number;
   requestId?: string;
   providerMessage?: string;
-  /** @deprecated Use providerMessage. */
-  awsMessage?: string;
   original?: Error | unknown;
   commandName?: string;
   commandInput?: unknown;
@@ -90,7 +84,6 @@ export class BaseError extends Error {
       statusCode,
       requestId,
       providerMessage,
-      awsMessage,
       original,
       commandName,
       commandInput,
@@ -123,8 +116,7 @@ export class BaseError extends Error {
     this.code = code;
     this.statusCode = statusCode ?? 500;
     this.requestId = requestId;
-    this.providerMessage = providerMessage ?? awsMessage;
-    this.awsMessage = awsMessage ?? providerMessage;
+    this.providerMessage = providerMessage;
     this.original = original;
     this.commandName = commandName;
     this.commandInput = commandInput;
@@ -157,7 +149,6 @@ export class BaseError extends Error {
       statusCode: this.statusCode,
       requestId: this.requestId,
       providerMessage: this.providerMessage,
-      awsMessage: this.awsMessage,
       bucket: this.bucket,
       key: this.key,
       thrownAt: this.thrownAt,
@@ -204,8 +195,6 @@ export interface StorageErrorDetails {
   code?: string;
   requestId?: string;
   providerMessage?: string;
-  /** @deprecated Use providerMessage. */
-  awsMessage?: string;
   metadata?: StringRecord;
   original?: StorageErrorLike | Error | unknown;
   statusCode?: number;
@@ -240,17 +229,12 @@ export class StorageError extends BaseError {
       code: details.code ?? code,
       statusCode: details.statusCode ?? statusCode,
       requestId: details.requestId ?? requestId,
-      providerMessage: details.providerMessage ?? details.awsMessage ?? providerMessage,
+      providerMessage: details.providerMessage ?? providerMessage,
       original,
       metadata: details.metadata ?? metadata,
     });
   }
 }
-
-/** @deprecated Use StorageError. */
-export { StorageError as S3dbError };
-/** @deprecated Use StorageErrorDetails. */
-export type S3dbErrorDetails = StorageErrorDetails;
 
 export class DatabaseError extends StorageError {
   constructor(message: string, details: StorageErrorDetails = {}) {
@@ -746,11 +730,6 @@ export class CryptoError extends StorageError {
     super(message, merged);
   }
 }
-
-/** @deprecated Use MapStorageErrorContext. */
-export type MapAwsErrorContext = MapStorageErrorContext;
-/** @deprecated Use mapStorageError. */
-export const mapAwsError = mapStorageError;
 
 export class SchemaError extends StorageError {
   constructor(message: string, details: StorageErrorDetails = {}) {

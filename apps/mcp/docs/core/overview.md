@@ -54,8 +54,6 @@ The memory implementation lives in `@baldim/adapter-memory` and is installed by
 core, so `memory:` works without setup. Filesystem, SQLite/libSQL/D1, RedDB, and
 S3-compatible storage live in separate adapter packages and register when imported.
 
-`S3db` remains available as a deprecated class alias so applications can migrate
-their imports before changing persisted data. Baldim continues to read and
-write the established `s3db.json` metadata format during this compatibility phase.
+Baldim continues to read and write the established `s3db.json` metadata format.
 
 No package has been published to npm yet.

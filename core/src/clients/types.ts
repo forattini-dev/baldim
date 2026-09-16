@@ -283,27 +283,6 @@ export interface StoragePutObjectMultipartParams {
   onProgress?: (progress: { partNumber: number; totalParts: number | null; uploadedBytes: number }) => void;
 }
 
-/** @deprecated Use StoragePutObjectParams. */
-export type PutObjectParams = StoragePutObjectParams;
-/** @deprecated Use StorageCopyObjectParams. */
-export type CopyObjectParams = StorageCopyObjectParams;
-/** @deprecated Use StorageListObjectsParams. */
-export type ListObjectsParams = StorageListObjectsParams;
-/** @deprecated Use StorageObject. */
-export type S3Object = StorageObject;
-/** @deprecated Use StorageObjectInfo. */
-export type S3ObjectInfo = StorageObjectInfo;
-/** @deprecated Use StoragePutObjectResponse. */
-export type PutObjectResponse = StoragePutObjectResponse;
-/** @deprecated Use StorageCopyObjectResponse. */
-export type CopyObjectResponse = StorageCopyObjectResponse;
-/** @deprecated Use StorageDeleteObjectResponse. */
-export type DeleteObjectResponse = StorageDeleteObjectResponse;
-/** @deprecated Use StorageDeleteObjectsResponse. */
-export type DeleteObjectsResponse = StorageDeleteObjectsResponse;
-/** @deprecated Use StorageListObjectsResponse. */
-export type ListObjectsResponse = StorageListObjectsResponse;
-
 export interface StorageObjectData {
   body: Buffer;
   metadata: Record<string, string>;

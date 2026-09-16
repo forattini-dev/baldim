@@ -28,7 +28,7 @@ import {
   UnknownError,
   ValidationError,
   idGenerator,
-  mapAwsError,
+  mapStorageError,
   md5,
   metadataDecode,
   metadataEncode,
@@ -176,7 +176,7 @@ export class S3Client extends EventEmitter {
 
     this.taskExecutorConfig = this._normalizeTaskExecutorConfig(poolConfig as boolean | TaskExecutorConfig);
     this.taskExecutor = this.taskExecutorConfig.enabled ? this._createTasksPool() : null;
-    const slowProfile = this._getPerfThresholdMs('S3DB_S3_SLOW_PROFILE', 0);
+    const slowProfile = this._getPerfThresholdMs('BALDIM_S3_SLOW_PROFILE', 0);
     const s3Defaults = slowProfile === 2
       ? {
           executeOperationMs: 2000,
@@ -196,16 +196,16 @@ export class S3Client extends EventEmitter {
         };
 
     this._slowOperationThresholds = {
-      executeOperationMs: this._getPerfThresholdMs('S3DB_S3_SLOW_EXECUTE_MS', s3Defaults.executeOperationMs),
-      getObjectMs: this._getPerfThresholdMs('S3DB_S3_SLOW_GETOBJECT_MS', s3Defaults.getObjectMs),
-      listObjectsMs: this._getPerfThresholdMs('S3DB_S3_SLOW_LISTOBJECTS_MS', s3Defaults.listObjectsMs),
-      getAllKeysIterationMs: this._getPerfThresholdMs('S3DB_S3_SLOW_LIST_ITERATION_MS', s3Defaults.getAllKeysIterationMs),
-      getAllKeysTotalMs: this._getPerfThresholdMs('S3DB_S3_SLOW_LIST_TOTAL_MS', s3Defaults.getAllKeysTotalMs),
-      getKeysPageMs: this._getPerfThresholdMs('S3DB_S3_SLOW_GETKEYSPAGE_MS', s3Defaults.getKeysPageMs)
+      executeOperationMs: this._getPerfThresholdMs('BALDIM_S3_SLOW_EXECUTE_MS', s3Defaults.executeOperationMs),
+      getObjectMs: this._getPerfThresholdMs('BALDIM_S3_SLOW_GETOBJECT_MS', s3Defaults.getObjectMs),
+      listObjectsMs: this._getPerfThresholdMs('BALDIM_S3_SLOW_LISTOBJECTS_MS', s3Defaults.listObjectsMs),
+      getAllKeysIterationMs: this._getPerfThresholdMs('BALDIM_S3_SLOW_LIST_ITERATION_MS', s3Defaults.getAllKeysIterationMs),
+      getAllKeysTotalMs: this._getPerfThresholdMs('BALDIM_S3_SLOW_LIST_TOTAL_MS', s3Defaults.getAllKeysTotalMs),
+      getKeysPageMs: this._getPerfThresholdMs('BALDIM_S3_SLOW_GETKEYSPAGE_MS', s3Defaults.getKeysPageMs)
     };
     this._warnSlowOperations = this._getPerfBoolean(
-      'S3DB_S3_SLOW_LOGS_ENABLED',
-      this._getPerfBoolean('S3DB_SLOW_LOGS_ENABLED', true)
+      'BALDIM_S3_SLOW_LOGS_ENABLED',
+      this._getPerfBoolean('BALDIM_SLOW_LOGS_ENABLED', true)
     );
   }
 
@@ -223,8 +223,8 @@ export class S3Client extends EventEmitter {
   }
 
   private _normalizeTaskExecutorConfig(config: boolean | TaskExecutorConfig): NormalizedTaskExecutorConfig {
-    const envEnabled = process.env.S3DB_EXECUTOR_ENABLED;
-    const envConcurrency = process.env.S3DB_CONCURRENCY;
+    const envEnabled = process.env.BALDIM_EXECUTOR_ENABLED;
+    const envConcurrency = process.env.BALDIM_CONCURRENCY;
 
     if (config === false || (typeof config === 'object' && config?.enabled === false) || envEnabled === 'false' || envEnabled === '0') {
       return { enabled: false };
@@ -449,7 +449,7 @@ export class S3Client extends EventEmitter {
   private _resolveBatchConcurrency(total: number): number {
     if (total <= 1) return total;
 
-    const env = process.env.S3DB_CONCURRENCY;
+    const env = process.env.BALDIM_CONCURRENCY;
     if (env) {
       const parsed = parseInt(env, 10);
       if (!isNaN(parsed) && parsed > 0) {
@@ -631,7 +631,7 @@ export class S3Client extends EventEmitter {
     if (!ok) {
       const bucket = this.config.bucket;
       const key = command.input && command.input.Key;
-      throw mapAwsError(err as Error, {
+      throw mapStorageError(err as Error, {
         bucket,
         key: key as string,
         commandName: command.constructor.name,
@@ -675,7 +675,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:PutObject', err || response, { key, metadata, contentType, body, contentEncoding, contentLength });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key,
           commandName: 'PutObjectCommand',
@@ -718,7 +718,7 @@ export class S3Client extends EventEmitter {
 
       if (!ok) {
         this.logger.debug({ key: key?.substring(0, 60), cmdMs, err: (err as Error)?.name }, `[S3Client.getObject] ERROR`);
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key,
           commandName: 'GetObjectCommand',
@@ -762,7 +762,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:HeadObject', err || response, { key });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key,
           commandName: 'HeadObjectCommand',
@@ -807,7 +807,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:CopyObject', err || response, { from, to, metadataDirective });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key: to,
           commandName: 'CopyObjectCommand',
@@ -860,7 +860,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:CreateMultipartUpload', err || response, { key });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key,
           commandName: 'CreateMultipartUploadCommand',
@@ -890,7 +890,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:UploadPart', err || response, { key, uploadId, partNumber });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key,
           commandName: 'UploadPartCommand',
@@ -940,7 +940,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:CompleteMultipartUpload', err || response, { key, uploadId, parts: orderedParts.length });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key,
           commandName: 'CompleteMultipartUploadCommand',
@@ -971,7 +971,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:AbortMultipartUpload', err || response, { key, uploadId });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key,
           commandName: 'AbortMultipartUploadCommand',
@@ -999,7 +999,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:ListParts', err || response, { key, uploadId });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key,
           commandName: 'ListPartsCommand',
@@ -1046,7 +1046,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:ListMultipartUploads', err || response, { prefix });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           commandName: 'ListMultipartUploadsCommand',
           commandInput: options,
@@ -1167,7 +1167,7 @@ export class S3Client extends EventEmitter {
       this.emit('cl:DeleteObject', err || response, { key });
 
       if (!ok) {
-        throw mapAwsError(err as Error, {
+        throw mapStorageError(err as Error, {
           bucket: this.config.bucket,
           key,
           commandName: 'DeleteObjectCommand',

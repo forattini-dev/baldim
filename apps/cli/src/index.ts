@@ -54,7 +54,6 @@ async function saveConfig(config: CLIConfig): Promise<void> {
 async function detectConnectionString(): Promise<string | null> {
   const sources = [
     async () => process.env.BALDIM_CONNECTION_STRING,
-    async () => process.env.S3DB_CONNECTION_STRING,
     async () => process.env.S3_CONNECTION_STRING,
     async () => process.env.DATABASE_URL,
     async () => {
@@ -72,9 +71,7 @@ async function detectConnectionString(): Promise<string | null> {
         const mcpConfigPath = path.join(os.homedir(), '.config', 'mcp', 'config.json');
         const content = await fs.readFile(mcpConfigPath, 'utf-8');
         const config = JSON.parse(content);
-        return config.servers?.baldim?.env?.BALDIM_CONNECTION_STRING
-          || config.servers?.s3db?.env?.S3DB_CONNECTION_STRING
-          || null;
+        return config.servers?.baldim?.env?.BALDIM_CONNECTION_STRING || null;
       } catch {
         return null;
       }

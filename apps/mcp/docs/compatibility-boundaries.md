@@ -34,15 +34,12 @@ so they are not renamed as part of the package migration.
 
 ## Operational configuration
 
-New deployments should use `BALDIM_*`. Every former `S3DB_*` environment variable
-remains a fallback, with the `BALDIM_*` value taking precedence when both are set.
+`BALDIM_*` is the only environment namespace.
 
-## Public API aliases
+## Public API
 
-`S3db`, `S3dbError`, `mapAwsError`, `S3Object`, `S3ObjectInfo`,
-`S3_METADATA_LIMIT_BYTES`, and `S3DBLogger` remain deprecated aliases. Canonical code
-uses `Baldim`, `StorageError`, `mapStorageError`, `StorageObject`,
-`DEFAULT_METADATA_LIMIT_BYTES`, and `BaldimLogger`.
+Canonical public names are `Baldim`, `StorageError`, `mapStorageError`,
+`StorageObject`, `DEFAULT_METADATA_LIMIT_BYTES`, and `BaldimLogger`.
 
 Provider names in `@baldim/adapter-s3` are current domain names for that package and
 do not leak storage selection or provider behavior into `@baldim/core`.

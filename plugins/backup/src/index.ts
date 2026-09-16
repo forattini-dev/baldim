@@ -132,8 +132,6 @@ export interface RestoreOptions {
   [key: string]: unknown;
   resources?: string[];
   mode?: 'merge' | 'replace' | 'skip';
-  /** @deprecated Use mode: 'replace'. */
-  overwrite?: boolean;
 }
 
 export interface ListBackupsOptions extends ListOptions {
@@ -824,7 +822,7 @@ export class BackupPlugin extends Plugin {
       resource = (this.database.resources as Record<string, Resource>)[resourceName]!;
     }
 
-    const mode = options.mode || (options.overwrite ? 'replace' : 'merge');
+    const mode = options.mode || 'merge';
     if (mode === 'replace') {
       for (const id of await resource.listIds()) await resource.delete(id);
     }

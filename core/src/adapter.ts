@@ -3,11 +3,8 @@ export {
   createStorageClient,
   hasStorageAdapter,
   registerStorageAdapter,
-  resolveLegacyConnectionString,
   type StorageAdapterContext,
   type StorageAdapterFactory,
-  type StorageAdapterRegistrationOptions,
-  type LegacyConnectionStringResolver,
   type Client,
 } from './storage-adapter.js';
 
@@ -16,8 +13,8 @@ export { tryFn } from './concerns/try-fn.js';
 export { md5 } from './concerns/crypto.js';
 export { idGenerator } from './concerns/id.js';
 export { metadataEncode, metadataDecode } from './concerns/metadata-encoding.js';
-export { mapStorageError, mapAwsError, UnknownError, BaseError, StorageError, S3dbError, DatabaseError, MetadataLimitError, ResourceError, ValidationError, NoSuchKey } from './errors.js';
-export type { BaseErrorContext, SerializedError, StorageErrorDetails, S3dbErrorDetails, MapStorageErrorContext, MapAwsErrorContext } from './errors.js';
+export { mapStorageError, UnknownError, BaseError, StorageError, DatabaseError, MetadataLimitError, ResourceError, ValidationError, NoSuchKey } from './errors.js';
+export type { BaseErrorContext, SerializedError, StorageErrorDetails, MapStorageErrorContext } from './errors.js';
 export { TasksPool } from './tasks/tasks-pool.class.js';
 export { TasksRunner } from './tasks/tasks-runner.class.js';
 export { createLogger } from './concerns/logger.js';

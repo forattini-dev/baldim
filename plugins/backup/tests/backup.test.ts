@@ -173,7 +173,7 @@ describe('BackupPlugin', () => {
 
     await users.update('u1', { name: 'Changed' });
     await users.insert({ id: 'u2', name: 'Grace' });
-    const restored = await plugin.restore(result.id, { overwrite: true });
+    const restored = await plugin.restore(result.id, { mode: 'replace' });
 
     expect(restored.restored).toEqual([
       { name: 'users', recordsRestored: 1, totalRecords: 1 }

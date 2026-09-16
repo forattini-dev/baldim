@@ -12,8 +12,7 @@ Original project and data remain unchanged. The historical s3db.js source was re
 - The dependency closure of the old `s3db.js/lite` entrypoint compiles in
   `@baldim/core`: Database, Resource, Schema, Validator, DatabaseManager,
   behaviors, streams, concurrency, tasks, and the transitional local clients.
-- `Baldim` is the primary named and default class. `BuckieDB` and `S3db` are deprecated
-  compatibility subclass and `Database` remains available.
+- `Baldim` is the primary named and default class. `Database` remains available.
 - `DatabaseManager` owns named connections, default routing, unified resource
   lookup, duplicate-name protection, reconnect-safe event forwarding, and
   connect rollback.
@@ -77,10 +76,9 @@ dependencies and release independently.
 ## Compatibility contract
 
 - Existing buckets keep the `s3db.json` manifest name and `s3dbVersion` metadata.
-- `BALDIM_*` is canonical; existing `S3DB_*` environment variables continue to work as fallbacks.
+- `BALDIM_*` is the only environment namespace.
 - Storage defaults remain unchanged so an import rename cannot silently select a
   different bucket, directory, or SQLite file.
-- `BuckieDB` and `S3db` remain importable while callers move to `Baldim`.
 - These names describe persisted or operational compatibility. New documentation
   and public entrypoints use the Baldim name.
 

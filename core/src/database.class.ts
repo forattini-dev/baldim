@@ -8,7 +8,7 @@ import { ProcessManager } from './concerns/process-manager.js';
 import { SafeEventEmitter } from './concerns/safe-event-emitter.js';
 import { CronManager } from './concerns/cron-manager.js';
 import { createLogger, getLoggerOptionsFromEnv, type Logger } from './concerns/logger.js';
-import { createStorageClient, resolveLegacyConnectionString } from './storage-adapter.js';
+import { createStorageClient } from './storage-adapter.js';
 
 import { ThreadPool } from './concurrency/thread-pool.js';
 import { DatabaseHooks } from './database/database-hooks.class.js';
@@ -281,8 +281,7 @@ export class Database extends SafeEventEmitter {
   }
 
   private _initializeClient(options: DatabaseOptions): void {
-    const connectionString = options.connectionString
-      ?? resolveLegacyConnectionString(options as unknown as Record<string, unknown>);
+    const connectionString = options.connectionString;
 
     let mergedClientOptions: ClientOptions = { ...(options.clientOptions || {}) };
     let parsedConnection: ConnectionString | null = null;
@@ -626,19 +625,5 @@ export class Database extends SafeEventEmitter {
 
 /** The primary Baldim database class. */
 export class Baldim extends Database {}
-
-/**
- * Compatibility alias for the project's earlier working name.
- *
- * @deprecated Import and instantiate `Baldim` instead.
- */
-export class BuckieDB extends Baldim {}
-
-/**
- * Compatibility alias for applications migrating from s3db.js.
- *
- * @deprecated Import and instantiate `Baldim` instead.
- */
-export class S3db extends Baldim {}
 
 export default Baldim;
