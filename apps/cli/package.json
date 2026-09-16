@@ -25,7 +25,7 @@
     "@baldim/testing": "workspace:*",
     "@baldim/typegen": "workspace:*",
     "cli-args-parser": "^1.0.6",
-    "tuiuiu.js": "1.0.63"
+    "tuiuiu.js": "1.0.75"
   },
   "devDependencies": {
     "@types/node": "25.5.2",
