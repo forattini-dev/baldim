@@ -46,7 +46,7 @@
   "devDependencies": {
     "@baldim/core": "workspace:*",
     "@types/node": "25.5.2",
-    "typescript": "6.0.2",
+    "typescript": "7.0.2",
     "@baldim/adapter-memory": "workspace:*"
   }
 }
