@@ -621,7 +621,7 @@ export class S3Client extends EventEmitter {
   }
 
   async putObject(params: StoragePutObjectParams): Promise<unknown> {
-    const { key, metadata, contentType, body, contentEncoding, contentLength, ifMatch, ifNoneMatch } = params;
+    const { key, metadata, contentType, body, contentEncoding, contentLength, ifMatch, ifNoneMatch, serverSideEncryption } = params;
 
     return await this._executeOperation(async () => {
       const keyPrefix = typeof this.config.keyPrefix === 'string' ? this.config.keyPrefix : '';
@@ -648,6 +648,7 @@ export class S3Client extends EventEmitter {
       if (contentLength !== undefined) options.ContentLength = contentLength;
       if (ifMatch !== undefined) options.IfMatch = ifMatch;
       if (ifNoneMatch !== undefined) options.IfNoneMatch = ifNoneMatch;
+      if (serverSideEncryption !== undefined) options.ServerSideEncryption = serverSideEncryption;
 
       const [ok, err, response] = await tryFn(() => this.sendCommand(new PutObjectCommand(options as unknown as ConstructorParameters<typeof PutObjectCommand>[0])));
       this.emit('cl:PutObject', err || response, { key, metadata, contentType, body, contentEncoding, contentLength });

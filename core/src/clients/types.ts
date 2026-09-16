@@ -72,6 +72,7 @@ export interface StoragePutObjectParams {
   contentLength?: number;
   ifMatch?: string;
   ifNoneMatch?: string;
+  serverSideEncryption?: 'AES256' | 'aws:kms';
 }
 
 export interface StorageCopyObjectParams {
