@@ -41,7 +41,7 @@
     "recker": "1.0.103"
   },
   "optionalDependencies": {
-    "nodemailer": "^10.0.1",
+    "nodemailer": "^10.0.9",
     "smtp-server": "^3.19.8"
   },
   "peerDependencies": {
