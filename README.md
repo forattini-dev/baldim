@@ -408,7 +408,7 @@ Install the adapter next to your application, import it once in the process entr
 | [`@baldim/adapter-memory`](adapters/memory) | `memory:` | Tests, prototypes, ephemeral workloads; loaded by core automatically. |
 | [`@baldim/adapter-filesystem`](adapters/filesystem) | `file:` | Local and mounted filesystems with durable object layout. |
 | [`@baldim/adapter-sqlite`](adapters/sqlite) | `sqlite:`, `sqlite+libsql:`, `sqlite+d1:` | Local SQLite, remote libSQL, and Cloudflare D1. |
-| [`@baldim/adapter-s3`](adapters/s3) | `s3:`, `http:`, `https:` | AWS S3, Cloudflare R2, MinIO, and compatible object stores. |
+| [`@baldim/adapter-s3`](adapters/s3) | `s3:`, `http:`, `https:` | AWS S3, Cloudflare R2, Floci, and compatible object stores. |
 | [`@baldim/adapter-reddb`](adapters/reddb) | `reddb:` | RedDB through its public HTTP storage contract. |
 
 ```sh
@@ -783,7 +783,7 @@ pnpm build
 pnpm test
 ```
 
-The CI pipeline enforces package dependency boundaries, type-checks and builds the workspace, runs all tests, exercises the S3 contract against MinIO, packs all 43 public packages, installs them into a clean consumer, and verifies their public entrypoints.
+The CI pipeline enforces package dependency boundaries, type-checks and builds the workspace, runs all tests, exercises the S3 contract against [Floci](https://github.com/floci-io/floci), packs all 43 public packages, installs them into a clean consumer, and verifies their public entrypoints.
 
 Changesets versions packages independently: a release changes only the packages affected by a change and the dependents whose declared ranges must move. The manual Release workflow creates the version PR or publishes those changed packages and their GitHub releases. Credentialed AWS S3, R2, RedDB, libSQL, and D1 contracts live in a separate manual provider workflow.
 

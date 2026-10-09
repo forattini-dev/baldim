@@ -21,22 +21,30 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm build
       - run: pnpm test
-      - name: Run S3 contract against MinIO
+      - name: Run S3 contract against Floci
         shell: bash
         env:
-          BALDIM_S3_CONTRACT_URL: http://minioadmin:minioadmin@127.0.0.1:9000/baldim-contract?region=us-east-1&forcePathStyle=true
+          BALDIM_S3_CONTRACT_URL: http://test:test@127.0.0.1:4566/baldim-contract?region=us-east-1&forcePathStyle=true
         run: |
-          docker run --detach --name baldim-minio \
-            --publish 9000:9000 \
-            --env MINIO_ROOT_USER=minioadmin \
-            --env MINIO_ROOT_PASSWORD=minioadmin \
-            minio/minio:latest server /data
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:9000/minio/health/ready >/dev/null; then
+          cleanup() {
+            status=$?
+            if [ "$status" -ne 0 ]; then
+              docker logs baldim-floci || true
+            fi
+            docker rm --force baldim-floci >/dev/null 2>&1 || true
+            exit "$status"
+          }
+          trap cleanup EXIT
+          docker run --detach --name baldim-floci \
+            --publish 127.0.0.1:4566:4566 \
+            --env FLOCI_STORAGE_MODE=memory \
+            --env FLOCI_SERVICES_UI_ENABLED=false \
+            floci/floci:2.2.0
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --connect-timeout 1 --max-time 2 http://127.0.0.1:4566/_floci/health >/dev/null; then
               break
             fi
-            if [ "$attempt" -eq 30 ]; then
-              docker logs baldim-minio
+            if [ "$attempt" -eq 60 ]; then
               exit 1
             fi
             sleep 1
