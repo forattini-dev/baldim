@@ -84,16 +84,12 @@ describe('FailbanManager', () => {
     const logged = await manager.violationsResource.query({ ip: offender });
     expect(logged.length).toBe(2);
 
-    await manager.ban(offender, 'test threshold', {
-      violationCount: logged.length,
-      userAgent: 'jest',
-      path: '/login'
-    });
     expect(manager.isBanned(offender)).toBe(true);
 
     const ban = await manager.getBan(offender);
     expect(ban).not.toBeNull();
-    expect(ban.reason).toContain('threshold');
+    expect(ban.reason).toBe('2 test violations');
+    expect(ban.violations).toBe(2);
 
     await manager.cleanup();
   });

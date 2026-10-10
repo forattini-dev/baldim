@@ -61,16 +61,20 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md",
+    "docs",
+    "examples"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.types-test.json",
     "test": "vitest run",
-    "prepack": "pnpm run build"
+    "prepack": "pnpm run build",
+    "docs:check": "tsc -p tsconfig.examples.json && vitest run tests/documentation.test.ts"
   },
   "dependencies": {
     "@baldim/adapter-memory": "workspace:*",

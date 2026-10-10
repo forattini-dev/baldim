@@ -1,3 +1,6 @@
+import type { ResourceDocument, ResourceInsert, ResourceUpdate, ResourceFilter, ResourcePatch, TypedQueryOptions, ResourceQueryDocument } from './types/schema-inference.js';
+import { ResourceEngine, type IndexDefinition, type MutationOperations, type MigrationOptions } from './core/resource-engine.js';
+import type { DocumentQueryOptions } from './core/document-query.js';
 import type { SecurityConfig } from './concerns/password-hashing.js';
 import type { CompressionConfig } from './concerns/text-compression.js';
 import { join } from 'path';
@@ -205,12 +208,7 @@ export interface QueryFilter {
   [key: string]: unknown;
 }
 
-export interface QueryOptions {
-  limit?: number;
-  offset?: number;
-  partition?: string | null;
-  partitionValues?: StringRecord;
-}
+export interface QueryOptions extends DocumentQueryOptions {}
 
 export interface ListOptions {
   partition?: string | null;
@@ -235,8 +233,7 @@ export interface UpdateConditionalResult {
 
 export interface DeleteManyResult {
   deleted: number;
-  failed: number;
-  errors?: unknown[];
+  errors: number;
 }
 
 export interface PageOptions {
@@ -284,7 +281,7 @@ interface VersionData {
   attributes?: AttributesSchema;
 }
 
-export class Resource extends AsyncEventEmitter implements Disposable {
+export class Resource<S extends AttributesSchema = AttributesSchema> extends AsyncEventEmitter implements Disposable {
   public name: string;
   public client: Client;
   public version: string;
@@ -340,9 +337,11 @@ export class Resource extends AsyncEventEmitter implements Disposable {
   private _content: ResourceContent;
   private _streams: ResourceStreams;
   private _persistence: ResourcePersistence;
+  private _engine: ResourceEngine;
 
   constructor(config: ResourceConfig = {} as ResourceConfig) {
     super();
+    this._engine = new ResourceEngine(this as unknown as Resource, (id, data, options) => this._persistence.replace(id, data, options) as Promise<ResourceData>);
     this._instanceId = defaultIdGenerator(7);
 
     const validation = validateResourceConfig(config as unknown as ResourceConfigInput);
@@ -973,21 +972,25 @@ export class Resource extends AsyncEventEmitter implements Disposable {
     return this._eventsModule.emit(eventName, ...args);
   }
 
+  async insert(data: ResourceInsert<S>, options?: InsertOptions): Promise<ResourceDocument<S>>;
   async insert({ id, ...attributes }: { id?: string } & Record<string, unknown>, options?: InsertOptions): Promise<ResourceData> {
     this._ensureSchemaCompiled();
-    return this._persistence.insert({ id, ...attributes }, options) as Promise<ResourceData>;
+    return this._engine.writeDocument(id, () => this._persistence.insert({ id, ...attributes }, options)) as Promise<ResourceData>;
   }
 
+  async get(id: string): Promise<ResourceDocument<S>>;
   async get(id: string): Promise<ResourceData> {
     this._ensureSchemaCompiled();
     return this._persistence.get(id) as Promise<ResourceData>;
   }
 
+  async getOrNull(id: string): Promise<ResourceDocument<S> | null>;
   async getOrNull(id: string): Promise<ResourceData | null> {
     this._ensureSchemaCompiled();
     return this._persistence.getOrNull(id) as Promise<ResourceData | null>;
   }
 
+  async getOrThrow(id: string): Promise<ResourceDocument<S>>;
   async getOrThrow(id: string): Promise<ResourceData> {
     this._ensureSchemaCompiled();
     return this._persistence.getOrThrow(id) as Promise<ResourceData>;
@@ -997,48 +1000,62 @@ export class Resource extends AsyncEventEmitter implements Disposable {
     return this._persistence.exists(id);
   }
 
+  async update(id: string, attributes: ResourceUpdate<S>): Promise<ResourceDocument<S>>;
   async update(id: string, attributes: Record<string, unknown>): Promise<ResourceData> {
     this._ensureSchemaCompiled();
-    return this._persistence.update(id, attributes) as Promise<ResourceData>;
+    return this._engine.writeDocument(id, () => this._persistence.update(id, attributes)) as Promise<ResourceData>;
   }
 
+  async patch(id: string, fields: ResourcePatch<S>, options?: { partition?: string; partitionValues?: StringRecord }): Promise<ResourceDocument<S>>;
   async patch(id: string, fields: Record<string, unknown>, options: { partition?: string; partitionValues?: StringRecord } = {}): Promise<ResourceData> {
     this._ensureSchemaCompiled();
-    return this._persistence.patch(id, fields, options) as Promise<ResourceData>;
+    return this._engine.writeDocument(id, () => this._persistence.patch(id, fields, options)) as Promise<ResourceData>;
   }
 
   async _patchViaCopyObject(id: string, fields: Record<string, unknown>): Promise<ResourceData> {
     this._ensureSchemaCompiled();
-    return this._persistence._patchViaCopyObject(id, fields) as Promise<ResourceData>;
+    return this._engine.writeDocument(id, () => this._persistence._patchViaCopyObject(id, fields)) as Promise<ResourceData>;
   }
 
-  async replace(id: string, fullData: Record<string, unknown>, options: { partition?: string; partitionValues?: StringRecord } = {}): Promise<ResourceData> {
+  async replace(id: string, fullData: ResourceInsert<S>, options?: { partition?: string; partitionValues?: StringRecord; ifMatch?: string; preserveContent?: boolean }): Promise<ResourceDocument<S>>;
+  async replace(id: string, fullData: Record<string, unknown>, options: { partition?: string; partitionValues?: StringRecord; ifMatch?: string; preserveContent?: boolean } = {}): Promise<ResourceData> {
     this._ensureSchemaCompiled();
-    return this._persistence.replace(id, fullData, options) as Promise<ResourceData>;
+    return this._engine.writeDocument(id, () => this._persistence.replace(id, fullData, options)) as Promise<ResourceData>;
   }
 
+  async updateConditional(id: string, attributes: ResourceUpdate<S>, options?: { ifMatch?: string }): Promise<Omit<UpdateConditionalResult, 'data'> & { data?: ResourceDocument<S> }>;
   async updateConditional(id: string, attributes: Record<string, unknown>, options: { ifMatch?: string } = {}): Promise<UpdateConditionalResult> {
     this._ensureSchemaCompiled();
-    return this._persistence.updateConditional(id, attributes, options as UpdateConditionalOptions) as unknown as Promise<UpdateConditionalResult>;
+    return this._engine.writeDocument(id, () => this._persistence.updateConditional(id, attributes, options as UpdateConditionalOptions)) as unknown as Promise<UpdateConditionalResult>;
   }
 
   async delete(id: string): Promise<unknown> {
     this._ensureSchemaCompiled();
-    return this._persistence.delete(id);
+    return this._engine.writeDocument(id, () => this._persistence.delete(id));
   }
 
+  async upsert(data: ResourceInsert<S> & {id: string}): Promise<ResourceDocument<S>>;
   async upsert({ id, ...attributes }: { id: string } & Record<string, unknown>): Promise<ResourceData> {
     this._ensureSchemaCompiled();
-    return this._persistence.upsert({ id, ...attributes }) as Promise<ResourceData>;
+    return this._engine.writeDocument(id, () => this._persistence.upsert({ id, ...attributes })) as Promise<ResourceData>;
   }
 
   async count({ partition = null, partitionValues = {}, skipCache = false }: CountOptions = {}): Promise<number> {
     return this._query.count({ partition, partitionValues, skipCache });
   }
 
+  async insertMany(objects: ResourceInsert<S>[]): Promise<ResourceDocument<S>[]>;
   async insertMany(objects: Record<string, unknown>[]): Promise<ResourceData[]> {
     this._ensureSchemaCompiled();
-    return this._persistence.insertMany(objects) as Promise<ResourceData[]>;
+    const { results } = await this._persistence._executeBatchHelper(
+      objects.map(data => () => (this as unknown as Resource).insert(data)), {
+        onItemError: (error, index) => {
+          this.emit('error', error, objects[index]);
+          this.observers.forEach(observer => (observer.emit as (...args: unknown[]) => void)('error', this.name, error, objects[index]));
+        },
+      });
+    this._emitStandardized('inserted-many', objects.length);
+    return results.filter((result): result is ResourceData => result !== null);
   }
 
   async _executeBatchHelper(operations: unknown[], options: Record<string, unknown> = {}): Promise<unknown> {
@@ -1048,12 +1065,28 @@ export class Resource extends AsyncEventEmitter implements Disposable {
 
   async deleteMany(ids: string[]): Promise<DeleteManyResult> {
     this._ensureSchemaCompiled();
-    return this._persistence.deleteMany(ids) as unknown as Promise<DeleteManyResult>;
+    const { results, errors } = await this._persistence._executeBatchHelper(
+      ids.map(id => () => this.delete(id)), {
+        onItemError: (error, index) => {
+          this.emit('error', error, ids[index]);
+          this.observers.forEach(observer => (observer.emit as (...args: unknown[]) => void)('error', this.name, error, ids[index]));
+        },
+      });
+    this._emitStandardized('deleted-many', ids.length);
+    return { deleted: results.filter(result => result !== null).length, errors: errors.length };
   }
 
   async deleteAll(): Promise<{ deletedCount: number }> {
     this._ensureSchemaCompiled();
-    return this._persistence.deleteAll();
+    if (this.config.paranoid !== false) {
+      throw new ResourceError('deleteAll() requires paranoid: false.', {
+        resourceName: this.name, operation: 'deleteAll', paranoid: this.config.paranoid,
+      });
+    }
+    if (!(await this.listIndexes()).length) return this._persistence.deleteAll();
+    const ids = await this.listIds({ limit: Number.MAX_SAFE_INTEGER });
+    for (const id of ids) await this.delete(id);
+    return { deletedCount: ids.length };
   }
 
   async deleteAllData(): Promise<{ deletedCount: number }> {
@@ -1065,6 +1098,7 @@ export class Resource extends AsyncEventEmitter implements Disposable {
     return this._query.listIds({ partition, partitionValues, limit, offset });
   }
 
+  async list(options?: ListOptions): Promise<ResourceDocument<S>[]>;
   async list({ partition = null, partitionValues = {}, limit, offset = 0 }: ListOptions = {}): Promise<ResourceData[]> {
     this._ensureSchemaCompiled();
     return this._query.list({ partition, partitionValues, limit, offset }) as Promise<ResourceData[]>;
@@ -1108,16 +1142,19 @@ export class Resource extends AsyncEventEmitter implements Disposable {
     return this._query.handleListError(error, { partition, partitionValues }) as ResourceData[];
   }
 
+  async getMany(ids: string[]): Promise<ResourceDocument<S>[]>;
   async getMany(ids: string[]): Promise<ResourceData[]> {
     this._ensureSchemaCompiled();
     return this._query.getMany(ids) as Promise<ResourceData[]>;
   }
 
+  async getAll(): Promise<ResourceDocument<S>[]>;
   async getAll(): Promise<ResourceData[]> {
     this._ensureSchemaCompiled();
     return this._query.getAll() as Promise<ResourceData[]>;
   }
 
+  async page(options?: PageOptions): Promise<Omit<PageResult, 'items'> & { items: ResourceDocument<S>[] }>;
   async page(options: PageOptions = {}): Promise<PageResult> {
     this._ensureSchemaCompiled();
     const result = await this._query.page(options);
@@ -1193,9 +1230,22 @@ export class Resource extends AsyncEventEmitter implements Disposable {
     return this._partitions.deleteReferences(data as any);
   }
 
-  async query(filter: QueryFilter = {}, { limit = 100, offset = 0, partition = null, partitionValues = {} }: QueryOptions = {}): Promise<ResourceData[]> {
+  createIndex(name: string, definition: IndexDefinition, options?: { maxScan?: number; quiescent?: boolean }) { return this._engine.createIndex(name, definition, options); }
+  listIndexes() { return this._engine.listIndexes(); }
+  dropIndex(name: string, options?: { quiescent?: boolean }) { return this._engine.dropIndex(name, options); }
+  findIndexedDocuments(equalities: Record<string, unknown>, maxScan: number) { return this._engine.findIndexedDocuments(equalities, maxScan); }
+  repairIndexes(options?: { quiescent?: boolean; maxScan?: number }) { return this._engine.repairIndexes(options); }
+  repairPartitions(options?: { repair?: boolean; quiescent?: boolean; maxScan?: number }) { return this._engine.repairPartitions(options); }
+  mutate(id: string, transform: (data: ResourceDocument<S>) => ResourceInsert<S> | Promise<ResourceInsert<S>>, options?: { retries?: number }): Promise<ResourceDocument<S>>;
+  mutate(id: string, transform: unknown, options?: { retries?: number }): Promise<unknown> { return this._engine.mutate(id, transform as Parameters<ResourceEngine['mutate']>[1], options); }
+  modify(id: string, operations: MutationOperations, options?: { retries?: number }) { return this._engine.modify(id, operations, options); }
+  migrate(options: MigrationOptions) { return this._engine.migrate(options); }
+  recoverMigrationLock(name: string, options: { runnerStopped: true }) { return this._engine.recoverMigrationLock(name, options); }
+
+  async query<const O extends TypedQueryOptions<S> = TypedQueryOptions<S> & { select?: never }>(filter?: ResourceFilter<S>, options?: O): Promise<Array<ResourceQueryDocument<S, O>>>;
+  async query(filter: QueryFilter = {}, options: unknown = {}): Promise<unknown> {
     this._ensureSchemaCompiled();
-    return this._query.query(filter, { limit, offset, partition, partitionValues }) as Promise<ResourceData[]>;
+    return this._query.query(filter, options as QueryOptions) as Promise<ResourceData[]>;
   }
 
   async handlePartitionReferenceUpdates(oldData: ResourceData, newData: ResourceData): Promise<void> {

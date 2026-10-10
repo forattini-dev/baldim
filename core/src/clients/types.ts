@@ -345,6 +345,8 @@ export interface StorageListParams {
 }
 
 export interface ClientCapabilities {
+  /** True only when ETags change for every logical body or metadata change. */
+  etagIncludesMetadata?: boolean;
   distributedMetadataLock?: boolean;
   multipartUpload?: boolean;
 }
