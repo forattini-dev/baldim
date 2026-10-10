@@ -20,6 +20,8 @@ jobs:
       - run: pnpm check:deps
       - run: pnpm typecheck
       - run: pnpm build
+      - name: Verify core documentation examples
+        run: pnpm --filter @baldim/core docs:check
       - run: pnpm test
       - name: Run S3 contract against Floci
         shell: bash

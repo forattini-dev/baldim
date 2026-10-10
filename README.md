@@ -38,6 +38,11 @@ Baldim gives every backend the same resource API: schemas, validation, CRUD, que
   - [Binary content](#attach-binary-content)
   - [Hooks](#transform-data-with-hooks)
 - [Partitions](#index-access-paths-with-partitions)
+- [Storage behaviors](core/docs/behaviors.md)
+- [Passwords and secrets](core/docs/protected-fields.md)
+- [Core API reference](core/docs/api.md)
+- [Core errors and recovery](core/docs/errors.md)
+- [Executable core recipes](core/docs/recipes.md)
 - [Storage adapters](#choose-storage-at-runtime)
 - [Multiple databases](#coordinate-multiple-databases)
 - [Plugins](#add-only-the-capabilities-you-need)
@@ -87,7 +92,7 @@ await database.disconnect();
 
 The connection string identifies the storage protocol and database location. `memory://my-app` survives reconnects inside the same process and is ideal for tests and examples. Applications should connect once during startup and disconnect during graceful shutdown.
 
-> Package versions are prepared in the repository. Publishing them to npm is the remaining registry release step.
+> Published packages are available on npm. Match documentation to your installed version: GitHub branches can contain unreleased changes. The document-engine query/index/mutation/migration/repair APIs described here require core 0.3.0 or later; check the package changelog and release tag before using them with 0.2.x.
 
 <img src="docs/readme/resources.svg" alt="Resource guide — the everyday resource API" width="100%">
 
@@ -148,7 +153,7 @@ Useful resource options:
 | `compression` | Overrides compression behavior. |
 | `strictValidation` | Overrides database-level validation for this resource. |
 
-Available storage behaviors are `user-managed`, `enforce-limits`, `truncate-data`, `body-overflow`, and `body-only`. The default `user-managed` behavior follows the schema mapping. `body-only` is useful for typed nested data that should live entirely in the object body.
+Available storage behaviors are `user-managed`, `enforce-limits`, `truncate-data`, `body-overflow`, and `body-only`. The default is `user-managed`; `body-only` keeps mapped document attributes in the body and supports portable optimistic mutations. `truncate-data` is explicitly lossy. See the [behavior decision table](core/docs/behaviors.md) for metadata limits, binary content and concurrency guarantees, and the [protected-field guide](core/docs/protected-fields.md) before using `secret` or `password`.
 
 ### Write, read, update, and delete
 
@@ -278,7 +283,7 @@ The result contains `items`, `pageSize`, `hasMore`, and `nextCursor`. `page` is 
 
 ### Attach binary content
 
-Attributes and binary content can live on the same document and be managed independently.
+Use `user-managed` with small attributes that fit metadata when binary content must live in the body. Body-only/overflow document attributes also use that body. Ordinary writes can overwrite content; explicit preservation is documented in the [behavior guide](core/docs/behaviors.md#binary-content).
 
 ```ts
 const assets = await database.createResource({

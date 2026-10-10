@@ -1,6 +1,31 @@
 # @baldim/core
 
-Baldim's document database engine, multidatabase manager, and extension contracts.
+Baldim's document database engine, multidatabase manager, and extension contracts. Requires Node.js 24 or newer.
+
+```sh
+pnpm add @baldim/core
+```
+
+The npm README describes its bundled package version. GitHub branch documentation can contain unreleased changes; use the matching release tag and [changelog](CHANGELOG.md) for your installed version. The document-engine APIs below (query operators, persisted indexes, mutations, migrations and repair) require core **0.3.0 or later**; they are not all present in 0.2.x. Before that release is published, use a build of this feature branch to run those recipes.
+
+## Documentation map
+
+- [Connect and create a resource](#connect-and-create-a-resource)
+- [Everyday CRUD and pagination](#everyday-crud-and-pagination)
+- [Multiple databases](#multiple-databases)
+- [Schemas and inferred types](#schemas-and-inferred-typescript-types)
+- [Document queries](#document-queries)
+- [Composite, sparse and unique indexes](#composite-sparse-and-unique-indexes)
+- [Document mutations](#optimistic-document-mutations)
+- [Schema migrations](#schema-evolution-and-resumable-migrations)
+- [Partition integrity](#partition-integrity-and-repair)
+- [Choose a storage behavior](docs/behaviors.md)
+- [Passwords and secrets](docs/protected-fields.md)
+- [API reference: inputs, defaults and returns](docs/api.md)
+- [Errors and recovery](docs/errors.md)
+- [Executable recipes checked by CI](docs/recipes.md)
+
+## Connect and create a resource
 
 ```ts
 import { Baldim } from '@baldim/core';
@@ -33,7 +58,34 @@ await notes.insert(
 );
 ```
 
-For multiple databases, use the manager with named connections:
+## Everyday CRUD and pagination
+
+```ts
+const first = await notes.get('first');
+const missing = await notes.getOrNull('missing'); // null; storage outages still reject
+await notes.update('first', { done: true });
+await notes.patch('first', { title: 'Ship Baldim' });
+await notes.replace('first', { title: 'Ship Baldim', done: true });
+await notes.upsert({ id: 'second', title: 'Read the guide', done: false });
+
+const ids = await notes.listIds({ limit: 20 });
+const documents = await notes.list({ limit: 20 });
+const count = await notes.count();
+const page = await notes.page({ size: 20 });
+const next = page.nextCursor
+  ? await notes.page({ size: 20, cursor: page.nextCursor })
+  : null;
+const removed = await notes.deleteMany(['second']);
+console.log(removed.deleted, removed.errors); // numeric counts
+```
+
+`insert` creates a new ID; `upsert` requires an explicit ID. `update`/`patch` merge values; `replace` writes the complete intended payload. Cursor pages do not include a total count and are not snapshots across concurrent writers. Bulk methods retain successes and report item failures rather than rolling back the entire batch. See the [API reference](docs/api.md) for every option/default/result and the [CRUD recipe](docs/recipes.md#crud-queries-partitions-and-pagination) for a complete connected example.
+
+Connect once during startup and use `try/finally` or graceful shutdown to call `database.disconnect()`. Choose [behavior](docs/behaviors.md) explicitly for growing documents, metadata budgets or binary content. Configure [passwords and secrets](docs/protected-fields.md) before storing protected fields.
+
+## Multiple databases
+
+Use the manager with named connections:
 
 ```ts
 import { DatabaseManager } from '@baldim/core';
@@ -78,8 +130,6 @@ S3-compatible storage live in separate adapter packages and register when import
 `S3db` remains available as a deprecated class alias so applications can migrate
 their imports before changing persisted data. Baldim continues to read and
 write the established `s3db.json` metadata format during this compatibility phase.
-
-
 
 ## Schemas and inferred TypeScript types
 
@@ -244,7 +294,7 @@ const report = await orders.migrate({
 });
 
 console.log(report.complete, report.migrated, report.failures);
-// Call again with the same name/transform to resume an incomplete migration.
+// Inspect failures; call again with the same name/transform to resume an incomplete migration.
 ```
 
 Every output is validated against the current resource schema and written with
@@ -265,7 +315,7 @@ candidate set; pause concurrent creates/deletes when pagination could change.
 A durable lock excludes simultaneous runners. After a process crash, confirm
 that its runner has stopped, then call
 `resource.recoverMigrationLock(name, { runnerStopped: true })` before resuming.
-The core never automatically steals an active migration lock.
+The core never automatically steals an active migration lock. See the [rename/backfill/failure/resume recipe](docs/recipes.md#rename-backfill-and-resume-a-migration), and the [migration options/report reference](docs/api.md#mutations-and-migrations).
 
 ## Partition integrity and repair
 
@@ -288,3 +338,7 @@ while writers are active is an observation rather than a consistent snapshot.
 Scans are bounded, and repair starts only after the document/reference scan has
 completed successfully. Existing asynchronous partition-write behavior remains
 available; this API provides explicit detection and recovery.
+
+## Documentation verification
+
+The [recipes](docs/recipes.md) are compiled as TypeScript and executed against memory and real local SQLite in CI. Marked recipe blocks are checked against their source files, and local links/headings in the core guide are validated. Run `pnpm --filter @baldim/core docs:check` after a build. Short contextual snippets elsewhere in the guide explain API usage; they are not all standalone programs. The guides and example source files are included in the npm package.

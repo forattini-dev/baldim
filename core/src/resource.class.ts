@@ -1078,6 +1078,11 @@ export class Resource<S extends AttributesSchema = AttributesSchema> extends Asy
 
   async deleteAll(): Promise<{ deletedCount: number }> {
     this._ensureSchemaCompiled();
+    if (this.config.paranoid !== false) {
+      throw new ResourceError('deleteAll() requires paranoid: false.', {
+        resourceName: this.name, operation: 'deleteAll', paranoid: this.config.paranoid,
+      });
+    }
     if (!(await this.listIndexes()).length) return this._persistence.deleteAll();
     const ids = await this.listIds({ limit: Number.MAX_SAFE_INTEGER });
     for (const id of ids) await this.delete(id);
@@ -1086,8 +1091,7 @@ export class Resource<S extends AttributesSchema = AttributesSchema> extends Asy
 
   async deleteAllData(): Promise<{ deletedCount: number }> {
     this._ensureSchemaCompiled();
-    if (!(await this.listIndexes()).length) return this._persistence.deleteAllData();
-    return this.deleteAll();
+    return this._persistence.deleteAllData();
   }
 
   async listIds({ partition = null, partitionValues = {}, limit, offset = 0 }: ListOptions = {}): Promise<string[]> {

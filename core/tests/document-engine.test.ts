@@ -537,3 +537,32 @@ describe('query and migration boundaries', () => {
     expect((await next.get('a')).newName).toBe('Ada');
   });
 });
+
+describe('administrative indexed deletion', () => {
+  it('preserves paranoid protection when indexes exist', async () => {
+    const { items } = await setup();
+    await items.createIndex('group', { fields: ['group'] }, { quiescent: true });
+    await items.insert({ id: 'a', name: 'A', score: 1, group: 'one', tags: [] });
+    await expect(items.deleteAll()).rejects.toThrow('paranoid: false');
+    await expect(items.deleteAllData()).rejects.toThrow('paranoid: false');
+    expect((await items.get('a')).name).toBe('A');
+    expect((await items.listIndexes())[0]?.state).toBe('ready');
+  });
+
+  it('distinguishes document deletion from purging definitions and auxiliary objects', async () => {
+    const { db } = await setup();
+    const items = await db.createResource({
+      name: 'purge', paranoid: false, behavior: 'body-only',
+      attributes: { group: 'string|required' },
+    });
+    await items.createIndex('group', { fields: ['group'] }, { quiescent: true });
+    await items.insert({ id: 'a', group: 'one' });
+    expect(await items.deleteAll()).toMatchObject({ deletedCount: 1 });
+    expect(await items.listIndexes()).toHaveLength(1);
+    expect(await items.query({ group: 'one' })).toEqual([]);
+    await items.insert({ id: 'b', group: 'two' });
+    expect((await items.deleteAllData()).deletedCount).toBeGreaterThan(1);
+    expect(await items.listIndexes()).toEqual([]);
+    expect(await items.getOrNull('b')).toBeNull();
+  });
+});
