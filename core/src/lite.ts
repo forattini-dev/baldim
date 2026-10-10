@@ -140,3 +140,8 @@ export { PerformanceMonitor } from './concerns/performance-monitor.js';
 // =============================================================================
 
 export { Baldim as default } from './database.class.js';
+
+export type { InferAttribute, InferSchema, InsertDocument, SchemaDocument, TypedFilter, TypedResource } from './types/schema-inference.js';
+export type { DocumentFilter, FieldPredicate, DocumentQueryOptions } from './core/document-query.js';
+export { DocumentEngineError, compareSchemas } from './core/resource-engine.js';
+export type { IndexDefinition, ResourceIndex, MutationOperations, MigrationOptions, MigrationReport, PartitionIntegrityReport, SchemaChange } from './core/resource-engine.js';

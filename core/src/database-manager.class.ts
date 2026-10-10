@@ -1,3 +1,5 @@
+import type { TypedResource } from './types/schema-inference.js';
+import type { AttributesSchema } from './core/resource-validator.class.js';
 import { merge } from 'lodash-es';
 
 import { Database } from './database.class.js';
@@ -94,7 +96,9 @@ export class DatabaseManager extends SafeEventEmitter {
   /**
    * Creates a resource on a specific connection (via `connection` field) or default.
    */
-  async createResource(config: ManagerCreateResourceConfig): Promise<Resource> {
+  async createResource<const S extends AttributesSchema>(config: Omit<ManagerCreateResourceConfig, 'attributes'> & { attributes: S }): Promise<string extends keyof S ? Resource : TypedResource<S>>;
+  async createResource(config: ManagerCreateResourceConfig): Promise<Resource>;
+  async createResource(config: ManagerCreateResourceConfig): Promise<unknown> {
     const { connection: connectionName = this._defaultConnection, ...resourceConfig } = config;
 
     const existingConnection = this._resourceIndex.get(resourceConfig.name);

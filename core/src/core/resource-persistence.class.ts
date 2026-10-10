@@ -206,6 +206,8 @@ export interface PatchOptions {
 export interface ReplaceOptions {
   partition?: string;
   partitionValues?: StringRecord;
+  ifMatch?: string;
+  preserveContent?: boolean;
 }
 
 export interface UpdateConditionalOptions {
@@ -1584,12 +1586,21 @@ export class ResourcePersistence {
       });
     }
 
+    let writeBody: string | Buffer = body;
+    if (options.preserveContent && this.behavior === 'user-managed') {
+      const stored = await this.client.getObject(key);
+      if (stored.Body && stored.ContentLength) {
+        writeBody = Buffer.from(await stored.Body.transformToByteArray());
+        contentType = stored.ContentType;
+      }
+    }
     const replacedObject: ResourceData = { id, ...validatedAttributes };
     const useAtomicPartitionWrite = this._shouldUseAtomicPartitionWriteTransaction();
     const [okPut, errPut] = await tryFn(() => this._runAtomicPartitionWriteIfSupported(async () => {
       await this.client.putObject({
         key,
-        body,
+        ifMatch: options.ifMatch,
+        body: writeBody,
         contentType,
         metadata: finalMetadata,
       });

@@ -1,3 +1,4 @@
+import { equalityFilter, finishQuery, matchesFilter, validateFilter, validateQueryOptions, type DocumentQueryOptions } from './document-query.js';
 import { tryFn } from '../concerns/try-fn.js';
 import { isNotFoundError } from '../concerns/storage-errors.js';
 import { metadataEncode } from '../concerns/metadata-encoding.js';
@@ -182,12 +183,7 @@ export interface PageResult {
   };
 }
 
-export interface QueryOptions {
-  limit?: number;
-  offset?: number;
-  partition?: string | null;
-  partitionValues?: StringRecord;
-}
+export interface QueryOptions extends DocumentQueryOptions {}
 
 interface PartitionPlannerCandidate {
   partition: string;
@@ -251,14 +247,14 @@ export class ResourceQuery {
     let matchCount = 0;
     const totalFields = Object.keys(fields).length;
 
-    for (const [fieldName, rule] of Object.entries(fields)) {
+    for (const [fieldName, rule] of Object.entries(fields).sort(([a], [b]) => a.localeCompare(b))) {
       if (!Object.prototype.hasOwnProperty.call(filter, fieldName)) {
-        continue;
+        break;
       }
 
       const value = filter[fieldName];
       if (!this.isUsablePartitionFilterValue(value)) {
-        continue;
+        break;
       }
 
       partitionValues[fieldName] = value;
@@ -1621,85 +1617,44 @@ export class ResourceQuery {
     return pageResult;
   }
 
-  async query(filter: StringRecord = {}, { limit = 100, offset = 0, partition = null, partitionValues = {} }: QueryOptions = {}): Promise<ResourceData[]> {
-    await this.resource.executeHooks('beforeQuery', { filter, limit, offset, partition, partitionValues });
-
-    if (Object.keys(filter).length === 0) {
-      return await this.list({ partition, partitionValues, limit, offset });
-    }
-
-    let queryPartition = partition;
-    let queryPartitionValues = partitionValues;
-
-    if (!partition) {
-      const plannedPartition = this.resolvePartitionFromFilter(filter);
-      if (plannedPartition) {
-        queryPartition = plannedPartition.partition;
-        queryPartitionValues = plannedPartition.partitionValues;
+  async query(filter: StringRecord = {}, options: QueryOptions = {}): Promise<ResourceData[]> {
+    validateFilter(filter);
+    validateQueryOptions(options);
+    const { limit = 100, offset = 0, partition = null, partitionValues = {}, maxScan = 10000 } = options;
+    await this.resource.executeHooks('beforeQuery', { filter, ...options, limit, offset });
+    if (limit === 0) return await this.resource.executeHooks('afterQuery', []) as ResourceData[];
+    const equalities = equalityFilter(filter);
+    const planned = partition ? null : this.resolvePartitionFromFilter(equalities);
+    const queryPartition = partition ?? planned?.partition ?? null;
+    const values = this.enrichPartitionValuesFromFilter(queryPartition, partition ? partitionValues : planned?.partitionValues ?? partitionValues, equalities);
+    const indexed = !partition ? await (this.resource as Resource & { findIndexedDocuments?(equalities: StringRecord, max: number): Promise<ResourceData[] | null> }).findIndexedDocuments?.(equalities, maxScan) : null;
+    const simpleEquality = Object.keys(filter).every(k => !k.startsWith('$')) && Object.values(filter).every(v => v === null || typeof v !== 'object');
+    if (indexed == null && simpleEquality && !options.orderBy) {
+      const residual = this._buildResidualFilter(filter, queryPartition, values);
+      if (Object.keys(residual).length) {
+        const {prefix, partitionDef} = this._buildPagePrefix(queryPartition, values);
+        const native = await this._queryWithFilteredObjectPage({prefix, filter: residual, limit, offset, partition: queryPartition, partitionDef});
+        if (native) return await this.resource.executeHooks('afterQuery', finishQuery(native, {...options, offset: 0})) as ResourceData[];
       }
     }
-
-    queryPartitionValues = this.enrichPartitionValuesFromFilter(queryPartition, queryPartitionValues, filter);
-
-    const residualFilter = this._buildResidualFilter(filter, queryPartition, queryPartitionValues);
-    if (Object.keys(residualFilter).length === 0) {
-      const directResults = await this.list({
-        partition: queryPartition,
-        partitionValues: queryPartitionValues,
-        limit,
-        offset
-      });
-
-      return await this.resource.executeHooks('afterQuery', directResults) as ResourceData[];
+    const matches: ResourceData[] = [];
+    let cursor: string | null = null;
+    let scanned = 0;
+    if (indexed) {
+      for (const doc of indexed) if (matchesFilter(doc, filter)) matches.push(doc);
+    } else {
+      do {
+        const window = await this._listPageByCursor({ cursor, size: Math.min(100, maxScan - scanned + 1), partition: queryPartition, partitionValues: values });
+        for (const doc of window.items) {
+          if (++scanned > maxScan) throw new PartitionError('Query scan limit exceeded', { resourceName: this.resource.name, maxScan, operation: 'query' });
+          if (matchesFilter(doc, filter)) matches.push(doc);
+          if (!options.orderBy && matches.length >= offset + limit) break;
+        }
+        if (!options.orderBy && matches.length >= offset + limit) break;
+        cursor = window.nextCursor ?? null;
+      } while (cursor);
     }
-
-    const { prefix, partitionDef } = this._buildPagePrefix(queryPartition, queryPartitionValues);
-    const filteredPageResults = await this._queryWithFilteredObjectPage({
-      prefix,
-      filter: residualFilter,
-      limit,
-      offset,
-      partition: queryPartition,
-      partitionDef
-    });
-
-    if (filteredPageResults) {
-      return await this.resource.executeHooks('afterQuery', filteredPageResults) as ResourceData[];
-    }
-
-    const results: ResourceData[] = [];
-    let currentOffset = offset;
-    const batchSize = Math.min(limit, 50);
-
-    while (results.length < limit) {
-      const batch = await this.list({
-        partition: queryPartition,
-        partitionValues: queryPartitionValues,
-        limit: batchSize,
-        offset: currentOffset
-      });
-
-      if (batch.length === 0) {
-        break;
-      }
-
-      const filteredBatch = batch.filter(doc => {
-        return Object.entries(residualFilter).every(([key, value]) => {
-          return this._getNestedFieldValue(doc, key) === value;
-        });
-      });
-
-      results.push(...filteredBatch);
-      currentOffset += batchSize;
-
-      if (batch.length < batchSize) {
-        break;
-      }
-    }
-
-    const finalResults = results.slice(0, limit);
-
-    return await this.resource.executeHooks('afterQuery', finalResults) as ResourceData[];
+    return await this.resource.executeHooks('afterQuery', finishQuery(matches, options)) as ResourceData[];
   }
 }
 

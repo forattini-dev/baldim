@@ -1,3 +1,4 @@
+import type { TypedResource } from './types/schema-inference.js';
 import tryFn, { tryFnSync } from './concerns/try-fn.js';
 import { getVersion } from './version.js';
 import type { SecurityConfig } from './concerns/password-hashing.js';
@@ -440,7 +441,9 @@ export class Database extends SafeEventEmitter {
     return this._coordinatorsModule.getGlobalCoordinator(namespace, options);
   }
 
-  async createResource(config: CreateResourceConfig): Promise<Resource> {
+  async createResource<const S extends AttributesSchema>(config: Omit<CreateResourceConfig, 'attributes'> & { attributes: S }): Promise<string extends keyof S ? Resource : TypedResource<S>>;
+  async createResource(config: CreateResourceConfig): Promise<Resource>;
+  async createResource(config: CreateResourceConfig): Promise<unknown> {
     await this._hooksModule.executeHooks('beforeCreateResource', { config });
 
     const resource = await this._resourcesModule.createResource(config);
