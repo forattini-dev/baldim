@@ -26,9 +26,9 @@ Storage clients with multipart support (for example `@baldim/adapter-s3`) can
 be used per insert:
 
 ```ts
-await notes.insert({ id: 'big-one', title: 'Large record' }, { multipart: true });
+await notes.insert({ id: 'big-one', title: 'Large record', done: false }, { multipart: true });
 await notes.insert(
-  { id: 'big-two', title: 'Large record' },
+  { id: 'big-two', title: 'Large record', done: false },
   { multipart: { partSize: 16 * 1024 * 1024, queueConcurrency: 2 } },
 );
 ```
@@ -103,7 +103,7 @@ const orders = await database.createResource({
   partitions: { byStatus: { fields: { status: 'string' } } },
 });
 
-await orders.insert({ customer: 'Ada', total: 120, status: 'pending', labels: [] });
+await orders.insert({ id: 'order-1', customer: 'Ada', total: 120, status: 'pending', labels: [] });
 // TypeScript rejects a string total, missing customer, unknown query fields,
 // and wrong operand types. Fields with defaults may be omitted on insert.
 ```
