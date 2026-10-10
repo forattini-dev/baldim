@@ -300,9 +300,9 @@ export class ResourceEngine {
         'Index fields must be a nonempty list of distinct paths',
       );
     definition.fields.forEach(pathParts);
-    if (definition.unique && !this.client.runInTransaction)
+    if (definition.unique && (!this.client.runInTransaction || !this.client.isInTransaction))
       throw new DocumentEngineError(
-        'Unique indexes require transactional storage',
+        'Unique indexes require transactional storage with transaction-context detection',
         'UNSUPPORTED_CAPABILITY',
       );
     if (!this.client.runInTransaction && !options.quiescent)
@@ -310,6 +310,8 @@ export class ResourceEngine {
         'Pause writers and pass quiescent: true to build an index on nontransactional storage',
         'QUIESCENCE_REQUIRED',
       );
+    if (this.client.isInTransaction?.())
+      throw new DocumentEngineError('Index builds must own their transaction', 'UNSUPPORTED_CAPABILITY');
     const max = positive(options.maxScan ?? 10000, 'maxScan');
     return this.transaction(async () => {
       const index: ResourceIndex = { ...definition, name, state: 'building' };
@@ -328,7 +330,7 @@ export class ResourceEngine {
         if (existing.state === 'ready') return existing;
       } else await this.write(key, index, '*');
       for await (const documentKey of this.keys(`${this.root}data/`, max)) {
-        const id = documentKey.slice(documentKey.lastIndexOf('/id=') + 4);
+        const id = documentKey.slice(`${this.root}data/id=`.length);
         await this.addIndexEntry(index, await this.resource.get(id));
       }
       index.state = 'ready';
@@ -403,7 +405,7 @@ export class ResourceEngine {
           'UNSUPPORTED_CAPABILITY',
         );
       if (!indexes.length) return fn();
-      if (indexes.some((i) => i.unique) && !this.client.runInTransaction)
+      if (indexes.some((i) => i.unique) && (!this.client.runInTransaction || !this.client.isInTransaction))
         throw new DocumentEngineError(
           'Persisted unique indexes require transactional storage',
           'UNSUPPORTED_CAPABILITY',
@@ -590,7 +592,7 @@ export class ResourceEngine {
       let documents = 0;
       for await (const key of this.keys(`${this.root}data/`, max)) {
         const document = await this.resource.get(
-          key.slice(key.lastIndexOf('/id=') + 4),
+          key.slice(`${this.root}data/id=`.length),
         );
         documents++;
         for (const name of Object.keys(this.resource.config.partitions)) {
@@ -633,16 +635,16 @@ export class ResourceEngine {
     return this.transaction(async () => {
       const indexes = await this.listIndexes(),
         max = positive(options.maxScan ?? 10000, 'maxScan');
-      if (indexes.some((i) => i.unique) && !this.client.runInTransaction)
+      if (indexes.some((i) => i.unique) && (!this.client.runInTransaction || !this.client.isInTransaction))
         throw new DocumentEngineError(
-          'Unique indexes require transactional storage',
+          'Unique indexes require transactional storage with transaction-context detection',
           'UNSUPPORTED_CAPABILITY',
         );
       // Finish scanning before changing any entries so scan/read failures preserve indexes.
       const documents: ResourceData[] = [];
       for await (const key of this.keys(`${this.root}data/`, max))
         documents.push(
-          await this.resource.get(key.slice(key.lastIndexOf('/id=') + 4)),
+          await this.resource.get(key.slice(`${this.root}data/id=`.length)),
         );
       let entries = 0;
       for (const index of indexes) {
@@ -739,7 +741,7 @@ export class ResourceEngine {
           continuationToken: report.cursor,
         });
         for (const item of page.Contents || []) {
-          const id = item.Key.slice(item.Key.lastIndexOf('/id=') + 4),
+          const id = item.Key.slice(`${this.root}data/id=`.length),
             journalKey = `${root}documents/${digest(id)}.json`;
           try {
             const changed = await this.writeDocument(id, async () => {

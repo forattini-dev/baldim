@@ -174,7 +174,8 @@ known equality values; range predicates use scan evaluation. Sparse indexes
 skip documents with a missing or null indexed field. Non-sparse indexes include
 those values. Indexed values must be finite scalar values or dates.
 
-`unique: true` requires a client's real `runInTransaction()` implementation.
+`unique: true` requires a client's real `runInTransaction()` implementation and
+`isInTransaction()` context detection.
 The document, its index references, and transactional partition writes commit
 or roll back together. A duplicate rejects with
 `DocumentEngineError.code === 'UNIQUE_CONSTRAINT'`. Nontransactional clients,

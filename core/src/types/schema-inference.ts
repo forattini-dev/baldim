@@ -144,3 +144,8 @@ export type ResourceFilter<S extends AttributesSchema> = string extends keyof S
 export type ResourcePatch<S extends AttributesSchema> = string extends keyof S
   ? Record<string, unknown>
   : { [P in Paths<InferSchema<S>>]?: PathValue<InferSchema<S>, P> };
+
+export type ResourceQueryDocument<S extends AttributesSchema, O> =
+  'select' extends keyof O
+    ? O extends { select?: undefined } ? ResourceDocument<S> : Partial<ResourceDocument<S>> & { id: string }
+    : ResourceDocument<S>;

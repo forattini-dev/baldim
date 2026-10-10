@@ -1,4 +1,4 @@
-import type { ResourceDocument, ResourceInsert, ResourceUpdate, ResourceFilter, ResourcePatch, TypedQueryOptions } from './types/schema-inference.js';
+import type { ResourceDocument, ResourceInsert, ResourceUpdate, ResourceFilter, ResourcePatch, TypedQueryOptions, ResourceQueryDocument } from './types/schema-inference.js';
 import { ResourceEngine, type IndexDefinition, type MutationOperations, type MigrationOptions } from './core/resource-engine.js';
 import type { DocumentQueryOptions } from './core/document-query.js';
 import type { SecurityConfig } from './concerns/password-hashing.js';
@@ -1238,9 +1238,7 @@ export class Resource<S extends AttributesSchema = AttributesSchema> extends Asy
   migrate(options: MigrationOptions) { return this._engine.migrate(options); }
   recoverMigrationLock(name: string, options: { runnerStopped: true }) { return this._engine.recoverMigrationLock(name, options); }
 
-  async query(filter?: ResourceFilter<S>, options?: TypedQueryOptions<S> & { select?: never }): Promise<ResourceDocument<S>[]>;
-  async query(filter: ResourceFilter<S>, options: TypedQueryOptions<S> & { select: readonly string[] }): Promise<Array<Partial<ResourceDocument<S>> & { id: string }>>;
-  async query(filter?: ResourceFilter<S>, options?: TypedQueryOptions<S>): Promise<Array<Partial<ResourceDocument<S>> & { id: string }>>;
+  async query<const O extends TypedQueryOptions<S> = TypedQueryOptions<S> & { select?: never }>(filter?: ResourceFilter<S>, options?: O): Promise<Array<ResourceQueryDocument<S, O>>>;
   async query(filter: QueryFilter = {}, options: unknown = {}): Promise<unknown> {
     this._ensureSchemaCompiled();
     return this._query.query(filter, options as QueryOptions) as Promise<ResourceData[]>;

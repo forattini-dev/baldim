@@ -36,3 +36,11 @@ void alwaysPresent;
 
 const legacyResource: import('../src/resource.class.js').Resource = users;
 void legacyResource;
+
+const dynamicFields = await database.createResource({ name: 'dynamic-fields', attributes: { name: 'string|required', metadata: 'object', sentAt: 'datetime', tags: 'array' } });
+const pluginResource: import('../src/resource.class.js').Resource = dynamicFields;
+void pluginResource;
+
+const ordered = await users.query({}, { orderBy: { name: 'asc' } });
+const orderedName: string = ordered[0]!.name;
+void orderedName;

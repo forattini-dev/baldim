@@ -247,7 +247,7 @@ const selected = await users.query({
 });
 ```
 
-The core also exposes schema-inferred `Resource<S>` types, persisted composite/sparse indexes (`createIndex`), document mutations (`modify`, `mutate`), schema diffs (`compareSchemas`), resumable migrations (`migrate`), and integrity audits/repairs (`repairPartitions`, `repairIndexes`). See the [core guide](core/README.md#schema-inferred-typescript-resources) for complete examples and storage guarantees. Unique indexes require real transactions; optimistic metadata mutations require transactions or ETags that cover metadata.
+The core also exposes schema-inferred `Resource<S>` types, persisted composite/sparse indexes (`createIndex`), document mutations (`modify`, `mutate`), schema diffs (`compareSchemas`), resumable migrations (`migrate`), and integrity audits/repairs (`repairPartitions`, `repairIndexes`). See the [core guide](core/README.md#schemas-and-inferred-typescript-types) for complete examples and storage guarantees. Unique indexes require real transactions; optimistic metadata mutations require transactions or ETags that cover metadata.
 
 
 ### Paginate large resources
