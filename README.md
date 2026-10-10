@@ -221,7 +221,7 @@ console.log(result.deleted, result.errors);
 
 ### Query and list documents
 
-`query()` performs equality matching. When the filter covers a partition, Baldim automatically chooses the best matching partition and only scans that path. Any remaining fields are applied as residual equality filters.
+`query()` supports equality, comparisons (`$gt`, `$gte`, `$lt`, `$lte`), membership (`$in`, `$nin`), existence (`$exists`), and logical filters (`$and`, `$or`, `$not`). Guaranteed equalities select a ready composite index or a leading partition prefix; remaining conditions filter the candidates. Use `select` for projection, `orderBy` for sorting, and `maxScan` to bound fallback scans.
 
 ```ts
 const activeUsers = await users.query(
@@ -235,6 +235,20 @@ const total = await users.count();
 ```
 
 `list()` returns hydrated documents. `listIds()` returns only IDs and avoids reading document bodies. `count()` counts the selected resource or partition.
+
+```ts
+const selected = await users.query({
+  $and: [{ active: true }, { age: { $gte: 18 } }],
+}, {
+  select: ['name', 'age'],
+  orderBy: { age: 'desc' },
+  limit: 25,
+  maxScan: 10_000,
+});
+```
+
+The core also exposes schema-inferred `Resource<S>` types, persisted composite/sparse indexes (`createIndex`), document mutations (`modify`, `mutate`), schema diffs (`compareSchemas`), resumable migrations (`migrate`), and integrity audits/repairs (`repairPartitions`, `repairIndexes`). See the [core guide](core/README.md#schema-inferred-typescript-resources) for complete examples and storage guarantees. Unique indexes require real transactions; optimistic metadata mutations require transactions or ETags that cover metadata.
+
 
 ### Paginate large resources
 
