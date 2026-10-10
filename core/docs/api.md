@@ -161,7 +161,7 @@ Unique indexes require `runInTransaction` and `isInTransaction` support. Their w
 | API | Parameters / result |
 | --- | --- |
 | `setContent({ id, buffer, contentType? })` | Buffer/string; default `application/octet-stream`; writes the document body |
-| `content(id)` | `{ buffer: Buffer | null, contentType: string | null }` |
+| `content(id)` | `{ buffer: Buffer \| null, contentType: string \| null }` |
 | `hasContent(id)` | Boolean |
 | `deleteContent(id)` | Removes body content; keeps mapped attributes where supported |
 | `readable()` / `writable()` | Resource-backed Node stream helpers |

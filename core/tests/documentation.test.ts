@@ -113,6 +113,32 @@ describe('executable core documentation', () => {
     }
   });
 
+  it('keeps Markdown table columns consistent when types contain pipes', async () => {
+    const files = [
+      '../README.md',
+      'README.md',
+      'docs/api.md',
+      'docs/behaviors.md',
+      'docs/protected-fields.md',
+      'docs/errors.md',
+      'docs/recipes.md',
+    ];
+    for (const file of files) {
+      let columns: number | null = null;
+      for (const line of (
+        await readFile(resolve(coreRoot, file), 'utf8')
+      ).split('\n')) {
+        if (!line.startsWith('|')) {
+          columns = null;
+          continue;
+        }
+        const count = (line.match(/(?<!\\)\|/g) ?? []).length;
+        columns ??= count;
+        expect(count, file + ': ' + line).toBe(columns);
+      }
+    }
+  });
+
   it('resolves local documentation links and GitHub heading anchors', async () => {
     const files = [
       '../README.md',
