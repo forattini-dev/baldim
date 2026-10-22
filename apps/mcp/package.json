@@ -47,7 +47,7 @@
     "@baldim/core": "workspace:*",
     "@baldim/plugin-cache": "workspace:*",
     "@baldim/plugin-costs": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.32.0",
     "dotenv": "^17.4.1",
     "fuse.js": "^7.3.0"
   },
